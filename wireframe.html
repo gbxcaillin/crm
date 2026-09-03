@@ -518,7 +518,165 @@ td.check-col,th.check-col{width:32px;padding-right:0;cursor:default}
 .login .lockup{padding:0 0 22px;border-bottom:1px solid var(--line);margin-bottom:6px}
 .login .l .lockup .frame b,.login .l .lockup .word b{color:var(--ink)}
 .login .err{color:var(--red);font-size:12px}
-@media(max-width:900px){.login{grid-template-columns:1fr}.login .r{display:none}.deal-grid{grid-template-columns:1fr}.settings{grid-template-columns:1fr}.mail{grid-template-columns:120px 1fr}.mail-read{display:none}.stats{grid-template-columns:1fr 1fr}.files-grid{grid-template-columns:1fr}}
+/* ===== responsive system ===== */
+.tabbar,.stage-strip,.room-strip,.folder-strip,.mail-back,.stage-select,.files-pick,#search-icon,.m-only{display:none}
+.shell{height:100vh;height:100dvh}.main{height:100vh;height:100dvh}
+
+/* tablet: icon rail, single-column two-pane layouts */
+@media(max-width:1100px) and (min-width:761px){
+  .shell{grid-template-columns:60px 1fr}
+  .lockup{padding:14px 10px;justify-content:center}.lockup .word{display:none}
+  .rail nav{padding:8px 6px}.rail .group{display:none}
+  .nav{font-size:0;justify-content:center;padding:0;height:42px;gap:0;border-left:none;border-radius:var(--r)}
+  .nav svg{width:18px;height:18px}.nav .count{display:none}
+  .rail-foot{padding:10px 8px;justify-content:center}.rail-foot .who,.rail-foot button{display:none}
+  .deal-grid,.inv-grid,.files-grid{grid-template-columns:1fr}
+  .mail{grid-template-columns:130px 250px minmax(0,1fr)}
+  .search{width:200px}
+  .page [style*="grid-template-columns:minmax"]{grid-template-columns:1fr!important}
+}
+
+/* phone */
+@media(max-width:760px){
+  html{-webkit-text-size-adjust:100%}
+  .login{grid-template-columns:1fr}.login .r{display:none}.login .l{padding:28px 20px;align-items:flex-start}
+  .shell{grid-template-columns:1fr}
+  .rail{display:none}
+  .main{padding-bottom:0}
+  .topbar{height:50px;padding:0 12px;gap:6px}
+  .crumb{font-size:17px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .crumb .sep{margin:0 5px}
+  .topbar .spacer{display:none}
+  .search{display:none}
+  #search-icon{display:flex}
+  #quick-add{width:36px;padding:0;letter-spacing:0;font-size:18px;font-weight:400}#quick-add .txt{display:none}
+  #theme-btn{display:none}
+  .content{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+  .page{padding:14px 14px 24px;gap:14px}
+  .page-head{flex-direction:column;align-items:stretch;gap:10px}
+  .page-head h1{font-size:24px}
+  .page-head .sub{font-size:12px}
+  .toolbar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;margin:0 -14px;padding-left:14px;padding-right:14px}
+  .toolbar::-webkit-scrollbar{display:none}
+  .toolbar>*{flex-shrink:0}
+  .btn{height:40px;padding:0 14px}.btn-sm{height:34px}.btn-icon{width:40px}
+  .input,.select,.textarea{font-size:16px;height:42px}.textarea{height:auto}
+  .seg button{height:36px}
+  .stats{grid-template-columns:1fr 1fr;gap:8px}.stat{padding:12px}.stat .v{font-size:24px}
+  .page [style*="grid-template-columns:minmax"]{grid-template-columns:1fr!important}
+  .card-head{padding:10px 14px}.card-body{padding:14px}
+  .tabs{overflow-x:auto;scrollbar-width:none;margin:0 -14px;padding:0 14px}.tabs::-webkit-scrollbar{display:none}.tabs button{flex-shrink:0;height:42px}
+  /* tables that become cards */
+  table.cards,table.cards tbody,table.cards tr,table.cards td{display:block}
+  table.cards thead{display:none}
+  table.cards tr{border-bottom:1px solid var(--line);padding:12px 14px;display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;align-items:start}
+  table.cards tr:last-child{border-bottom:none}
+  table.cards td{padding:0;border:none;white-space:normal;font-size:13px;text-align:left}
+  table.cards td.num{text-align:left;font-family:var(--font-mono)}
+  table.cards td[data-l]::before{content:attr(data-l);display:block;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:1px}
+  table.cards td.full{grid-column:1/-1}
+  table.cards td.hide-m,table.cards .check-col{display:none}
+  #bulk{display:none!important}
+  /* board */
+  .stage-strip{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -14px;padding:0 14px 4px}.stage-strip::-webkit-scrollbar{display:none}
+  .stage-strip button{flex-shrink:0;height:32px;padding:0 12px;border:1px solid var(--line-2);background:var(--surface);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);display:inline-flex;align-items:center;gap:6px}
+  .stage-strip button .c{font-family:var(--font-mono);color:var(--teal-ink);letter-spacing:0}
+  .stage-strip button.active{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+  .board{scroll-snap-type:x mandatory;margin:0 -14px;padding:0 14px 8px;gap:10px;-webkit-overflow-scrolling:touch}
+  .col{width:86vw;min-width:86vw;scroll-snap-align:start;scroll-snap-stop:always}
+  .dcard{padding:12px 13px 11px}.dcard .co{font-size:17px}
+  .dcard::after{content:"›";position:absolute;right:10px;top:10px;color:var(--ink-3);font-size:16px}.dcard{position:relative}
+  /* deal & client */
+  .deal-hero{flex-direction:column;align-items:stretch;gap:10px}.deal-hero h1{font-size:26px}.deal-hero .meta{gap:8px;font-size:12px}
+  .deal-hero .toolbar{margin:0 -14px;padding:0 14px}
+  .deal-hero>div{min-width:0;max-width:100%}.deal-hero .meta{display:flex;flex-wrap:wrap;row-gap:4px;white-space:normal}
+  .reply .faint{display:none}.mail-read .mr-head h2{font-size:19px}
+  .deal-hero .toolbar .btn-primary{order:-1}
+  .deal-grid{grid-template-columns:1fr;gap:14px}
+  .props{grid-template-columns:1fr}.prop{padding-right:0!important}
+  .stage-track{display:none}.stage-select{display:block}
+  .tdetail{grid-template-columns:1fr}
+  .task{padding:11px 0;gap:10px}.task input{width:20px;height:20px}
+  /* email */
+  .mail{display:flex;flex-direction:column;border:none;background:transparent}
+  .mail-folders{display:none}
+  .folder-strip{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -14px;padding:0 14px 6px}.folder-strip::-webkit-scrollbar{display:none}
+  .folder-strip button{flex-shrink:0;height:32px;padding:0 12px;border:1px solid var(--line-2);background:var(--surface);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);display:inline-flex;align-items:center;gap:6px}
+  .folder-strip button.active{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+  .folder-strip button .c{font-family:var(--font-mono);color:var(--teal);letter-spacing:0}
+  .mail-list{border:1px solid var(--line);background:var(--surface);flex:1}
+  .mail.open .mail-list,.mail.open .folder-strip{display:none}
+  .mail-read{display:none}
+  .mail.open .mail-read{display:flex;border:1px solid var(--line);background:var(--surface);flex:1}
+  .mail-back{display:inline-flex}
+  .mail-read .mr-head{padding:12px 14px}.msg{padding:12px 14px}.reply{padding:12px 14px}
+  .thr{padding:12px 14px}
+  /* chat */
+  .chat{display:flex;flex-direction:column;border:none;background:transparent;min-height:0}
+  .chat-side{display:none}
+  .room-strip{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -14px;padding:0 14px 6px}.room-strip::-webkit-scrollbar{display:none}
+  .room-strip button{flex-shrink:0;height:34px;padding:0 12px;border:1px solid var(--line-2);background:var(--surface);font-size:12px;color:var(--ink-2);display:inline-flex;align-items:center;gap:6px}
+  .room-strip button.active{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+  .room-strip button .n{font-family:var(--font-mono);font-size:10px;background:var(--teal);color:#fff;padding:1px 5px}
+  .chat-main{border:1px solid var(--line);background:var(--surface);flex:1;min-height:0}
+  .chat-head{padding:10px 14px}.chat-head h2{font-size:17px}.chat-head .btn{display:none}
+  .chat-log{padding:6px 14px 10px}.cm .txt{font-size:14px}
+  .composer{padding:10px 14px}.composer .select{display:none}.composer textarea{min-height:44px;font-size:16px}
+  /* calendar */
+  .legend{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;margin:0 -14px;padding:0 14px}.legend::-webkit-scrollbar{display:none}.legend label{flex-shrink:0}
+  .agenda{border:1px solid var(--line);background:var(--surface)}
+  .agenda .ad{padding:8px 14px;background:var(--surface-2);border-bottom:1px solid var(--line);font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);display:flex;gap:8px;align-items:baseline;position:sticky;top:0}
+  .agenda .ad b{font-family:var(--font-mono);font-size:15px;font-weight:400;color:var(--ink);letter-spacing:0}
+  .agenda .ad.today b{color:var(--teal-ink)}
+  .agenda .ai2{display:flex;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);font-size:13px;align-items:flex-start}
+  .agenda .ai2 .bar{width:3px;align-self:stretch;background:var(--c);flex-shrink:0}
+  .agenda .ai2 .tm{font-family:var(--font-mono);font-size:11px;color:var(--ink-2);width:78px;flex-shrink:0}
+  .agenda .ai2.tk .bar{background:transparent;border-left:2px dashed var(--line-2)}
+  /* files */
+  .files-grid{grid-template-columns:1fr}.tree{display:none}.files-pick{display:block}
+  /* invoices */
+  .inv-grid{grid-template-columns:1fr}.doc{padding:22px 18px;min-height:0}.doc .ttl{font-size:24px}.doc .meta{grid-template-columns:1fr}
+  .li-table th:nth-child(4),.li-table td.lt{display:none}
+  .mode{grid-template-columns:1fr}
+  /* settings */
+  .settings{grid-template-columns:1fr;gap:12px}
+  .settings-nav{flex-direction:row;overflow-x:auto;scrollbar-width:none;margin:0 -14px;padding:0 14px}.settings-nav::-webkit-scrollbar{display:none}
+  .settings-nav a{flex-shrink:0;border-left:none;border-bottom:2px solid transparent;background:transparent!important}.settings-nav a.active{border-bottom-color:var(--teal)}
+  .form-grid{grid-template-columns:1fr}.form-grid .span2{grid-column:auto}
+  .frow{flex-wrap:wrap;gap:8px 10px}.frow .fname{flex-basis:100%}
+  .prefs th,.prefs td{width:60px}
+  .int-grid{grid-template-columns:1fr}
+  .swatches .sw{width:38px;height:38px}
+  /* modals → sheets */
+  .overlay{padding:0;align-items:flex-end}
+  .modal,.modal.wide{max-width:none;width:100%;height:94dvh;display:flex;flex-direction:column;border:none;border-radius:10px 10px 0 0;animation:sheet .2s ease}
+  .modal form{display:flex;flex-direction:column;flex:1;min-height:0}
+  .modal-head{padding:14px 16px}.modal-head h2{font-size:19px}
+  .modal-body{overflow-y:auto;flex:1;padding:16px;-webkit-overflow-scrolling:touch}
+  .modal-foot{padding:10px 16px calc(10px + env(safe-area-inset-bottom));flex-wrap:wrap}.modal-foot .btn{flex:1}
+  .palette{max-width:none;width:100%;height:80dvh;display:flex;flex-direction:column;border-radius:10px 10px 0 0}.palette .res{max-height:none;flex:1}
+  .pop{position:fixed;top:50px;left:8px;right:8px;width:auto}
+  .toasts{left:12px;right:12px;bottom:calc(72px + env(safe-area-inset-bottom))}.toast{min-width:0}
+  .people .check,.chans .check{padding:8px 10px}
+  /* bottom tab bar */
+  .tabbar{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;height:calc(60px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:var(--rail);border-top:1px solid var(--rail-line);z-index:45}
+  .tabbar a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--rail-text);font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;position:relative}
+  .tabbar a svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+  .tabbar a.active{color:#fff}.tabbar a.active svg{stroke:var(--teal)}
+  .tabbar a .count{position:absolute;top:6px;left:calc(50% + 6px);background:var(--teal);color:#fff;font-family:var(--font-mono);font-size:9px;padding:0 4px;min-width:14px;text-align:center}
+  .tabbar a .count:empty{display:none}
+  .sheet{position:fixed;inset:0;background:var(--overlay);z-index:46;display:flex;align-items:flex-end}
+  .sheet .sh{background:var(--surface);width:100%;border-radius:10px 10px 0 0;padding:8px 8px calc(12px + env(safe-area-inset-bottom));animation:sheet .2s ease}
+  .sheet .sh .label{padding:10px 12px 4px}
+  .sheet .sh a{display:flex;align-items:center;gap:12px;height:46px;padding:0 12px;font-size:14px;color:var(--ink);text-decoration:none;border-radius:var(--r)}
+  .sheet .sh a:active{background:var(--surface-2)}
+  .sheet .sh a svg{width:18px;height:18px;stroke:var(--teal);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+  .sheet .sh a .count{margin-left:auto;font-family:var(--font-mono);font-size:11px;color:var(--teal-ink)}
+  .m-only{display:block}
+  @keyframes sheet{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+}
+@media(max-width:400px){.stats{grid-template-columns:1fr 1fr}.col{width:90vw;min-width:90vw}}
+@media(hover:none){.dcard{cursor:default}.prop .val:hover{color:inherit}}
 </style>
 
 <!-- ===== LOGIN ===== -->
@@ -581,7 +739,8 @@ td.check-col,th.check-col{width:32px;padding-right:0;cursor:default}
       <div class="crumb" id="crumb">Dashboard</div>
       <div class="spacer"></div>
       <button class="search" id="search-btn" type="button"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="6" r="4.2"/><path d="M9.2 9.2L12.5 12.5"/></svg><input placeholder="Search deals, contacts, files…" readonly><kbd>/</kbd></button>
-      <button class="btn btn-primary" id="quick-add">+ New lead</button>
+      <button class="icon-btn" id="search-icon" title="Search"><svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg></button>
+      <button class="btn btn-primary" id="quick-add" title="New lead"><span class="plus">+</span><span class="txt"> New lead</span></button>
       <div style="position:relative">
         <button class="icon-btn" id="notif-btn" title="Notifications"><svg viewBox="0 0 16 16"><path d="M4 11V7a4 4 0 018 0v4l1.5 1.5h-11z"/><path d="M6.5 14a1.5 1.5 0 003 0"/></svg><span class="pip" id="notif-pip"></span></button>
         <div class="pop" id="notif-pop" hidden></div>
@@ -590,7 +749,15 @@ td.check-col,th.check-col{width:32px;padding-right:0;cursor:default}
     </header>
     <div class="content" id="content"></div>
   </div>
+  <nav class="tabbar" id="tabbar">
+    <a href="#/dashboard" data-r="dashboard"><svg viewBox="0 0 16 16"><rect x="1.5" y="1.5" width="5.5" height="5.5"/><rect x="9" y="1.5" width="5.5" height="5.5"/><rect x="1.5" y="9" width="5.5" height="5.5"/><rect x="9" y="9" width="5.5" height="5.5"/></svg>Home</a>
+    <a href="#/pipeline" data-r="pipeline"><svg viewBox="0 0 16 16"><rect x="1.5" y="2" width="3.5" height="12"/><rect x="6.25" y="2" width="3.5" height="8"/><rect x="11" y="2" width="3.5" height="10"/></svg>Pipeline<span class="count" id="tb-deals"></span></a>
+    <a href="#/tasks" data-r="tasks"><svg viewBox="0 0 16 16"><path d="M2 4.5l1.5 1.5L6 3.5M2 9.5l1.5 1.5L6 8.5"/><path d="M8 4.5h6M8 9.5h6"/></svg>Tasks<span class="count" id="tb-tasks"></span></a>
+    <a href="#/chat" data-r="chat"><svg viewBox="0 0 16 16"><path d="M2 3h12v8H6l-3 3v-3H2z"/></svg>Chat<span class="count" id="tb-chat"></span></a>
+    <a href="#more" id="tb-more" data-r="more"><svg viewBox="0 0 16 16"><circle cx="3" cy="8" r="1.4" fill="currentColor"/><circle cx="8" cy="8" r="1.4" fill="currentColor"/><circle cx="13" cy="8" r="1.4" fill="currentColor"/></svg>More<span class="count" id="tb-more-n"></span></a>
+  </nav>
 </div>
+<div id="more-sheet" hidden></div>
 
 <div id="modal-root"></div>
 <div class="toasts" id="toasts"></div>
@@ -876,11 +1043,20 @@ function completeTask(id,done=true){
   save();
 }
 
+/* ================= RESPONSIVE ================= */
+const isMobile=()=>matchMedia('(max-width:760px)').matches;
+let _wasM=isMobile();addEventListener('resize',()=>{const m=isMobile();if(m!==_wasM){_wasM=m;if(S.loggedIn)route()}});
+function openMore(){const items=[['clients','Clients','<path d="M2 14V6l6-4 6 4v8"/><path d="M6 14v-4h4v4"/>',S.clients.filter(c=>c.status==='Active').length],['calendar','Calendar','<rect x="2" y="3" width="12" height="11"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/>',eventsOn('2026-09-03').filter(e=>e.who.includes(S.me)).length],['email','Email','<rect x="1.5" y="3" width="13" height="10"/><path d="M1.5 4l6.5 4.5L14.5 4"/>',S.threads.filter(t=>t.unread).length],['files','Files','<path d="M1.5 3.5h5l1.5 1.5h6.5v8h-13z"/>',''],['invoices','Invoices','<path d="M3 1.5h8l2 2v11H3z"/><path d="M5.5 6h5M5.5 8.5h5M5.5 11h3"/>',S.invoices.filter(i=>invStatus(i)==='Overdue').length],['reports','Reports','<path d="M2 13h12"/><path d="M4 11V7M8 11V4M12 11V9"/>',''],['integrations','Integrations','<path d="M5.5 2v4M10.5 10v4"/><path d="M5.5 6a2.5 2.5 0 002.5 2.5h0M10.5 10a2.5 2.5 0 00-2.5-2.5h0"/>',''],['settings/profile','Settings','<path d="M2 4.5h12M2 8h12M2 11.5h12"/>','']];
+  const me=user(S.me);$('#more-sheet').innerHTML=`<div class="sheet" id="more-ov"><div class="sh"><div class="row" style="padding:8px 12px 4px;gap:10px">${avatarHtml(S.me)}<div class="grow"><div style="font-weight:600;font-size:13px">${esc(me.name)}</div><div class="faint" style="font-size:11px">${esc(me.role)} · ${esc(me.email)}</div></div><button class="btn btn-sm btn-quiet" id="more-theme">Theme</button><button class="btn btn-sm btn-quiet" id="more-logout">Sign out</button></div><div class="label">More</div>${items.map(([r,l,ic,n])=>`<a href="#/${r}"><svg viewBox="0 0 16 16">${ic}</svg>${l}<span class="count">${n||''}</span></a>`).join('')}</div></div>`;$('#more-sheet').hidden=false;
+  $('#more-ov').onclick=e=>{if(e.target.id==='more-ov'||e.target.closest('a'))closeMore();if(e.target.id==='more-logout'){closeMore();S.loggedIn=false;save();route()}if(e.target.id==='more-theme'){$('#theme-btn').click()}}}
+function closeMore(){$('#more-sheet').hidden=true;$('#more-sheet').innerHTML=''}
+
 /* ================= ROUTER ================= */
 const ROUTES={dashboard:'Dashboard',pipeline:'Pipeline',clients:'Clients',client:'Clients',tasks:'Tasks',calendar:'Calendar',email:'Email',chat:'Chat',files:'Files',invoices:'Invoices',invoice:'Invoices',reports:'Reports',integrations:'Integrations',settings:'Settings',deal:'Pipeline'};
 function route(){
   if(!S.loggedIn){$('#login').hidden=false;$('#shell').hidden=true;return}
   $('#login').hidden=true;$('#shell').hidden=false;
+  closeMore();
   const h=location.hash.replace(/^#\/?/,'')||'dashboard';const [r,a,b]=h.split('/');
   const rr=ROUTES[r]?r:'dashboard';
   $$('#nav .nav').forEach(n=>n.classList.toggle('active',n.dataset.r===rr));
@@ -898,6 +1074,8 @@ function route(){
   $('#nav-cal').textContent=eventsOn('2026-09-03').filter(e=>e.who.includes(S.me)).length||'';
   $('#nav-inv').textContent=S.invoices.filter(i=>invStatus(i)==='Overdue').length||'';
   $('#nav-clients').textContent=S.clients.filter(c=>c.status==='Active').length||'';
+  const primary=['dashboard','pipeline','tasks','chat'];$$('#tabbar a').forEach(t=>t.classList.toggle('active',t.dataset.r===rr||(t.dataset.r==='more'&&!primary.includes(rr))));
+  $('#tb-deals').textContent=$('#nav-deals').textContent;$('#tb-tasks').textContent=$('#nav-tasks').textContent;$('#tb-chat').textContent=$('#nav-chat').textContent;$('#tb-more-n').textContent=(S.threads.filter(t=>t.unread).length+S.invoices.filter(i=>invStatus(i)==='Overdue').length)||'';
   $('#notif-pip').hidden=!S.notifs.some(n=>!n.read);
   bindView(rr);
   save();
@@ -975,7 +1153,7 @@ function vPipeline(){
   </div>`;
 }
 function board(ds){
-  return`<div class="board" id="board">${S.stages.map(s=>{const cs=ds.filter(d=>d.stage===s.id);return`<div class="col ${s.closed||''}" data-stage="${s.id}" style="--stage:${s.closed?'':'var(--teal)'}">
+  return`<div class="stage-strip" id="stage-strip">${S.stages.map((s,i)=>`<button data-jump="${s.id}" class="${i===0?'active':''}">${esc(s.name)}<span class="c">${ds.filter(d=>d.stage===s.id).length}</span></button>`).join('')}</div><div class="board" id="board">${S.stages.map(s=>{const cs=ds.filter(d=>d.stage===s.id);return`<div class="col ${s.closed||''}" data-stage="${s.id}" style="--stage:${s.closed?'':'var(--teal)'}">
     <div class="col-head"><span class="n">${esc(s.name)}</span><span class="c">${cs.length}</span><span class="t">${audK(cs.reduce((a,d)=>a+d.value,0))}</span></div>
     <div class="col-body">${cs.map(dcard).join('')||'<div class="empty" style="padding:18px 8px;font-size:11px">Drop a deal here</div>'}</div></div>`}).join('')}</div>`;
 }
@@ -992,8 +1170,8 @@ function list(ds){
   const u=S.ui;const key=u.sort;const dir=u.dir==='asc'?1:-1;
   ds=ds.slice().sort((a,b)=>{let x=a[key],y=b[key];if(key==='stage'){x=S.stages.findIndex(s=>s.id===a.stage);y=S.stages.findIndex(s=>s.id===b.stage)}if(key==='owner'){x=user(a.owner)?.name||'zz';y=user(b.owner)?.name||'zz'}if(key==='score'){x=score(a);y=score(b)}return(x>y?1:x<y?-1:0)*dir});
   const th=(k,l,cls='')=>`<th class="${cls} ${key===k?'sorted '+u.dir:''}" data-sort="${k}">${l}</th>`;
-  return`<div class="table-wrap" style="flex:1"><table><thead><tr><th class="check-col"><input type="checkbox" id="sel-all"></th>${th('practice','Practice')}${th('contact','Contact')}${th('stage','Stage')}${th('value','Value','num')}${th('service','Service line')}${th('source','Source')}${th('owner','Owner')}${th('score','AI','num')}${th('priority','Priority')}${th('created','Created')}${th('close','Close')}</tr></thead>
-  <tbody>${ds.map(d=>`<tr class="link" data-id="${d.id}"><td class="check-col"><input type="checkbox" class="sel" data-id="${d.id}"></td><td><span class="name">${esc(d.practice)}</span><br><span class="faint" style="font-size:11px">${esc(d.city||'')}</span></td><td>${esc(d.contact)}<br><span class="faint" style="font-size:11px">${esc(d.email)}</span></td><td><span class="dot" style="background:${stage(d.stage)?.closed==='won'?'var(--teal)':stage(d.stage)?.closed?'var(--ink-3)':'var(--teal-tint-2)'};margin-right:6px"></span>${esc(stage(d.stage)?.name)}</td><td class="num">${aud(d.value)}</td><td class="ellip" style="max-width:220px">${esc(d.service)}</td><td>${chipSrc(d.source)}</td><td><span class="row">${avatarHtml(d.owner,'sm')}<span style="font-size:12px">${esc(user(d.owner)?.name.split(' ')[0]||'—')}</span></span></td><td class="num">${score(d)}</td><td>${chipPri(d.priority)}</td><td class="mono" style="font-size:11px">${fmtDate(d.created)}</td><td class="mono" style="font-size:11px">${fmtDate(d.close)||'—'}</td></tr>`).join('')}</tbody></table>
+  return`<div class="table-wrap" style="flex:1"><table class="cards"><thead><tr><th class="check-col"><input type="checkbox" id="sel-all"></th>${th('practice','Practice')}${th('contact','Contact')}${th('stage','Stage')}${th('value','Value','num')}${th('service','Service line')}${th('source','Source')}${th('owner','Owner')}${th('score','AI','num')}${th('priority','Priority')}${th('created','Created')}${th('close','Close')}</tr></thead>
+  <tbody>${ds.map(d=>`<tr class="link" data-id="${d.id}"><td class="check-col"><input type="checkbox" class="sel" data-id="${d.id}"></td><td class="full"><span class="name" style="font-size:14px">${esc(d.practice)}</span><br><span class="faint" style="font-size:11px">${esc(d.city||'')}</span></td><td data-l="Contact">${esc(d.contact)}<br><span class="faint" style="font-size:11px">${esc(d.email)}</span></td><td data-l="Stage"><span class="dot" style="background:${stage(d.stage)?.closed==='won'?'var(--teal)':stage(d.stage)?.closed?'var(--ink-3)':'var(--teal-tint-2)'};margin-right:6px"></span>${esc(stage(d.stage)?.name)}</td><td class="num" data-l="Value">${aud(d.value)}</td><td class="ellip" style="max-width:220px" data-l="Service">${esc(d.service)}</td><td data-l="Source">${chipSrc(d.source)}</td><td data-l="Owner"><span class="row">${avatarHtml(d.owner,'sm')}<span style="font-size:12px">${esc(user(d.owner)?.name.split(' ')[0]||'—')}</span></span></td><td class="num hide-m">${score(d)}</td><td class="hide-m">${chipPri(d.priority)}</td><td class="mono hide-m" style="font-size:11px">${fmtDate(d.created)}</td><td class="mono hide-m" style="font-size:11px">${fmtDate(d.close)||'—'}</td></tr>`).join('')}</tbody></table>
   <div id="bulk" class="row" style="padding:8px 12px;border-top:1px solid var(--line);background:var(--surface-2)" hidden><span id="bulk-n" style="font-size:12px;font-weight:600"></span><select class="select" id="bulk-stage" style="width:160px;height:28px"><option value="">Move to stage…</option>${S.stages.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select><select class="select" id="bulk-owner" style="width:160px;height:28px"><option value="">Assign to…</option>${S.users.filter(x=>x.status==='Active').map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('')}</select><button class="btn btn-sm btn-danger" id="bulk-del">Delete</button></div></div>`;
 }
 
@@ -1028,6 +1206,7 @@ function vDeal(id){
       <div class="toolbar"><button class="btn btn-quiet" data-open="compose" data-deal="${d.id}">Email</button><button class="btn btn-quiet" data-open="task" data-deal="${d.id}">Task</button><button class="btn btn-quiet" data-invoice="${d.id}">Invoice</button>${cl?`<a class="btn" href="#/client/${cl.id}">View client</a>`:stage(d.stage).closed?(d.stage==='won'?`<button class="btn btn-primary" data-convert="${d.id}">Convert to client</button>`:''):`<button class="btn" data-close="lost" data-id="${d.id}">Mark lost</button><button class="btn btn-primary" data-convert="${d.id}">Convert to client</button>`}<button class="btn btn-icon" data-del="${d.id}" title="Delete deal">✕</button></div></div>
     ${dupes.length?dupeBanner(dupes,d.id):''}
     <div class="stage-track">${S.stages.map((s,i)=>`<button data-stage="${s.id}" data-id="${d.id}" class="${i<idx?'done':i===idx?'cur':''}">${esc(s.name)}</button>`).join('')}</div>
+    <div class="stage-select"><span class="label" style="display:block;margin-bottom:4px">Stage</span><select class="select" id="stage-select" data-id="${d.id}">${S.stages.map((s,i)=>`<option value="${s.id}" ${i===idx?'selected':''}>${String(i+1).padStart(2,'0')} · ${esc(s.name)}</option>`).join('')}</select></div>
     <div class="tabs">${['overview','activity','email','files','changelog'].map(t=>`<button class="${tab===t?'active':''}" data-tab="${t}" data-id="${d.id}">${t}<span class="cnt">${{overview:'',activity:acts.length,email:threads.length,files:files.length,changelog:changes.length}[t]}</span></button>`).join('')}</div>
     ${tabs[tab]}
   </div>`;
@@ -1075,12 +1254,14 @@ function vEmail(){
   const cur=S.threads.find(t=>t.id===u.thread&&t.folder===u.folder)||ths[0];
   if(cur&&cur.unread){cur.unread=false}
   const cnt=f=>S.threads.filter(t=>t.folder===f&&t.unread).length||'';
+  const folders=[['inbox','Inbox'],['sent','Sent'],['drafts','Drafts'],['archive','Archive']];
   return`<div class="page" style="gap:12px"><div class="page-head"><div><h1>Email</h1><div class="sub">Connected: caillin@gbxps.com via Microsoft 365 · every deal email is threaded onto its card automatically</div></div><button class="btn btn-primary" data-open="compose">Compose</button></div>
-  <div class="mail">
-    <div class="mail-folders">${[['inbox','Inbox'],['sent','Sent'],['drafts','Drafts'],['archive','Archive']].map(([k,l])=>`<button class="${u.folder===k?'active':''}" data-folder="${k}">${l}<span class="c">${cnt(k)}</span></button>`).join('')}
+  <div class="mail ${u.mailOpen&&cur?'open':''}">
+    <div class="folder-strip">${folders.map(([k,l])=>`<button class="${u.folder===k?'active':''}" data-folder="${k}">${l}<span class="c">${cnt(k)}</span></button>`).join('')}</div>
+    <div class="mail-folders">${folders.map(([k,l])=>`<button class="${u.folder===k?'active':''}" data-folder="${k}">${l}<span class="c">${cnt(k)}</span></button>`).join('')}
       <div class="acct"><b>Microsoft 365</b>Shared mailbox: hello@gbxps.com<br>Synced 1 min ago</div></div>
     <div class="mail-list">${ths.length?ths.map(t=>`<div class="thr ${t.unread?'unread':''} ${cur&&t.id===cur.id?'active':''}" data-thread="${t.id}"><div class="l1"><span class="from ellip">${esc(t.from)}</span><span class="when">${fmtDT(t.at)}</span></div><div class="subj ellip">${esc(t.subject)}</div><div class="prev ellip">${esc(t.msgs[t.msgs.length-1].body.replace(/\n/g,' '))}</div>${deal(t.deal)?`<div class="deal">${esc(deal(t.deal).practice)}</div>`:''}</div>`).join(''):'<div class="empty">Nothing here</div>'}</div>
-    <div class="mail-read">${cur?`<div class="mr-head"><h2>${esc(cur.subject)}</h2><div class="row wrap" style="gap:8px"><span class="muted" style="font-size:12px">${esc(cur.from)} &lt;${esc(cur.addr)}&gt;</span>${deal(cur.deal)?`<a class="chip chip-teal" href="#/deal/${cur.deal}">${esc(deal(cur.deal).practice)}</a>`:`<button class="btn btn-sm btn-quiet">Link to deal</button>`}<span class="grow"></span><button class="btn btn-sm btn-quiet" data-archive="${cur.id}">Archive</button></div></div>
+    <div class="mail-read">${cur?`<div class="mr-head"><button class="btn btn-sm btn-quiet mail-back" id="mail-back" style="align-self:flex-start">‹ Back to ${esc(folders.find(f=>f[0]===u.folder)?.[1]||'list')}</button><h2>${esc(cur.subject)}</h2><div class="row wrap" style="gap:8px"><span class="muted" style="font-size:12px">${esc(cur.from)} &lt;${esc(cur.addr)}&gt;</span>${deal(cur.deal)?`<a class="chip chip-teal" href="#/deal/${cur.deal}">${esc(deal(cur.deal).practice)}</a>`:`<button class="btn btn-sm btn-quiet">Link to deal</button>`}<span class="grow"></span><button class="btn btn-sm btn-quiet" data-archive="${cur.id}">Archive</button></div></div>
       ${cur.msgs.map(m=>`<div class="msg ${m.out?'out':''}"><div class="mh">${avatarHtml(m.out?S.me:'','sm')}<b>${esc(m.from)}</b><span class="faint" style="font-size:11px">${m.out?'to '+esc(cur.addr):'to caillin@gbxps.com'}</span><span class="when">${fmtDT(m.at)}</span></div><div class="mb">${esc(m.body)}</div></div>`).join('')}
       <form class="reply" id="reply-form" data-thread="${cur.id}"><textarea class="textarea" name="body" placeholder="Reply to ${esc(cur.from)}…" style="min-height:70px"></textarea><div class="row"><button class="btn btn-primary btn-sm" type="submit">Send</button><button class="btn btn-sm btn-quiet" type="button" data-ai="reply" data-thread="${cur.id}">Draft with Claude</button><span class="faint grow" style="font-size:11px;text-align:right">Sent via Microsoft Graph · logged to ${esc(deal(cur.deal)?.practice||'deal')}</span></div></form>`:'<div class="empty">Select a conversation</div>'}</div>
   </div></div>`;
@@ -1093,7 +1274,7 @@ function vFiles(){
   const fs=cur?S.files.filter(f=>f.deal===cur.id):S.files.slice().sort((a,b)=>a.at<b.at?1:-1);
   const total=S.files.length;
   return`<div class="page" style="gap:12px"><div class="page-head"><div><h1>Files</h1><div class="sub">Stored in SharePoint · <span class="mono">${esc(S.settings.spSite)}/${esc(S.settings.spLibrary)}</span> · ${total} files · 0 MB on the CRM server</div></div><div class="toolbar"><a class="btn btn-quiet" href="#/settings/storage">Storage settings</a><button class="btn btn-primary" data-upload="${cur?cur.id:0}">Upload</button></div></div>
-  <div class="files-grid"><div class="card tree"><button class="${!cur?'active':''}" data-filedeal="0">All recent files</button><div class="label" style="padding:12px 14px 4px">Client folders</div>${dealsWithFolders.map(d=>`<button class="sub ${cur&&cur.id===d.id?'active':''}" data-filedeal="${d.id}"><span class="ellip">${esc(d.practice)}</span><span class="mono faint" style="margin-left:auto;font-size:10px">${S.files.filter(f=>f.deal===d.id).length||''}</span></button>`).join('')}</div>
+  <div class="files-grid"><div class="files-pick"><select class="select" id="files-pick"><option value="0">All recent files</option>${dealsWithFolders.map(d=>`<option value="${d.id}" ${cur&&cur.id===d.id?'selected':''}>${esc(d.practice)} (${S.files.filter(f=>f.deal===d.id).length})</option>`).join('')}</select></div><div class="card tree"><button class="${!cur?'active':''}" data-filedeal="0">All recent files</button><div class="label" style="padding:12px 14px 4px">Client folders</div>${dealsWithFolders.map(d=>`<button class="sub ${cur&&cur.id===d.id?'active':''}" data-filedeal="${d.id}"><span class="ellip">${esc(d.practice)}</span><span class="mono faint" style="margin-left:auto;font-size:10px">${S.files.filter(f=>f.deal===d.id).length||''}</span></button>`).join('')}</div>
   <div class="card"><div class="card-head"><div class="crumbs"><span class="sp-tag"><i></i></span><span>${esc(S.settings.spLibrary)}</span>${cur?`<span>/</span><b>${esc(cur.practice)}</b>`:''}</div>${cur?`<a class="btn-link" href="#/deal/${cur.id}">Open deal</a>`:''}</div><div class="table-wrap" style="border:none"><table><thead><tr><th>Name</th><th>Client</th><th>Uploaded by</th><th>Date</th><th class="num">Size</th><th></th></tr></thead><tbody>${fs.length?fs.map(f=>`<tr><td><span class="row"><span class="fi" style="width:22px;height:26px;border:1px solid var(--line-2);display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:7.5px">${f.kind}</span><span class="name">${esc(f.name)}</span></span></td><td><a href="#/deal/${f.deal}">${esc(deal(f.deal)?.practice)}</a></td><td>${esc(user(f.by)?.name||'')}</td><td class="mono" style="font-size:11px">${fmtDate(f.at)}</td><td class="num" style="font-size:11px">${f.size}</td><td style="text-align:right"><button class="btn btn-sm btn-quiet" onclick="toast('Opening in SharePoint…')">Open</button> <button class="btn btn-sm btn-quiet" data-delfile="${f.id}">Remove</button></td></tr>`).join(''):'<tr><td colspan="6"><div class="empty">Folder is created in SharePoint on first upload.</div></td></tr>'}</tbody></table></div></div></div></div>`;
 }
 
@@ -1187,6 +1368,7 @@ function vChat(){
   const dmFor=uid=>S.rooms.find(x=>x.kind==='dm'&&x.members.includes(S.me)&&x.members.includes(uid));
   return`<div class="page" style="gap:12px"><div class="page-head"><div><h1>Chat</h1><div class="sub">Internal only. Anything you have not read within ${h} hours is emailed to you, so nothing gets missed without living in the app.</div></div><a class="btn btn-quiet" href="#/settings/notifications">Notification settings</a></div>
   <div class="chat">
+    <div class="room-strip">${rooms.filter(x=>x.kind==='room').map(x=>{const n=unreadIn(x.id);return`<button class="${x.id===r.id?'active':''}" data-room="${x.id}">#${esc(x.name)}${n?`<span class="n">${n}</span>`:''}</button>`}).join('')}${others.map(x=>{const d=dmFor(x.id);const n=d?unreadIn(d.id):0;return`<button class="${d&&d.id===r.id?'active':''}" data-dm="${x.id}">${avatarHtml(x.id,'sm')}${esc(x.name.split(' ')[0])}${n?`<span class="n">${n}</span>`:''}</button>`}).join('')}<button id="new-room-m" data-newroom="1">+ Room</button></div>
     <div class="chat-side">
       <div class="group">Rooms<button id="new-room" title="New room">+</button></div>
       ${rooms.filter(x=>x.kind==='room').map(x=>{const n=unreadIn(x.id);return`<button class="rm ${x.id===r.id?'active':''}" data-room="${x.id}"><span class="hash">#</span>${esc(x.name)}${n?`<span class="n">${n}</span>`:''}</button>`}).join('')}
@@ -1208,7 +1390,11 @@ function vCalendar(){
   const active=S.users.filter(x=>x.status==='Active');
   const legend=`<div class="legend">${active.map(x=>`<label class="${(u.calHide||[]).includes(x.id)?'off':''}"><input type="checkbox" data-hide="${x.id}"><i style="background:${x.color}"></i>${esc(x.name.split(' ')[0])}</label>`).join('')}</div>`;
   let title,body;
-  if(u.calView==='month'){
+  if(isMobile()){
+    let days;if(u.calView==='month'){const first=a.slice(0,8)+'01';const n=new Date(new Date(first+'T00:00:00').getFullYear(),new Date(first+'T00:00:00').getMonth()+1,0).getDate();days=[...Array(n)].map((_,i)=>addDays(first,i));title=d.toLocaleDateString('en-AU',{month:'long',year:'numeric'})}else{const off=(d.getDay()+6)%7;const mon=addDays(a,-off);days=[...Array(7)].map((_,i)=>addDays(mon,i));title=`${fmtDate(days[0])} – ${fmtDate(days[6])} ${d.getFullYear()}`}
+    const rows=days.map(day=>{const evs=eventsOn(day);const tks=u.calTasks?S.tasks.filter(t=>!t.done&&t.due===day):[];if(!evs.length&&!tks.length&&!(u.calView==='week'))return'';const dt=new Date(day+'T00:00:00');return`<div class="ad ${day==='2026-09-03'?'today':''}" data-day="${day}"><b>${dt.getDate()}</b>${dt.toLocaleDateString('en-AU',{weekday:'long'})}${day==='2026-09-03'?' · Today':''}</div>${evs.map(e=>`<div class="ai2" data-ev="${e.id}" style="--c:${evColor(e)}"><span class="bar"></span><span class="tm">${e.allDay?'All day':tm(e.start)+'–'+tm(e.end)}</span><span class="grow"><div style="font-weight:500">${esc(e.title)}</div><div class="faint" style="font-size:11px">${e.who.map(w=>esc(user(w)?.name.split(' ')[0]||'')).join(', ')}${deal(e.deal)?' · '+esc(deal(e.deal).practice):''}</div></span></div>`).join('')}${tks.map(t=>`<div class="ai2 tk" data-task="${t.id}"><span class="bar"></span><span class="tm">Due</span><span class="grow"><div>${esc(t.title)}</div></span></div>`).join('')}${!evs.length&&!tks.length?'<div class="ai2 faint" style="font-size:12px">Nothing scheduled</div>':''}`}).join('');
+    body=`<div class="agenda">${rows||'<div class="empty">Nothing this month</div>'}</div>`;
+  }else if(u.calView==='month'){
     title=d.toLocaleDateString('en-AU',{month:'long',year:'numeric'});
     const first=a.slice(0,8)+'01';const fd=new Date(first+'T00:00:00');const off=(fd.getDay()+6)%7;const start=addDays(first,-off);
     const lastDay=new Date(fd.getFullYear(),fd.getMonth()+1,0).getDate();const rows=Math.ceil((off+lastDay)/7);
@@ -1276,7 +1462,7 @@ function vInvoices(){
   return`<div class="page"><div class="page-head"><div><h1>Invoices</h1><div class="sub">Tax invoices issued by ${esc(S.settings.invoice.entity)} · ABN ${esc(S.settings.invoice.abn)} · GST ${S.settings.invoice.gst}%</div></div><div class="toolbar"><a class="btn btn-quiet" href="#/settings/invoicing">Invoicing settings</a><button class="btn btn-primary" id="inv-new">+ New invoice</button></div></div>
   <div class="stats"><div class="stat"><span class="label">Outstanding</span><span class="v">${audK(outstanding)}</span><span class="d">${all.filter(i=>['Sent','Overdue'].includes(invStatus(i))).length} invoices sent, unpaid</span></div><div class="stat"><span class="label">Overdue</span><span class="v" style="color:${overdue?'var(--red)':'inherit'}">${audK(overdue)}</span><span class="d">${all.filter(i=>invStatus(i)==='Overdue').length} past due date</span></div><div class="stat"><span class="label">Paid · 30 days</span><span class="v">${audK(paid)}</span><span class="d"><b>${all.filter(i=>i.status==='Paid').length}</b> received</span></div><div class="stat"><span class="label">Drafts</span><span class="v">${audK(drafts)}</span><span class="d">${all.filter(i=>i.status==='Draft').length} not yet sent</span></div></div>
   <div class="toolbar"><div class="seg">${[['all','All'],['Draft','Draft'],['Sent','Sent'],['Overdue','Overdue'],['Paid','Paid']].map(([k,l])=>`<button class="${f===k?'active':''}" data-invfilter="${k}">${l}</button>`).join('')}</div></div>
-  <div class="table-wrap"><table><thead><tr><th>Invoice</th><th>Client</th><th>Deal</th><th>Issued</th><th>Due</th><th>Basis</th><th class="num">Ex GST</th><th class="num">GST</th><th class="num">Total</th><th>Status</th></tr></thead><tbody>${rows.length?rows.map(i=>{const c=calcInvoice(i);const dd=dayDiff(i.due);return`<tr class="link" data-inv="${i.id}"><td class="mono">${esc(i.number)}</td><td><span class="name">${esc(i.client.name)}</span><br><span class="faint" style="font-size:11px">${esc(i.client.contact)}</span></td><td>${deal(i.deal)?`<a href="#/deal/${i.deal}">${esc(deal(i.deal).practice)}</a>`:'—'}</td><td class="mono" style="font-size:11px">${fmtDate(i.issued)}</td><td class="mono" style="font-size:11px;color:${invStatus(i)==='Overdue'?'var(--red)':'inherit'}">${fmtDate(i.due)}${invStatus(i)==='Overdue'?' · '+Math.abs(dd)+'d':''}</td><td><span class="chip chip-line">${i.mode==='gross'?'Gross':'Net'}</span></td><td class="num">${money(c.sub)}</td><td class="num">${money(c.gst)}</td><td class="num" style="font-weight:500">${money(c.total)}</td><td>${invChip(i)}${i.status==='Paid'?`<span class="faint" style="font-size:10.5px"> ${fmtDate(i.paidAt)}</span>`:''}</td></tr>`}).join(''):'<tr><td colspan="10"><div class="empty">No invoices in this view</div></td></tr>'}</tbody></table></div></div>`;
+  <div class="table-wrap"><table class="cards"><thead><tr><th>Invoice</th><th>Client</th><th>Deal</th><th>Issued</th><th>Due</th><th>Basis</th><th class="num">Ex GST</th><th class="num">GST</th><th class="num">Total</th><th>Status</th></tr></thead><tbody>${rows.length?rows.map(i=>{const c=calcInvoice(i);const dd=dayDiff(i.due);return`<tr class="link" data-inv="${i.id}"><td class="mono">${esc(i.number)}</td><td class="full"><span class="name">${esc(i.client.name)}</span><br><span class="faint" style="font-size:11px">${esc(i.client.contact)}</span></td><td class="hide-m">${deal(i.deal)?`<a href="#/deal/${i.deal}">${esc(deal(i.deal).practice)}</a>`:'—'}</td><td class="mono" style="font-size:11px" data-l="Issued">${fmtDate(i.issued)}</td><td class="mono" style="font-size:11px;color:${invStatus(i)==='Overdue'?'var(--red)':'inherit'}" data-l="Due">${fmtDate(i.due)}${invStatus(i)==='Overdue'?' · '+Math.abs(dd)+'d':''}</td><td class="hide-m"><span class="chip chip-line">${i.mode==='gross'?'Gross':'Net'}</span></td><td class="num hide-m">${money(c.sub)}</td><td class="num hide-m">${money(c.gst)}</td><td class="num" style="font-weight:500" data-l="Total inc GST">${money(c.total)}</td><td data-l="Status">${invChip(i)}${i.status==='Paid'?`<span class="faint" style="font-size:10.5px"> ${fmtDate(i.paidAt)}</span>`:''}</td></tr>`}).join(''):'<tr><td colspan="10"><div class="empty">No invoices in this view</div></td></tr>'}</tbody></table></div></div>`;
 }
 function vInvoice(id){
   const inv=invoice(id);if(!inv)return'<div class="page"><div class="empty"><h3>Invoice not found</h3><a href="#/invoices">Back to invoices</a></div></div>';
@@ -1340,7 +1526,7 @@ function vClients(){
   const totalInv=S.clients.reduce((a,c)=>a+invoiced(c),0),totalOwing=S.clients.reduce((a,c)=>a+owing(c),0);
   return`<div class="page"><div class="page-head"><div><h1>Clients</h1><div class="sub">Won leads become clients here. A client keeps its SharePoint folder, invoices, tasks and full changelog for as long as you work together.</div></div><div class="toolbar"><input class="input" id="client-q" placeholder="Search clients…" value="${esc(S.ui.clientQ||'')}" style="width:200px;height:30px"><button class="btn btn-primary" id="client-new">+ New client</button></div></div>
   <div class="stats"><div class="stat"><span class="label">Active clients</span><span class="v">${S.clients.filter(c=>c.status==='Active').length}</span><span class="d">${S.clients.filter(c=>dayDiff(c.since)>=-30).length} added in the last 30 days</span></div><div class="stat"><span class="label">Invoiced · all time</span><span class="v">${audK(totalInv)}</span><span class="d">${S.invoices.filter(i=>i.status!=='Draft').length} invoices</span></div><div class="stat"><span class="label">Outstanding</span><span class="v">${audK(totalOwing)}</span><span class="d">across ${S.clients.filter(c=>owing(c)>0).length} client${S.clients.filter(c=>owing(c)>0).length===1?'':'s'}</span></div><div class="stat"><span class="label">Repeat engagements</span><span class="v">${S.clients.reduce((a,c)=>a+Math.max(0,c.deals.length-1),0)}</span><span class="d">second or later deals with existing clients</span></div></div>
-  <div class="table-wrap"><table><thead><tr><th>Client</th><th>Contact</th><th>Segment</th><th>City</th><th>Owner</th><th>Since</th><th class="num">Engagements</th><th class="num">Invoiced</th><th class="num">Outstanding</th><th>Status</th></tr></thead><tbody>${cs.length?cs.map(c=>`<tr class="link" data-client="${c.id}"><td><span class="name">${esc(c.name)}</span><br><span class="faint" style="font-size:11px">${esc(c.services.join(' · '))}</span></td><td>${esc(c.contact)}<br><span class="faint" style="font-size:11px">${esc(c.email)}</span></td><td>${esc(c.segment||'')}</td><td>${esc(c.city||'')}</td><td><span class="row">${avatarHtml(c.owner,'sm')}<span style="font-size:12px">${esc(user(c.owner)?.name.split(' ')[0]||'—')}</span></span></td><td class="mono" style="font-size:11px">${fmtDate(c.since)} ${c.since.slice(0,4)}</td><td class="num">${c.deals.length}</td><td class="num">${money(invoiced(c))}</td><td class="num" style="color:${owing(c)?'var(--red)':'inherit'}">${owing(c)?money(owing(c)):'—'}</td><td><span class="chip ${c.status==='Active'?'chip-teal':'chip-line'}">${c.status}</span></td></tr>`).join(''):'<tr><td colspan="10"><div class="empty">No clients match</div></td></tr>'}</tbody></table></div></div>`;
+  <div class="table-wrap"><table class="cards"><thead><tr><th>Client</th><th>Contact</th><th>Segment</th><th>City</th><th>Owner</th><th>Since</th><th class="num">Engagements</th><th class="num">Invoiced</th><th class="num">Outstanding</th><th>Status</th></tr></thead><tbody>${cs.length?cs.map(c=>`<tr class="link" data-client="${c.id}"><td class="full"><span class="name" style="font-size:14px">${esc(c.name)}</span><br><span class="faint" style="font-size:11px">${esc(c.services.join(' · '))}</span></td><td data-l="Contact">${esc(c.contact)}<br><span class="faint" style="font-size:11px">${esc(c.email)}</span></td><td class="hide-m">${esc(c.segment||'')}</td><td data-l="City">${esc(c.city||'')}</td><td data-l="Owner"><span class="row">${avatarHtml(c.owner,'sm')}<span style="font-size:12px">${esc(user(c.owner)?.name.split(' ')[0]||'—')}</span></span></td><td class="mono hide-m" style="font-size:11px">${fmtDate(c.since)} ${c.since.slice(0,4)}</td><td class="num hide-m">${c.deals.length}</td><td class="num" data-l="Invoiced">${money(invoiced(c))}</td><td class="num" style="color:${owing(c)?'var(--red)':'inherit'}" data-l="Outstanding">${owing(c)?money(owing(c)):'—'}</td><td class="hide-m"><span class="chip ${c.status==='Active'?'chip-teal':'chip-line'}">${c.status}</span></td></tr>`).join(''):'<tr><td colspan="10"><div class="empty">No clients match</div></td></tr>'}</tbody></table></div></div>`;
 }
 function vClient(id){
   const c=client(id);if(!c)return'<div class="page"><div class="empty"><h3>Client not found</h3><a href="#/clients">Back to clients</a></div></div>';
@@ -1547,6 +1733,9 @@ function bindView(r){
     const t=e.target;const el=s=>t.closest(s);
     let x;
     if(x=el('[data-tfilter]')){S.ui.taskFilter=x.dataset.tfilter;route();return}
+    if(x=el('[data-jump]')){const col=$(`.col[data-stage="${x.dataset.jump}"]`);if(col)col.scrollIntoView({behavior:'smooth',inline:'start',block:'nearest'});$$('#stage-strip button').forEach(b=>b.classList.toggle('active',b===x));return}
+    if(x=el('#mail-back')){S.ui.mailOpen=false;route();return}
+    if(x=el('[data-newroom]')){$('#new-room')?.click();return}
     if(x=el('[data-invfilter]')){S.ui.invFilter=x.dataset.invfilter;route();return}
     if(x=el('[data-convert]')){openConvert(x.dataset.convert);return}
     if(x=el('[data-merge]')){const keep=+x.dataset.keep;if(confirm('Merge this lead into the existing one? Emails, files, tasks and history move across; the duplicate is removed.')){mergeDeal(+x.dataset.merge,keep);closeModal();toast('Merged');location.hash='#/deal/'+keep;route()}return}
@@ -1595,8 +1784,8 @@ function bindView(r){
     if(x=el('[data-close]')){moveStage(+x.dataset.id,x.dataset.close);return}
     if(x=el('[data-del]')){if(confirm('Delete this deal? Its SharePoint folder is kept.')){S.deals=S.deals.filter(d=>d.id!==+x.dataset.del);toast('Deal deleted');location.hash='#/pipeline';route()}return}
     if(x=el('[data-ai]')){const k=x.dataset.ai;if(k==='draft')openCompose(x.dataset.id,aiDraft(deal(x.dataset.id)));if(k==='rescore'){toast('Claude re‑scored: '+score(deal(x.dataset.id))+' / 100 (no change)')}if(k==='reply'){const th=S.threads.find(q=>q.id===+x.dataset.thread);$('#reply-form [name=body]').value=aiDraft(deal(th.deal))}return}
-    if(x=el('[data-folder]')){S.ui.folder=x.dataset.folder;S.ui.thread=0;route();return}
-    if(x=el('[data-thread]')){S.ui.thread=+x.dataset.thread;route();return}
+    if(x=el('[data-folder]')){S.ui.folder=x.dataset.folder;S.ui.thread=0;S.ui.mailOpen=false;route();return}
+    if(x=el('[data-thread]')){S.ui.thread=+x.dataset.thread;S.ui.mailOpen=true;route();return}
     if(x=el('[data-archive]')){const th=S.threads.find(q=>q.id===+x.dataset.archive);th.folder='archive';toast('Archived');route();return}
     if(x=el('[data-filedeal]')){S.ui.fileDeal=+x.dataset.filedeal;route();return}
     if(x=el('[data-delfile]')){S.files=S.files.filter(f=>f.id!==+x.dataset.delfile);toast('Link removed — file stays in SharePoint');route();return}
@@ -1617,6 +1806,8 @@ function bindView(r){
     if(t.classList.contains('task-chk')){completeTask(+t.dataset.id,t.checked);route();return}
     if(t.id==='show-done'){S.ui.showDone=t.checked;route();return}
     if(t.id==='cal-tasks'){S.ui.calTasks=t.checked;route();return}
+    if(t.id==='stage-select'){moveStage(+t.dataset.id,t.value);return}
+    if(t.id==='files-pick'){S.ui.fileDeal=+t.value;route();return}
     if(t.dataset.hide){const h=S.ui.calHide||(S.ui.calHide=[]);const i=h.indexOf(t.dataset.hide);i>=0?h.splice(i,1):h.push(t.dataset.hide);route();return}
     if(t.id==='chat-hours'){S.settings.notifyPrefs.chatHours=+t.value;save();toast('Unread chat is emailed after '+t.value+' hours');return}
     if(t.dataset.invsel==='deal'){const inv=curInv();const v=t.value;if(v.startsWith('c:')){const c=client(v.slice(2));inv.clientId=c.id;inv.deal=c.deals[0]||0;inv.client={name:c.name,contact:c.contact,email:c.email,address:c.address||'',abn:c.abn||''};if(inv.items.length===1&&!inv.items[0].desc)inv.items[0].desc=c.services[0]||''}else{const d=deal(v.slice(2));inv.clientId=0;inv.deal=d?d.id:0;if(d){inv.client={name:d.practice,contact:d.contact,email:d.email,address:d.city||'',abn:inv.client.abn||''};if(inv.items.length===1&&!inv.items[0].desc)inv.items[0].desc=d.service}}route();return}
@@ -1639,7 +1830,8 @@ function bindView(r){
     if(e.target.id==='f-q'){S.ui.q=e.target.value;clearTimeout(c._t);c._t=setTimeout(()=>{route();const i=$('#f-q');if(i){i.focus();i.setSelectionRange(99,99)}},250)}};
   c.onsubmit=e=>{if(e.target.id==='chat-form'){e.preventDefault();sendChat(e.target);return}
     if(e.target.id==='reply-form'){e.preventDefault();const th=S.threads.find(q=>q.id===+e.target.dataset.thread);const body=e.target.body.value.trim();if(!body)return;th.msgs.push({from:user(S.me).name,out:true,at:'2026-09-03T09:30',body});th.at='2026-09-03T09:30';if(th.deal)logAct(th.deal,'email','Email sent','Re: '+th.subject);toast('Sent via Microsoft 365');route()}};
-  if(r==='chat'){const log=$('#chat-log');if(log)log.scrollTop=log.scrollHeight;const ta=$('#chat-form textarea');if(ta){ta.focus();ta.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat($('#chat-form'))}}}}
+  if(r==='pipeline'&&S.ui.view==='board'&&isMobile()){const b=$('#board');if(b)b.onscroll=()=>{clearTimeout(b._t);b._t=setTimeout(()=>{const cols=$$('.col',b);const i=Math.round(b.scrollLeft/(cols[0]?.offsetWidth+10||1));$$('#stage-strip button').forEach((s,j)=>s.classList.toggle('active',j===i));const act=$('#stage-strip .active');if(act)act.scrollIntoView({inline:'center',block:'nearest'})},80)}}
+  if(r==='chat'){const log=$('#chat-log');if(log)log.scrollTop=log.scrollHeight;const rs=$('.room-strip .active');if(rs)rs.scrollIntoView({inline:'center',block:'nearest'});const ta=$('#chat-form textarea');if(ta){ta.focus();ta.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat($('#chat-form'))}}}}
   // drag & drop: board
   if(r==='pipeline'&&S.ui.view==='board'){let dragId=null;
     $$('.dcard',c).forEach(k=>{k.addEventListener('dragstart',e=>{dragId=+k.dataset.id;k.classList.add('dragging');e.dataTransfer.effectAllowed='move'});k.addEventListener('dragend',()=>k.classList.remove('dragging'))});
@@ -1674,7 +1866,8 @@ function inlineEdit(el){
 $('#login-form').onsubmit=e=>{e.preventDefault();const em=$('#li-email').value.trim().toLowerCase();const u=S.users.find(x=>x.email===em&&x.status==='Active');if(!u||$('#li-pw').value.length<6){$('#li-err').hidden=false;return}S.me=u.id;S.loggedIn=true;if(!location.hash)location.hash='#/dashboard';route()};
 $('#logout').onclick=()=>{S.loggedIn=false;save();route()};
 $('#quick-add').onclick=openAdd;
-$('#search-btn').onclick=openPalette;
+$('#search-btn').onclick=openPalette;$('#search-icon').onclick=openPalette;
+$('#tb-more').onclick=e=>{e.preventDefault();if($('#more-sheet').hidden)openMore();else closeMore()};
 $('#theme-btn').onclick=()=>{const r=document.documentElement;const cur=r.getAttribute('data-theme');const dark=cur?cur==='dark':matchMedia('(prefers-color-scheme:dark)').matches;r.setAttribute('data-theme',dark?'light':'dark');try{localStorage.setItem('gbx-theme',dark?'light':'dark')}catch(e){}};
 try{const th=localStorage.getItem('gbx-theme');if(th)document.documentElement.setAttribute('data-theme',th)}catch(e){}
 $('#notif-btn').onclick=e=>{e.stopPropagation();const p=$('#notif-pop');if(!p.hidden){p.hidden=true;return}p.innerHTML=`<div class="ph"><span class="label">Notifications</span><button class="btn-link" id="notif-all">Mark all read</button></div>${S.notifs.map(n=>`<div class="notif ${n.read?'read':''}" data-go="${n.go}" data-nid="${n.id}"><span class="dot"></span><div class="grow"><div style="font-weight:${n.read?400:600}">${esc(n.text)}</div><p>${esc(n.p)}</p></div><span class="mono faint" style="font-size:10px">${n.at}</span></div>`).join('')}`;p.hidden=false;
