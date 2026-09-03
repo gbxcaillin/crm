@@ -253,16 +253,91 @@ td.check-col,th.check-col{width:32px;padding-right:0;cursor:default}
 .prefs th,.prefs td{text-align:center;width:90px}
 .prefs th:first-child,.prefs td:first-child{text-align:left;width:auto}
 .prefs td{cursor:default}
-.tcard{max-width:380px;background:#F5F5F5;color:#242424;border:1px solid #E1DFDD;border-radius:6px;padding:12px 14px;font-family:'Segoe UI',system-ui,sans-serif;font-size:13px;line-height:1.4}
-.tcard .th{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.tcard .th .bot{width:24px;height:24px;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border-radius:4px}
-.tcard .th b{font-weight:600}.tcard .th span{color:#616161;font-size:11px}
-.tcard h4{font-size:14px;font-weight:600;margin:0 0 4px}
-.tcard .row2{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:12px;color:#424242;margin:6px 0}
-.tcard .row2 b{font-weight:600;color:#616161}
-.tcard .acts{display:flex;gap:6px;margin-top:10px}
-.tcard .acts span{border:1px solid #C7C7C7;border-radius:4px;padding:4px 10px;font-size:12px;font-weight:600;background:#fff}
-.tcard .acts span.pri{background:#5B5FC7;color:#fff;border-color:#5B5FC7}
+.mailcard{max-width:420px;background:var(--surface);border:1px solid var(--line-2);font-size:12.5px}
+.mailcard .mh{padding:10px 14px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:11.5px;color:var(--ink-2)}
+.mailcard .mh b{color:var(--ink-3);font-weight:600;font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+.mailcard .mb{padding:12px 14px;line-height:1.55;color:var(--ink-2)}
+.mailcard .mb .q{border-left:2px solid var(--teal);padding:4px 10px;margin:6px 0;background:var(--surface-2);color:var(--ink)}
+.mailcard .mb .q small{display:block;color:var(--ink-3);font-family:var(--font-mono);font-size:10px}
+.mailcard .cta{display:inline-block;background:var(--teal);color:#fff;padding:6px 12px;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-top:6px}
+
+/* chat */
+.chat{display:grid;grid-template-columns:220px minmax(0,1fr);flex:1;min-height:0;border:1px solid var(--line);background:var(--surface)}
+.chat-side{border-right:1px solid var(--line);background:var(--surface-2);display:flex;flex-direction:column;padding:10px 8px;gap:1px;overflow-y:auto}
+.chat-side .group{display:flex;align-items:center;justify-content:space-between;padding:12px 10px 4px;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.chat-side .group button{font-size:14px;line-height:1;color:var(--teal-ink)}
+.rm{display:flex;align-items:center;gap:8px;height:32px;padding:0 10px;font-size:12.5px;color:var(--ink-2);border-radius:var(--r);text-align:left;width:100%;border-left:2px solid transparent}
+.rm:hover{background:var(--surface)}
+.rm.active{background:var(--surface);color:var(--ink);border-left-color:var(--teal);font-weight:600}
+.rm .hash{color:var(--ink-3);font-family:var(--font-mono)}
+.rm .n{margin-left:auto;font-family:var(--font-mono);font-size:10px;background:var(--teal);color:#fff;padding:1px 6px;border-radius:var(--r)}
+.rm .pres{width:7px;height:7px;border-radius:50%;background:var(--line-2);margin-left:auto}
+.rm .pres.on{background:var(--teal)}
+.chat-main{display:flex;flex-direction:column;min-height:0}
+.chat-head{padding:12px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px}
+.chat-head h2{font-size:20px}
+.chat-log{flex:1;overflow-y:auto;padding:8px 20px 12px;display:flex;flex-direction:column}
+.daysep{text-align:center;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:14px 0 6px;display:flex;align-items:center;gap:10px}
+.daysep::before,.daysep::after{content:"";flex:1;height:1px;background:var(--line)}
+.daysep.new{color:var(--teal-ink)}.daysep.new::before,.daysep.new::after{background:var(--teal)}
+.cm{display:flex;gap:10px;padding:7px 0}
+.cm .body{flex:1;min-width:0}
+.cm .h{display:flex;align-items:baseline;gap:8px}
+.cm .h b{font-weight:600;font-size:12.5px}
+.cm .h .when{font-family:var(--font-mono);font-size:10px;color:var(--ink-3)}
+.cm .txt{font-size:13px;line-height:1.55;max-width:72ch;white-space:pre-line}
+.cm .men{background:var(--teal-tint);color:var(--teal-ink);font-weight:600;padding:0 3px}
+.cm .att{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line-2);padding:5px 9px;margin:5px 6px 0 0;font-size:12px;background:var(--surface-2);color:var(--ink)}
+.cm .att:hover{text-decoration:none;border-color:var(--teal)}
+.cm .rs{font-size:10.5px;color:var(--ink-3);margin-top:4px;display:flex;gap:12px;flex-wrap:wrap}
+.cm .rs .em{color:var(--amber)}
+.composer{border-top:1px solid var(--line);padding:12px 20px;display:flex;flex-direction:column;gap:8px}
+.composer textarea{min-height:58px}
+
+/* calendar */
+.cal{border:1px solid var(--line);background:var(--surface);flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.cal-head{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--line);background:var(--surface-2)}
+.cal-head div{padding:7px;font-size:9.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);text-align:center}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:minmax(104px,1fr);flex:1;overflow-y:auto}
+.day{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:5px;display:flex;flex-direction:column;gap:3px;cursor:pointer;min-width:0}
+.day:nth-child(7n){border-right:none}
+.day .dn{font-family:var(--font-mono);font-size:11px;color:var(--ink-2);display:flex;justify-content:space-between;align-items:center;padding:1px 2px}
+.day.other .dn{color:var(--ink-3)}.day.other{background:var(--surface-2)}
+.day.today .dn b{background:var(--teal);color:#fff;padding:0 5px;font-weight:500}
+.day.wkend{background:var(--surface-2)}
+.day:hover{background:var(--teal-tint)}
+.ev{display:flex;align-items:center;gap:5px;padding:2px 5px;font-size:10.5px;color:#fff;background:var(--c);cursor:pointer;min-width:0;line-height:1.3}
+.ev .t{font-family:var(--font-mono);font-size:9px;opacity:.9;flex-shrink:0}
+.ev .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev .dots{margin-left:auto;display:flex;gap:2px;flex-shrink:0}.ev .dots i{width:6px;height:6px;border-radius:50%;border:1px solid rgba(255,255,255,.8);display:block}
+.ev:hover{filter:brightness(.92)}
+.ev.tk{background:transparent;color:var(--ink-2);border:1px dashed var(--line-2)}
+.ev.tk::before{content:"☐";font-size:9px}
+.more{font-size:10px;color:var(--teal-ink);font-weight:600;padding-left:4px}
+.wk{display:grid;grid-template-columns:48px repeat(7,minmax(0,1fr));flex:1;min-height:0;overflow:auto;position:relative}
+.wk>*{min-width:0}
+.wk .wh{position:sticky;top:0;z-index:2;background:var(--surface-2);border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:6px 4px;font-size:10px;text-align:center;color:var(--ink-2);font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.wk .wh b{display:block;font-family:var(--font-mono);font-size:14px;font-weight:400;color:var(--ink);letter-spacing:0}
+.wk .wh.today b{color:var(--teal-ink)}
+.wk .ad{min-height:28px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:2px;display:flex;flex-direction:column;gap:2px;background:var(--surface)}
+.wk .col{position:relative;border-right:1px solid var(--line);height:660px;cursor:pointer}
+.wk .gut{position:relative;height:660px;border-right:1px solid var(--line)}
+.wk .hr{position:absolute;left:0;right:0;border-top:1px solid var(--line)}
+.wk .gut .hr{font-family:var(--font-mono);font-size:9px;color:var(--ink-3);padding:2px 4px;border-top:none}
+.wk .wev{position:absolute;left:2px;right:2px;padding:3px 5px;font-size:10.5px;color:#fff;overflow:hidden;cursor:pointer;line-height:1.3;border-left:2px solid rgba(0,0,0,.15)}
+.wk .wev .t{font-family:var(--font-mono);font-size:9px;opacity:.9;display:block}
+.legend{display:flex;gap:6px;flex-wrap:wrap}
+.legend label{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;cursor:pointer;border:1px solid var(--line-2);padding:4px 9px;background:var(--surface)}
+.legend label.off{opacity:.4}
+.legend i{width:10px;height:10px;display:inline-block}
+.legend input{display:none}
+.swatches{display:flex;gap:8px;flex-wrap:wrap}
+.sw{width:30px;height:30px;border:2px solid transparent;cursor:pointer;padding:0}
+.sw.sel{border-color:var(--ink);box-shadow:inset 0 0 0 2px var(--surface)}
+.today-ev{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px;align-items:flex-start;cursor:pointer}
+.today-ev:last-child{border-bottom:none}
+.today-ev .bar{width:3px;align-self:stretch;background:var(--c);flex-shrink:0}
+.today-ev .tm{font-family:var(--font-mono);font-size:11px;color:var(--ink-2);width:80px;flex-shrink:0}
 .file{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px}
 .file:last-child{border-bottom:none}
 .file .fi{width:26px;height:30px;border:1px solid var(--line-2);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:8px;font-weight:500;color:var(--ink-2);flex-shrink:0;background:var(--surface)}
@@ -427,11 +502,13 @@ td.check-col,th.check-col{width:32px;padding-right:0;cursor:default}
       <a class="nav" href="#/dashboard" data-r="dashboard"><svg viewBox="0 0 16 16"><rect x="1.5" y="1.5" width="5.5" height="5.5"/><rect x="9" y="1.5" width="5.5" height="5.5"/><rect x="1.5" y="9" width="5.5" height="5.5"/><rect x="9" y="9" width="5.5" height="5.5"/></svg>Dashboard</a>
       <a class="nav" href="#/pipeline" data-r="pipeline"><svg viewBox="0 0 16 16"><rect x="1.5" y="2" width="3.5" height="12"/><rect x="6.25" y="2" width="3.5" height="8"/><rect x="11" y="2" width="3.5" height="10"/></svg>Pipeline<span class="count" id="nav-deals"></span></a>
       <a class="nav" href="#/tasks" data-r="tasks"><svg viewBox="0 0 16 16"><path d="M2 4.5l1.5 1.5L6 3.5M2 9.5l1.5 1.5L6 8.5"/><path d="M8 4.5h6M8 9.5h6"/></svg>Tasks<span class="count" id="nav-tasks"></span></a>
+      <a class="nav" href="#/calendar" data-r="calendar"><svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="11"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>Calendar<span class="count" id="nav-cal"></span></a>
       <a class="nav" href="#/email" data-r="email"><svg viewBox="0 0 16 16"><rect x="1.5" y="3" width="13" height="10"/><path d="M1.5 4l6.5 4.5L14.5 4"/></svg>Email<span class="count" id="nav-mail"></span></a>
+      <a class="nav" href="#/chat" data-r="chat"><svg viewBox="0 0 16 16"><path d="M2 3h12v8H6l-3 3v-3H2z"/></svg>Chat<span class="count" id="nav-chat"></span></a>
       <a class="nav" href="#/files" data-r="files"><svg viewBox="0 0 16 16"><path d="M1.5 3.5h5l1.5 1.5h6.5v8h-13z"/></svg>Files</a>
       <div class="group">Configure</div>
       <a class="nav" href="#/integrations" data-r="integrations"><svg viewBox="0 0 16 16"><path d="M5.5 2v4M10.5 10v4"/><path d="M5.5 6a2.5 2.5 0 002.5 2.5h0M10.5 10a2.5 2.5 0 00-2.5-2.5h0"/></svg>Integrations</a>
-      <a class="nav" href="#/settings/fields" data-r="settings"><svg viewBox="0 0 16 16"><path d="M2 4.5h12M2 8h12M2 11.5h12"/><circle cx="5" cy="4.5" r="1.3" fill="currentColor"/><circle cx="11" cy="8" r="1.3" fill="currentColor"/><circle cx="7" cy="11.5" r="1.3" fill="currentColor"/></svg>Settings</a>
+      <a class="nav" href="#/settings/profile" data-r="settings"><svg viewBox="0 0 16 16"><path d="M2 4.5h12M2 8h12M2 11.5h12"/><circle cx="5" cy="4.5" r="1.3" fill="currentColor"/><circle cx="11" cy="8" r="1.3" fill="currentColor"/><circle cx="7" cy="11.5" r="1.3" fill="currentColor"/></svg>Settings</a>
     </nav>
     <div class="rail-foot">
       <div class="avatar" id="me-av">CC</div>
@@ -463,11 +540,51 @@ td.check-col,th.check-col{width:32px;padding-right:0;cursor:default}
 const TODAY = new Date('2026-09-03T09:00:00');
 const SEED = {
   users:[
-    {id:'u1',name:'Caillin Clyne',email:'caillin@gbxps.com',role:'Admin',status:'Active',last:'Just now',focus:'Strategy / Portfolio / Commercial'},
-    {id:'u2',name:'Rose Sunny',email:'rose@gbxps.com',role:'Manager',status:'Active',last:'2 h ago',focus:'Creative / Marketing / Brand'},
-    {id:'u3',name:'Anders Torcello',email:'anders@gbxps.com',role:'Manager',status:'Active',last:'Yesterday',focus:'Sales / Growth / Client Relations'},
-    {id:'u4',name:'Patrick Gray',email:'patrick@gbxps.com',role:'Member',status:'Active',last:'3 d ago',focus:'Financial Education / Investment / Training'},
-    {id:'u5',name:'Mia Nguyen',email:'mia@gbxps.com',role:'Member',status:'Invited',last:'—',focus:'Client Services'}
+    {id:'u1',name:'Caillin Clyne',email:'caillin@gbxps.com',role:'Admin',status:'Active',last:'Just now',focus:'Strategy / Portfolio / Commercial',color:'#2E8B6E'},
+    {id:'u2',name:'Rose Sunny',email:'rose@gbxps.com',role:'Manager',status:'Active',last:'2 h ago',focus:'Creative / Marketing / Brand',color:'#B4463F'},
+    {id:'u3',name:'Anders Torcello',email:'anders@gbxps.com',role:'Manager',status:'Active',last:'Yesterday',focus:'Sales / Growth / Client Relations',color:'#3E6C9B'},
+    {id:'u4',name:'Patrick Gray',email:'patrick@gbxps.com',role:'Member',status:'Active',last:'3 d ago',focus:'Financial Education / Investment / Training',color:'#B0812A'},
+    {id:'u5',name:'Mia Nguyen',email:'mia@gbxps.com',role:'Member',status:'Invited',last:'—',focus:'Client Services',color:'#6E5E9B'}
+  ],
+  colors:['#2E8B6E','#1A5C4A','#B4463F','#3E6C9B','#B0812A','#6E5E9B','#7A8B2E','#8B4A6E','#3F8A8A','#5A5852'],
+  rooms:[
+    {id:'general',name:'General',kind:'room',members:['u1','u2','u3','u4'],desc:'Whole team'},
+    {id:'pipeline',name:'Pipeline',kind:'room',members:['u1','u2','u3','u4'],desc:'Deals, proposals, closes'},
+    {id:'marketing',name:'Marketing',kind:'room',members:['u1','u2','u3'],desc:'Ads, funnels, content'},
+    {id:'dm_u1_u3',name:'',kind:'dm',members:['u1','u3']},
+    {id:'dm_u1_u2',name:'',kind:'dm',members:['u1','u2']}
+  ],
+  messages:[
+    {id:1,room:'general',who:'u3',at:'2026-09-01T08:52',text:"Morning all — Harbourline's compliance manager wants to see our ad copy approval process before they sign the scope. Do we have that written up anywhere?",read:['u3','u1','u2'],emailed:['u4']},
+    {id:2,room:'general',who:'u2',at:'2026-09-01T09:10',text:"There's a draft in SharePoint under Templates › Compliance. I'll tidy it today and link it here.",read:['u2','u1','u3'],emailed:['u4']},
+    {id:3,room:'general',who:'u2',at:'2026-09-01T16:40',text:'Done — v2 attached. @Anders send this to Sarah with the scope.',file:{name:'Ad copy approval process v2.docx',url:'https://gbxps.sharepoint.com/sites/Clients/Client%20Files/Templates/Compliance/Ad%20copy%20approval%20v2.docx'},read:['u2','u1','u3'],emailed:['u4']},
+    {id:4,room:'general',who:'u1',at:'2026-09-02T18:05',text:'Reminder: pipeline review moved to 9:00 Monday. Please update your deals before then.',read:['u1','u2','u3'],emailed:[]},
+    {id:5,room:'general',who:'u4',at:'2026-09-03T08:20',text:'Sorry, was off‑grid at the Congress yesterday. Catching up on the thread now — I have the compliance doc, thanks Rose.',read:['u4'],emailed:[]},
+    {id:6,room:'pipeline',who:'u1',at:'2026-09-02T17:30',text:"Summit redlines are in — data‑ownership clause again. @Anders can you dig out the wording we used for Solara?",deal:10,read:['u1'],emailed:[]},
+    {id:7,room:'pipeline',who:'u3',at:'2026-09-03T08:45',text:"On it. Solara's clause is in the engagement letter, section 7. Will have a draft by lunch.",read:['u3'],emailed:[]},
+    {id:8,room:'marketing',who:'u2',at:'2026-08-29T11:00',text:'Meta "Broker KPI dashboard" form is live. CPL A$38 so far.',read:['u2','u1','u3'],emailed:[]},
+    {id:9,room:'marketing',who:'u3',at:'2026-08-29T11:20',text:'Nice. Two leads already sitting in New Lead.',read:['u3','u1','u2'],emailed:[]},
+    {id:10,room:'dm_u1_u3',who:'u3',at:'2026-09-02T14:10',text:'Do you want me on the Vantage call Thursday?',read:['u3','u1'],emailed:[]},
+    {id:11,room:'dm_u1_u3',who:'u1',at:'2026-09-02T14:12',text:'Yes — bring the mandate comparison.',read:['u1','u3'],emailed:[]},
+    {id:12,room:'dm_u1_u2',who:'u2',at:'2026-09-03T08:58',text:'Can you approve the September ad budget when you get a sec?',read:['u2'],emailed:[]}
+  ],
+  events:[
+    {id:1,title:'Health Check — Cascade Conveyancing',kind:'Health Check',start:'2026-09-04T11:00',end:'2026-09-04T11:45',who:['u2','u4'],deal:4,notes:'Use the conveyancing KPI template.'},
+    {id:2,title:'Vantage partners call',kind:'Client call',start:'2026-09-04T14:00',end:'2026-09-04T14:45',who:['u1','u3'],deal:3,notes:'Walk through exec summary; bring mandate comparison.'},
+    {id:3,title:'Summit — contract call',kind:'Client call',start:'2026-09-05T15:00',end:'2026-09-05T15:30',who:['u1'],deal:10,notes:''},
+    {id:4,title:'Weekly pipeline review',kind:'Internal',start:'2026-09-08T09:00',end:'2026-09-08T09:45',who:['u1','u2','u3','u4'],deal:0,notes:''},
+    {id:5,title:'Health Check — Atlas Accounting',kind:'Health Check',start:'2026-09-09T10:00',end:'2026-09-09T10:45',who:['u3'],deal:8,notes:''},
+    {id:6,title:'Marketing sync',kind:'Internal',start:'2026-09-10T13:00',end:'2026-09-10T13:30',who:['u2','u3'],deal:0,notes:''},
+    {id:7,title:'CPD webinar',kind:'Training',start:'2026-09-11T12:00',end:'2026-09-11T13:00',who:['u4'],deal:0,notes:''},
+    {id:8,title:'Weekly pipeline review',kind:'Internal',start:'2026-09-15T09:00',end:'2026-09-15T09:45',who:['u1','u2','u3','u4'],deal:0,notes:''},
+    {id:9,title:'Solara kick‑off',kind:'Client call',start:'2026-09-15T10:00',end:'2026-09-15T11:30',who:['u1','u4'],deal:5,notes:'Onboarding plan and data access.'},
+    {id:10,title:'Rose — annual leave',kind:'Out of office',start:'2026-09-17',end:'2026-09-19',allDay:true,who:['u2'],deal:0,notes:''},
+    {id:11,title:'FAAA Congress',kind:'Event',start:'2026-09-02',end:'2026-09-02',allDay:true,who:['u4'],deal:0,notes:'Sydney ICC'},
+    {id:12,title:'Weekly pipeline review',kind:'Internal',start:'2026-09-22T09:00',end:'2026-09-22T09:45',who:['u1','u2','u3','u4'],deal:0,notes:''},
+    {id:13,title:'Pinnacle — training session 1',kind:'Training',start:'2026-09-23T09:30',end:'2026-09-23T12:00',who:['u4'],deal:7,notes:'Sydney office, 7 advisers.'},
+    {id:14,title:'Content review',kind:'Internal',start:'2026-09-24T11:00',end:'2026-09-24T11:30',who:['u2','u1'],deal:0,notes:''},
+    {id:15,title:'Weekly pipeline review',kind:'Internal',start:'2026-09-29T09:00',end:'2026-09-29T09:45',who:['u1','u2','u3','u4'],deal:0,notes:''},
+    {id:16,title:'Board prep',kind:'Internal',start:'2026-09-03T15:00',end:'2026-09-03T16:00',who:['u1'],deal:0,notes:'Q3 numbers.'}
   ],
   stages:[
     {id:'new',name:'New Lead'},{id:'hc',name:'Health Check'},{id:'scope',name:'Scoped'},{id:'prop',name:'Proposal Sent'},{id:'neg',name:'Negotiation'},{id:'won',name:'Won',closed:'won'},{id:'lost',name:'Lost',closed:'lost'}
@@ -519,18 +636,18 @@ const SEED = {
     {id:10,deal:10,type:'email',who:'',text:'Email received from Carlos Ruiz',detail:'Re: Summit — Mandate scope redlines',at:'2026-09-02T17:22'}
   ],
   tasks:[
-    {id:1,title:'Chase engagement letter signature',desc:'Amy said legal has cleared it. Get the countersigned copy back and file it in the client folder.',deal:5,due:'2026-09-03',who:['u1'],by:'u3',notify:[],channels:['app','email','teams'],notifyBy:true,repeat:null,files:[{name:'Solara_Engagement_Letter.pdf',fileId:4}],done:false,created:'2026-09-01T09:10'},
-    {id:2,title:'Run Health Check — Cascade Conveyancing',desc:'45 min on Teams. Use the conveyancing KPI template and capture settlement volumes for the last two quarters.',deal:4,due:'2026-09-04',who:['u2','u4'],by:'u1',notify:['u3'],channels:['app','email','teams'],notifyBy:true,repeat:null,files:[{name:'Health Check template — Conveyancing.docx',url:'https://gbxps.sharepoint.com/sites/Clients/Client%20Files/Templates/HealthCheck_Conveyancing.docx'}],done:false,created:'2026-08-28T14:00'},
-    {id:3,title:'First call within 24 h of lead',desc:'Auto‑created by the Google Ads lead rule. Call, qualify, and book a Health Check if there is fit.',deal:13,due:'2026-09-04',who:[],by:'',notify:['u3'],channels:['app','email','teams'],notifyBy:false,repeat:null,files:[],done:false,created:'2026-09-03T08:41',auto:'Google Ads lead rule'},
-    {id:4,title:'Send exec summary to partners',desc:'One page: scope, commitment options, onboarding timeline. Lisa needs it before the Thursday call.',deal:3,due:'2026-09-02',who:['u1'],by:'u1',notify:['u3'],channels:['app','email','teams'],notifyBy:false,repeat:null,files:[{name:'Vantage_Proposal_v2.pdf',fileId:1}],done:false,created:'2026-08-31T10:25'},
-    {id:5,title:'Return mandate redlines',desc:'Accept review‑frequency change; propose alternative wording on data ownership.',deal:10,due:'2026-09-05',who:['u1'],by:'u1',notify:['u3'],channels:['app','email','teams'],notifyBy:false,repeat:null,files:[{name:'Summit_Mandate_v3_redlines.docx',fileId:5}],done:false,created:'2026-09-02T17:30'},
-    {id:6,title:'Draft training calendar',desc:'Two offices, monthly sessions, compliance topics first.',deal:7,due:'2026-09-10',who:['u4'],by:'u1',notify:['u2'],channels:['app','email','teams'],notifyBy:true,repeat:null,files:[],done:false,created:'2026-08-29T11:00'},
-    {id:7,title:'Share funnel wireframe',desc:'',deal:1,due:'2026-09-01',who:['u3'],by:'u3',notify:['u1'],channels:['app','email','teams'],notifyBy:false,repeat:null,files:[{name:'Harbourline_Funnel_Wireframe.pdf',fileId:6}],done:true,doneAt:'2026-09-01T15:20',doneBy:'u3',created:'2026-08-29T15:15'},
-    {id:8,title:'Confirm Health Check 9 Sep',desc:'',deal:8,due:'2026-09-08',who:['u3'],by:'u3',notify:[],channels:['app','email','teams'],notifyBy:false,repeat:null,files:[],done:false,created:'2026-08-25T16:00'},
-    {id:9,title:'Weekly pipeline review',desc:'Before the Monday 9am meeting: update stage, owner and expected close on every open deal. Flag anything stuck more than 14 days.',deal:0,due:'2026-09-08',who:['u1','u2','u3','u4'],by:'u1',notify:[],channels:['app','email','teams'],notifyBy:true,repeat:{every:1,unit:'week'},files:[{name:'Pipeline review template.xlsx',url:'https://gbxps.sharepoint.com/sites/Clients/Client%20Files/Templates/Pipeline%20review.xlsx'}],done:false,created:'2026-07-07T09:00',series:'s9'},
-    {id:10,title:'Reconcile Google Ads & Meta lead spend',desc:'Export cost per lead from both ad accounts and update the source ROI sheet.',deal:0,due:'2026-09-30',who:['u2'],by:'u1',notify:['u1'],channels:['app','email','teams'],notifyBy:true,repeat:{every:1,unit:'month'},files:[{name:'Source ROI.xlsx',url:'https://gbxps.sharepoint.com/sites/Clients/Client%20Files/Reporting/Source%20ROI.xlsx'}],done:false,created:'2026-06-30T09:00',series:'s10'},
-    {id:11,title:'Check webhook log for failed leads',desc:'Look for 4xx/5xx rows in Integrations → Webhook log and re‑queue anything that failed.',deal:0,due:'2026-09-03',who:['u2'],by:'u1',notify:[],channels:['app','email','teams'],notifyBy:false,repeat:{every:1,unit:'day'},files:[],done:false,created:'2026-08-01T09:00',series:'s11'},
-    {id:12,title:'Quarterly compliance training refresh',desc:'Refresh the training deck for regulatory changes and re‑issue to all client practices on a training plan.',deal:0,due:'2026-10-01',who:['u4'],by:'u1',notify:['u1','u3'],channels:['app','email','teams'],notifyBy:true,repeat:{every:3,unit:'month'},files:[],done:false,created:'2026-07-01T09:00',series:'s12'}
+    {id:1,title:'Chase engagement letter signature',desc:'Amy said legal has cleared it. Get the countersigned copy back and file it in the client folder.',deal:5,due:'2026-09-03',who:['u1'],by:'u3',notify:[],channels:['app','email'],notifyBy:true,repeat:null,files:[{name:'Solara_Engagement_Letter.pdf',fileId:4}],done:false,created:'2026-09-01T09:10'},
+    {id:2,title:'Run Health Check — Cascade Conveyancing',desc:'45 min on Teams. Use the conveyancing KPI template and capture settlement volumes for the last two quarters.',deal:4,due:'2026-09-04',who:['u2','u4'],by:'u1',notify:['u3'],channels:['app','email'],notifyBy:true,repeat:null,files:[{name:'Health Check template — Conveyancing.docx',url:'https://gbxps.sharepoint.com/sites/Clients/Client%20Files/Templates/HealthCheck_Conveyancing.docx'}],done:false,created:'2026-08-28T14:00'},
+    {id:3,title:'First call within 24 h of lead',desc:'Auto‑created by the Google Ads lead rule. Call, qualify, and book a Health Check if there is fit.',deal:13,due:'2026-09-04',who:[],by:'',notify:['u3'],channels:['app','email'],notifyBy:false,repeat:null,files:[],done:false,created:'2026-09-03T08:41',auto:'Google Ads lead rule'},
+    {id:4,title:'Send exec summary to partners',desc:'One page: scope, commitment options, onboarding timeline. Lisa needs it before the Thursday call.',deal:3,due:'2026-09-02',who:['u1'],by:'u1',notify:['u3'],channels:['app','email'],notifyBy:false,repeat:null,files:[{name:'Vantage_Proposal_v2.pdf',fileId:1}],done:false,created:'2026-08-31T10:25'},
+    {id:5,title:'Return mandate redlines',desc:'Accept review‑frequency change; propose alternative wording on data ownership.',deal:10,due:'2026-09-05',who:['u1'],by:'u1',notify:['u3'],channels:['app','email'],notifyBy:false,repeat:null,files:[{name:'Summit_Mandate_v3_redlines.docx',fileId:5}],done:false,created:'2026-09-02T17:30'},
+    {id:6,title:'Draft training calendar',desc:'Two offices, monthly sessions, compliance topics first.',deal:7,due:'2026-09-10',who:['u4'],by:'u1',notify:['u2'],channels:['app','email'],notifyBy:true,repeat:null,files:[],done:false,created:'2026-08-29T11:00'},
+    {id:7,title:'Share funnel wireframe',desc:'',deal:1,due:'2026-09-01',who:['u3'],by:'u3',notify:['u1'],channels:['app','email'],notifyBy:false,repeat:null,files:[{name:'Harbourline_Funnel_Wireframe.pdf',fileId:6}],done:true,doneAt:'2026-09-01T15:20',doneBy:'u3',created:'2026-08-29T15:15'},
+    {id:8,title:'Confirm Health Check 9 Sep',desc:'',deal:8,due:'2026-09-08',who:['u3'],by:'u3',notify:[],channels:['app','email'],notifyBy:false,repeat:null,files:[],done:false,created:'2026-08-25T16:00'},
+    {id:9,title:'Weekly pipeline review',desc:'Before the Monday 9am meeting: update stage, owner and expected close on every open deal. Flag anything stuck more than 14 days.',deal:0,due:'2026-09-08',who:['u1','u2','u3','u4'],by:'u1',notify:[],channels:['app','email'],notifyBy:true,repeat:{every:1,unit:'week'},files:[{name:'Pipeline review template.xlsx',url:'https://gbxps.sharepoint.com/sites/Clients/Client%20Files/Templates/Pipeline%20review.xlsx'}],done:false,created:'2026-07-07T09:00',series:'s9'},
+    {id:10,title:'Reconcile Google Ads & Meta lead spend',desc:'Export cost per lead from both ad accounts and update the source ROI sheet.',deal:0,due:'2026-09-30',who:['u2'],by:'u1',notify:['u1'],channels:['app','email'],notifyBy:true,repeat:{every:1,unit:'month'},files:[{name:'Source ROI.xlsx',url:'https://gbxps.sharepoint.com/sites/Clients/Client%20Files/Reporting/Source%20ROI.xlsx'}],done:false,created:'2026-06-30T09:00',series:'s10'},
+    {id:11,title:'Check webhook log for failed leads',desc:'Look for 4xx/5xx rows in Integrations → Webhook log and re‑queue anything that failed.',deal:0,due:'2026-09-03',who:['u2'],by:'u1',notify:[],channels:['app','email'],notifyBy:false,repeat:{every:1,unit:'day'},files:[],done:false,created:'2026-08-01T09:00',series:'s11'},
+    {id:12,title:'Quarterly compliance training refresh',desc:'Refresh the training deck for regulatory changes and re‑issue to all client practices on a training plan.',deal:0,due:'2026-10-01',who:['u4'],by:'u1',notify:['u1','u3'],channels:['app','email'],notifyBy:true,repeat:{every:3,unit:'month'},files:[],done:false,created:'2026-07-01T09:00',series:'s12'}
   ],
   threads:[
     {id:1,deal:3,folder:'inbox',from:'Lisa Park',addr:'lisa@vantagewealth.com.au',subject:'Re: Vantage Wealth — Proposal v2',unread:true,at:'2026-09-03T08:02',msgs:[
@@ -568,20 +685,23 @@ const SEED = {
     {id:4,text:'Meta sync completed',p:'2 leads imported from "Broker KPI dashboard" form',at:'Yesterday',read:true,go:'#/integrations'}
   ],
   settings:{notifyPrefs:{events:[
-      {id:'assigned',label:'A task is assigned to me',app:true,email:true,teams:true},
-      {id:'completed_by',label:'A task I set is completed',app:true,email:false,teams:true},
-      {id:'completed_cc',label:'A task I am on the notify list for is completed',app:true,email:true,teams:false},
-      {id:'overdue',label:'One of my tasks becomes overdue',app:true,email:true,teams:true},
-      {id:'lead',label:'A new lead is assigned to me',app:true,email:false,teams:true},
-      {id:'reply',label:'A client replies on one of my deals',app:true,email:false,teams:false},
-      {id:'summary',label:'Morning pipeline summary from Claude',app:false,email:true,teams:true}
-    ],teamsChannel:'#pipeline-ops',teamsChannelEvents:true,quietFrom:'19:00',quietTo:'07:30'},storage:'sharepoint',spSite:'gbxps.sharepoint.com/sites/Clients',spLibrary:'Client Files',claudeModel:'claude-sonnet-5',claudeTriggers:{score:true,draft:true,summary:true,stage:false},apiKeys:[{id:'k1',name:'Google Ads connector',prefix:'gbx_live_7f2a…',created:'2026-06-14',last:'2 min ago'},{id:'k2',name:'Meta Lead Ads',prefix:'gbx_live_c91d…',created:'2026-06-14',last:'18 min ago'},{id:'k3',name:'Claude agent (read/write)',prefix:'gbx_live_0be4…',created:'2026-07-02',last:'08:41'}]}
+      {id:'assigned',label:'A task is assigned to me',app:true,email:true},
+      {id:'completed_by',label:'A task I set is completed',app:true,email:true},
+      {id:'completed_cc',label:'A task I am on the notify list for is completed',app:true,email:true},
+      {id:'overdue',label:'One of my tasks becomes overdue',app:true,email:true},
+      {id:'lead',label:'A new lead is assigned to me',app:true,email:false},
+      {id:'reply',label:'A client replies on one of my deals',app:true,email:false},
+      {id:'mention',label:'Someone @mentions me in chat',app:true,email:true},
+      {id:'chat',label:'A chat message I have not read for 24 hours',app:false,email:true},
+      {id:'invite',label:'I am added to a calendar event',app:true,email:true},
+      {id:'summary',label:'Morning pipeline summary from Claude',app:false,email:true}
+    ],chatHours:24,quietFrom:'19:00',quietTo:'07:30',digest:'07:30'},storage:'sharepoint',spSite:'gbxps.sharepoint.com/sites/Clients',spLibrary:'Client Files',claudeModel:'claude-sonnet-5',claudeTriggers:{score:true,draft:true,summary:true,stage:false},apiKeys:[{id:'k1',name:'Google Ads connector',prefix:'gbx_live_7f2a…',created:'2026-06-14',last:'2 min ago'},{id:'k2',name:'Meta Lead Ads',prefix:'gbx_live_c91d…',created:'2026-06-14',last:'18 min ago'},{id:'k3',name:'Claude agent (read/write)',prefix:'gbx_live_0be4…',created:'2026-07-02',last:'08:41'}]}
 };
 
 /* ================= STATE ================= */
 const KEY='gbx-pipeline-v1';
 let S;
-function load(){try{const raw=localStorage.getItem(KEY);if(raw){S=JSON.parse(raw);if(S._v===3)return}}catch(e){}S=JSON.parse(JSON.stringify(SEED));S._v=3;S.me='u1';S.ui={view:'board',sort:'created',dir:'desc',filterOwner:'',filterStage:'',folder:'inbox',thread:1,fileDeal:0,dealTab:{},taskFilter:'mine',showDone:false}}
+function load(){try{const raw=localStorage.getItem(KEY);if(raw){S=JSON.parse(raw);if(S._v===4)return}}catch(e){}S=JSON.parse(JSON.stringify(SEED));S._v=4;S.me='u1';S.ui={view:'board',sort:'created',dir:'desc',filterOwner:'',filterStage:'',folder:'inbox',thread:1,fileDeal:0,dealTab:{},taskFilter:'mine',showDone:false,room:'general',calView:'month',calAnchor:'2026-09-03',calTasks:true,calHide:[]}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function reset(){try{localStorage.removeItem(KEY)}catch(e){}load();route()}
 load();
@@ -600,7 +720,7 @@ function dayDiff(d){return Math.round((new Date(d)-TODAY)/864e5)}
 function ago(d){const n=-dayDiff(d);return n<=0?'today':n===1?'1d':n+'d'}
 function fmtDate(d){if(!d)return'';const x=new Date(d);return x.toLocaleDateString('en-AU',{day:'numeric',month:'short'})}
 function fmtDT(d){const x=new Date(d);const dd=dayDiff(d.slice(0,10));const t=x.toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit',hour12:false});return dd===0?t:dd===-1?'Yesterday':fmtDate(d)}
-function avatarHtml(uid,cls=''){const u=user(uid);return`<span class="avatar ${cls}" title="${esc(u?u.name:'Unassigned')}" style="${u?'':'background:var(--line-2);color:var(--ink-2)'}">${u?initials(u.name):'?'}</span>`}
+function avatarHtml(uid,cls=''){const u=user(uid);return`<span class="avatar ${cls}" title="${esc(u?u.name:'Unassigned')}" style="${u?'background:'+(u.color||'var(--teal-deep)'):'background:var(--line-2);color:var(--ink-2)'}">${u?initials(u.name):'?'}</span>`}
 function chipPri(p){return p?`<span class="chip ${p==='High'?'chip-red':p==='Medium'?'chip-amber':'chip-line'}">${p}</span>`:''}
 function chipSrc(k){const s=src(k);return`<span class="chip chip-line" style="border-color:${s.color};color:${s.color}">${s.label}</span>`}
 function score(d){let s=40;if(d.priority==='High')s+=25;if(d.priority==='Medium')s+=10;if(d.advisers>=10)s+=12;else if(d.advisers>=5)s+=6;if(d.source==='referral')s+=15;if(d.source==='google')s+=5;if(['prop','neg'].includes(d.stage))s+=8;return Math.min(98,s)}
@@ -611,8 +731,24 @@ const UNITS={day:'day',week:'week',month:'month',quarter:'quarter',year:'year'};
 function addInterval(iso,n,unit){const d=new Date(iso+'T00:00:00');if(unit==='day')d.setDate(d.getDate()+n);if(unit==='week')d.setDate(d.getDate()+7*n);if(unit==='month')d.setMonth(d.getMonth()+n);if(unit==='quarter')d.setMonth(d.getMonth()+3*n);if(unit==='year')d.setFullYear(d.getFullYear()+n);return d.toISOString().slice(0,10)}
 function repeatLabel(r){if(!r)return'';return r.every===1?`Every ${r.unit}`:`Every ${r.every} ${r.unit}s`}
 function names(ids){return ids.map(i=>user(i)?.name.split(' ')[0]).filter(Boolean)}
-const CHAN={app:'in‑app',email:'email',teams:'Teams'};
-function chanText(chs){const c=(chs&&chs.length?chs:['app']);return['email','teams','app'].filter(k=>c.includes(k)).map(k=>CHAN[k]).join(' + ')}
+const CHAN={app:'in‑app',email:'email'};
+function chanText(chs){const c=(chs&&chs.length?chs:['app']);return['email','app'].filter(k=>c.includes(k)).map(k=>CHAN[k]).join(' + ')}
+/* chat */
+function hoursSince(iso){return(TODAY-new Date(iso))/36e5}
+function room(id){return S.rooms.find(r=>r.id===id)}
+function roomName(r){if(r.kind==='room')return'#'+r.name;const o=r.members.find(m=>m!==S.me);return user(o)?.name||'Direct'}
+function myRooms(){return S.rooms.filter(r=>r.members.includes(S.me))}
+function unreadIn(rid){return S.messages.filter(m=>m.room===rid&&!m.read.includes(S.me)).length}
+function sweepChat(){const h=S.settings.notifyPrefs.chatHours||24;S.messages.forEach(m=>{const r=room(m.room);if(!r)return;r.members.forEach(u=>{if(u!==m.who&&!m.read.includes(u)&&!m.emailed.includes(u)&&hoursSince(m.at)>=h)m.emailed.push(u)})})}
+function readState(m){const r=room(m.room);const h=S.settings.notifyPrefs.chatHours||24;const others=r.members.filter(u=>u!==m.who);const seen=others.filter(u=>m.read.includes(u));const em=others.filter(u=>m.emailed.includes(u)&&!m.read.includes(u));const pend=others.filter(u=>!m.read.includes(u)&&!m.emailed.includes(u));return{seen,em,pend,left:Math.max(0,h-hoursSince(m.at))}}
+/* calendar */
+const KINDS={'Health Check':'HC','Client call':'Call','Internal':'Int','Training':'Trn','Out of office':'OOO','Event':'Evt'};
+function evColor(e){return user(e.who[0])?.color||'var(--ink-3)'}
+function ymd(d){return d.toISOString().slice(0,10)}
+function addDays(iso,n){const d=new Date(iso+'T00:00:00');d.setDate(d.getDate()+n);return ymd(d)}
+function eventsOn(day){return S.events.filter(e=>{const s=e.start.slice(0,10),en=(e.end||e.start).slice(0,10);return s<=day&&day<=en&&!(S.ui.calHide||[]).some(u=>e.who.includes(u)&&e.who.every(w=>(S.ui.calHide||[]).includes(w)))}).sort((a,b)=>(a.allDay?'0':'1'+a.start)<(b.allDay?'0':'1'+b.start)?-1:1)}
+function tm(iso){return iso.length>10?iso.slice(11,16):''}
+function mins(iso){const t=tm(iso);return t?+t.slice(0,2)*60+ +t.slice(3):0}
 function notifyList(t,completer){const s=new Set(t.notify||[]);if(t.notifyBy&&t.by)s.add(t.by);s.delete(completer);return[...s].filter(i=>user(i))}
 function completeTask(id,done=true){
   const t=S.tasks.find(q=>q.id===id);if(!t)return;
@@ -629,7 +765,7 @@ function completeTask(id,done=true){
 }
 
 /* ================= ROUTER ================= */
-const ROUTES={dashboard:'Dashboard',pipeline:'Pipeline',tasks:'Tasks',email:'Email',files:'Files',integrations:'Integrations',settings:'Settings',deal:'Pipeline'};
+const ROUTES={dashboard:'Dashboard',pipeline:'Pipeline',tasks:'Tasks',calendar:'Calendar',email:'Email',chat:'Chat',files:'Files',integrations:'Integrations',settings:'Settings',deal:'Pipeline'};
 function route(){
   if(!S.loggedIn){$('#login').hidden=false;$('#shell').hidden=true;return}
   $('#login').hidden=true;$('#shell').hidden=false;
@@ -637,14 +773,17 @@ function route(){
   const rr=ROUTES[r]?r:'dashboard';
   $$('#nav .nav').forEach(n=>n.classList.toggle('active',n.dataset.r===rr));
   const c=$('#content');c.scrollTop=0;
-  const view={dashboard:vDashboard,pipeline:vPipeline,tasks:vTasks,email:vEmail,files:vFiles,integrations:vIntegrations,settings:()=>vSettings(a||'fields'),deal:()=>vDeal(a)}[rr];
+  sweepChat();
+  const view={dashboard:vDashboard,pipeline:vPipeline,tasks:vTasks,calendar:vCalendar,email:vEmail,chat:vChat,files:vFiles,integrations:vIntegrations,settings:()=>vSettings(a||'profile'),deal:()=>vDeal(a)}[rr];
   c.innerHTML=view();
-  const crumbs={dashboard:'Dashboard',pipeline:'Pipeline',tasks:'Tasks',email:'Email',files:'Files',integrations:'Integrations',settings:`Settings<span class="sep">/</span>${{fields:'Fields',stages:'Stages',team:'Team',notifications:'Notifications',storage:'Storage',security:'Security'}[a]||'Fields'}`,deal:`<a href="#/pipeline" style="color:var(--ink-3)">Pipeline</a><span class="sep">/</span>${esc(deal(a)?.practice||'Deal')}`};
+  const crumbs={dashboard:'Dashboard',pipeline:'Pipeline',tasks:'Tasks',calendar:'Calendar',email:'Email',chat:'Chat',files:'Files',integrations:'Integrations',settings:`Settings<span class="sep">/</span>${{profile:'Profile',fields:'Fields',stages:'Stages',team:'Team',notifications:'Notifications',storage:'Storage',security:'Security'}[a]||'Profile'}`,deal:`<a href="#/pipeline" style="color:var(--ink-3)">Pipeline</a><span class="sep">/</span>${esc(deal(a)?.practice||'Deal')}`};
   $('#crumb').innerHTML=crumbs[rr];
   const me=user(S.me);$('#me-av').textContent=initials(me.name);$('#me-name').textContent=me.name;$('#me-role').textContent=me.role;
   $('#nav-deals').textContent=S.deals.filter(d=>!stage(d.stage)?.closed).length;
   $('#nav-tasks').textContent=S.tasks.filter(t=>!t.done&&dayDiff(t.due)<=0&&(t.who.includes(S.me)||!t.who.length)).length||'';
   $('#nav-mail').textContent=S.threads.filter(t=>t.unread).length||'';
+  $('#nav-chat').textContent=myRooms().reduce((a,r)=>a+unreadIn(r.id),0)||'';
+  $('#nav-cal').textContent=eventsOn('2026-09-03').filter(e=>e.who.includes(S.me)).length||'';
   $('#notif-pip').hidden=!S.notifs.some(n=>!n.read);
   bindView(rr);
   save();
@@ -688,6 +827,7 @@ function vDashboard(){
           <p style="font-family:var(--font-serif);font-size:19px;line-height:1.3;font-weight:300">Two negotiations are within a week of close and both have an unanswered email. Summit's redlines are the larger risk — the data‑ownership clause is the same one that stalled Luminary.</p>
           <div class="row wrap" style="gap:6px"><a class="btn btn-sm" style="border-color:#fff;color:#fff" href="#/deal/10">Summit redlines</a><a class="btn btn-sm" style="border-color:#fff;color:#fff" href="#/deal/5">Solara letter</a></div>
         </div></div>
+        <div class="card"><div class="card-head"><h3>Today</h3><a class="btn-link" href="#/calendar">Calendar</a></div><div class="card-body" style="padding:2px 16px">${(()=>{const evs=eventsOn('2026-09-03');return evs.length?evs.map(e=>`<div class="today-ev" data-ev="${e.id}" style="--c:${evColor(e)}"><span class="bar"></span><span class="tm">${e.allDay?'All day':tm(e.start)+'–'+tm(e.end)}</span><span class="grow"><div style="font-weight:500">${esc(e.title)}</div><div class="faint" style="font-size:11px">${e.who.map(w=>esc(user(w)?.name.split(' ')[0]||'')).join(', ')}${deal(e.deal)?' · '+esc(deal(e.deal).practice):''}</div></span></div>`).join(''):'<div class="empty" style="padding:14px">Nothing scheduled</div>'})()}</div></div>
         <div class="card"><div class="card-head"><h3>Leads by source</h3><span class="label">All time</span></div><div class="card-body" style="display:flex;flex-direction:column;gap:8px">
           ${Object.entries(bySrc).sort((a,b)=>b[1]-a[1]).map(([k,n])=>`<div class="row" style="gap:10px"><span class="dot" style="background:${src(k).color}"></span><span style="width:84px;font-size:12px">${src(k).label}</span><span style="flex:1;height:8px;background:var(--surface-2)"><i style="display:block;height:100%;width:${n/maxSrc*100}%;background:${src(k).color}"></i></span><span class="mono" style="font-size:11px;width:16px;text-align:right">${n}</span></div>`).join('')}
         </div></div>
@@ -849,8 +989,7 @@ function vIntegrations(){
     <div class="int"><div class="ih"><span class="lg" style="color:#3E6C9B">G</span><h3>Google Ads</h3><span class="status ok"><span class="dot" style="background:var(--teal)"></span>Connected</span></div><div class="ib"><p>Lead form extensions and website conversions post to a webhook. Each submission becomes a New Lead with campaign, ad group and keyword stored on the card.</p><div class="kv"><span class="k">Account</span><code>GBX PS · 512‑880‑1194</code></div><div class="kv"><span class="k">Webhook</span><code>https://crm.gbxps.com/api/v1/hooks/google-ads</code></div><div class="kv"><span class="k">Default owner</span><span>Round‑robin (Anders, Rose)</span></div><div class="kv"><span class="k">Last lead</span><span class="mono">08:41 today · CorePath Broking</span></div></div><div class="if"><button class="btn btn-sm btn-quiet" onclick="toast('Test lead sent — check Pipeline')">Send test lead</button><button class="btn btn-sm btn-quiet">Field mapping</button></div></div>
     <div class="int"><div class="ih"><span class="lg" style="color:#6E5E9B">M</span><h3>Meta Lead Ads</h3><span class="status ok"><span class="dot" style="background:var(--teal)"></span>Connected</span></div><div class="ib"><p>Facebook and Instagram instant forms are subscribed via the Meta Graph API. Form questions map to CRM fields below; unmapped answers land in Notes.</p><div class="kv"><span class="k">Page</span><code>GBX Professional Services</code></div><div class="kv"><span class="k">Forms</span><span>Broker KPI dashboard · Adviser funnel</span></div><div class="kv"><span class="k">Webhook</span><code>https://crm.gbxps.com/api/v1/hooks/meta</code></div><div class="kv"><span class="k">Last lead</span><span class="mono">Yesterday 16:12 · Northgate Mortgage</span></div></div><div class="if"><button class="btn btn-sm btn-quiet" onclick="toast('Test lead sent — check Pipeline')">Send test lead</button><button class="btn btn-sm btn-quiet">Field mapping</button></div></div>
     <div class="int"><div class="ih"><span class="lg" style="color:var(--teal)">C</span><h3>Claude</h3><span class="status ok"><span class="dot" style="background:var(--teal)"></span>Active</span></div><div class="ib"><p>A Claude agent reads the deal API and writes back scores, drafts and summaries. It never sends email or moves stages unless the trigger below is on.</p><div class="kv"><span class="k">Model</span><select class="select" id="claude-model" style="width:190px;height:28px">${['claude-sonnet-5','claude-opus-5','claude-haiku-4-5'].map(m=>`<option ${st.claudeModel===m?'selected':''}>${m}</option>`).join('')}</select></div><div class="kv"><span class="k">Score every new lead</span>${sw('score')}</div><div class="kv"><span class="k">Draft first‑touch email</span>${sw('draft')}</div><div class="kv"><span class="k">Morning pipeline summary</span>${sw('summary')}</div><div class="kv"><span class="k">Allow stage changes</span>${sw('stage')}</div><div class="kv"><span class="k">Outbound feed</span><code>GET /api/v1/deals?updated_since=…</code></div><div class="kv"><span class="k">Write‑back</span><code>PATCH /api/v1/deals/:id/ai</code></div></div><div class="if"><button class="btn btn-sm btn-quiet" onclick="toast('Prompt editor coming in v2')">Edit system prompt</button><button class="btn btn-sm btn-quiet" onclick="toast('Re‑scoring 6 open leads…')">Run now</button></div></div>
-    <div class="int"><div class="ih"><span class="lg" style="color:#0F7B6C">M365</span><h3>Microsoft 365</h3><span class="status ok"><span class="dot" style="background:var(--teal)"></span>Connected</span></div><div class="ib"><p>One Entra ID app registration covers Outlook (mail sync, send‑as) and SharePoint (client folders via Microsoft Graph). Optional SSO for CRM sign‑in.</p><div class="kv"><span class="k">Tenant</span><code>gbxps.onmicrosoft.com</code></div><div class="kv"><span class="k">Mailboxes</span><span>4 users + hello@ shared</span></div><div class="kv"><span class="k">SharePoint site</span><code>${esc(st.spSite)}</code></div><div class="kv"><span class="k">Library</span><code>${esc(st.spLibrary)}</code></div><div class="kv"><span class="k">Calendar</span><span>Health Checks booked as Teams meetings</span></div><div class="kv"><span class="k">Sign‑in</span><span>Entra ID SSO · optional</span></div><div class="kv"><span class="k">Permissions</span><code>Mail.ReadWrite.Shared · Mail.Send · Calendars.ReadWrite · Sites.Selected · User.Read.All</code></div></div><div class="if"><a class="btn btn-sm btn-quiet" href="#/settings/storage">Storage settings</a><button class="btn btn-sm btn-quiet" onclick="toast('Consent link copied for tenant admin')">Re‑consent</button></div></div>
-    <div class="int"><div class="ih"><span class="lg" style="color:#5B5FC7">T</span><h3>Microsoft Teams</h3><span class="status ok"><span class="dot" style="background:var(--teal)"></span>Bot installed</span></div><div class="ib"><p>The GBX Pipeline bot sends task, lead and reminder cards to people 1:1, posts a digest to a channel, and lets the team open any deal as a Teams tab. Health Check meeting transcripts can be summarised into the deal by Claude.</p><div class="kv"><span class="k">Installed for</span><span>4 users · auto‑install on invite</span></div><div class="kv"><span class="k">Digest channel</span><code>${esc(st.notifyPrefs.teamsChannel)}</code></div><div class="kv"><span class="k">Deal tab</span><span>Pinned in "GBX Clients" team</span></div><div class="kv"><span class="k">Meeting transcripts → Claude</span><button class="switch on" onclick="this.classList.toggle('on');toast('Transcript summaries '+(this.classList.contains('on')?'on':'off'))"></button></div><div class="kv"><span class="k">Cards sent · 7 days</span><span class="mono">63 · 0 failed</span></div><div class="kv"><span class="k">Permissions</span><code>TeamsActivity.Send · ChannelMessage.Send · OnlineMeetingTranscript.Read.All · Presence.Read</code></div></div><div class="if"><a class="btn btn-sm btn-quiet" href="#/settings/notifications">Notification settings</a><button class="btn btn-sm btn-quiet" onclick="toast('Test card sent to you in Teams')">Send test card</button></div></div>
+    <div class="int"><div class="ih"><span class="lg" style="color:#0F7B6C">M365</span><h3>Microsoft 365</h3><span class="status ok"><span class="dot" style="background:var(--teal)"></span>Connected</span></div><div class="ib"><p>One Entra ID app registration covers Outlook (mail sync, send‑as, the shared hello@ mailbox) and SharePoint (client folders via Microsoft Graph). Scoped to named mailboxes and the Clients site only. Optional SSO for CRM sign‑in. Chat and calendar are internal to the CRM and do not touch Microsoft.</p><div class="kv"><span class="k">Tenant</span><code>gbxps.onmicrosoft.com</code></div><div class="kv"><span class="k">Mailboxes</span><span>4 users + hello@ shared</span></div><div class="kv"><span class="k">Notification sender</span><code>notifications@gbxps.com</code></div><div class="kv"><span class="k">SharePoint site</span><code>${esc(st.spSite)}</code></div><div class="kv"><span class="k">Library</span><code>${esc(st.spLibrary)}</code></div><div class="kv"><span class="k">Sign‑in</span><span>Entra ID SSO · optional</span></div><div class="kv"><span class="k">Permissions</span><code>Mail.ReadWrite.Shared · Mail.Send · Sites.Selected · User.Read.All</code></div></div><div class="if"><a class="btn btn-sm btn-quiet" href="#/settings/storage">Storage settings</a><button class="btn btn-sm btn-quiet" onclick="toast('Consent link copied for tenant admin')">Re‑consent</button></div></div>
     <div class="int" style="grid-column:1/-1"><div class="ih"><span class="lg">API</span><h3>REST API &amp; keys</h3><span class="status ok"><span class="dot" style="background:var(--teal)"></span>v1</span></div><div class="ib"><div class="kv"><span class="k">Base URL</span><code>https://crm.gbxps.com/api/v1</code><span class="grow"></span><span class="k">Auth</span><code>Authorization: Bearer gbx_live_…</code><span class="grow"></span><span class="k">Rate limit</span><span class="mono">600 req / min per key</span></div>
       <div class="table-wrap" style="margin-top:6px"><table><thead><tr><th>Key</th><th>Prefix</th><th>Scopes</th><th>Created</th><th>Last used</th><th></th></tr></thead><tbody>${st.apiKeys.map(k=>`<tr><td class="name">${esc(k.name)}</td><td class="mono">${esc(k.prefix)}</td><td><span class="chip chip-line">deals:write</span> <span class="chip chip-line">contacts:write</span></td><td class="mono" style="font-size:11px">${fmtDate(k.created)}</td><td class="mono" style="font-size:11px">${esc(k.last)}</td><td style="text-align:right"><button class="btn btn-sm btn-quiet" data-revoke="${k.id}">Revoke</button></td></tr>`).join('')}</tbody></table></div>
       <div class="row"><button class="btn btn-sm" data-open="key">Generate key</button><a class="btn-link" href="#" onclick="event.preventDefault();toast('OpenAPI spec download')">OpenAPI spec</a></div>
@@ -868,15 +1007,18 @@ function vIntegrations(){
 
 /* ================= SETTINGS ================= */
 function vSettings(sec){
-  const nav=['fields','stages','team','notifications','storage','security'].map(k=>`<a class="${sec===k?'active':''}" href="#/settings/${k}">${k}</a>`).join('');
-  const st=S.settings;const np=st.notifyPrefs;
+  const nav=['profile','fields','stages','team','notifications','storage','security'].map(k=>`<a class="${sec===k?'active':''}" href="#/settings/${k}">${k}</a>`).join('');
+  const st=S.settings;const np=st.notifyPrefs;const me=user(S.me);
   const body={
-    notifications:`<div class="stack" style="gap:14px"><div class="card"><div class="card-head"><div><h3>My notifications</h3><div class="faint" style="font-size:11.5px">Per‑person. Task creators choose channels on each task; these settings can switch a channel off for you.</div></div><span class="row" style="gap:6px"><span class="chip chip-line">${esc(user(S.me).name)}</span></span></div>
-      <div class="table-wrap" style="border:none"><table class="prefs"><thead><tr><th>When…</th><th>In‑app</th><th>Email</th><th>Teams chat</th></tr></thead><tbody>${np.events.map(ev=>`<tr><td>${esc(ev.label)}</td>${['app','email','teams'].map(ch=>`<td><button class="switch ${ev[ch]?'on':''}" data-pref="${ev.id}" data-ch="${ch}" aria-label="${ch}"></button></td>`).join('')}</tr>`).join('')}</tbody></table></div>
-      <div class="card-body form-grid" style="border-top:1px solid var(--line)"><div class="field"><span class="label">Quiet hours (Teams &amp; email held)</span><div class="row"><input class="input" id="quiet-from" value="${esc(np.quietFrom)}" style="width:90px"><span class="faint">to</span><input class="input" id="quiet-to" value="${esc(np.quietTo)}" style="width:90px"><span class="faint" style="font-size:11px">AEST · in‑app always delivers</span></div></div><div class="field"><span class="label">Team channel digest</span><div class="row"><button class="switch ${np.teamsChannelEvents?'on':''}" id="teams-channel-on"></button><input class="input" id="teams-channel" value="${esc(np.teamsChannel)}" style="width:170px"><span class="faint" style="font-size:11px">Won deals, new leads and completed tasks post here</span></div></div><div class="span2"><button class="btn btn-sm" id="prefs-save">Save</button></div></div></div>
-      <div class="card"><div class="card-head"><h3>What a Teams notification looks like</h3><span class="status ok"><span class="dot" style="background:var(--teal)"></span>GBX Pipeline bot installed</span></div><div class="card-body" style="display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:start">
-        <div class="tcard"><div class="th"><span class="bot">GBX</span><b>GBX Pipeline</b><span>08:41</span></div><h4>Task completed · Send exec summary to partners</h4><div class="row2"><b>Deal</b><span>Vantage Wealth Partners</span><b>Done by</b><span>Caillin Clyne</span><b>Files</b><span>Vantage_Proposal_v2.pdf</span></div><div class="acts"><span class="pri">Open deal</span><span>View task</span><span>Reply</span></div></div>
-        <div class="stack" style="gap:8px;font-size:12px;color:var(--ink-2);line-height:1.55"><p>Sent as an Adaptive Card from the GBX Pipeline bot in a 1:1 chat. Buttons deep‑link into the CRM (or open the deal as a Teams tab). "Mark done" and "Snooze" act in place without leaving Teams.</p><p>New tasks, overdue reminders and lead assignments use the same card. Channel posts go to <span class="mono">${esc(np.teamsChannel)}</span> and are read‑only.</p><p>Email uses the same content as a plain HTML message from <span class="mono">notifications@gbxps.com</span> with a reply‑to of the person who triggered it.</p></div>
+    profile:`<div class="stack" style="gap:14px"><div class="card"><div class="card-head"><h3>My profile</h3><span class="chip chip-line">${esc(me.role)}</span></div><div class="card-body form-grid"><div class="field"><span class="label">Name</span><input class="input" id="pf-name" value="${esc(me.name)}"></div><div class="field"><span class="label">Work email</span><input class="input" value="${esc(me.email)}" readonly></div><div class="field span2"><span class="label">Focus</span><input class="input" id="pf-focus" value="${esc(me.focus)}"></div><div class="span2"><button class="btn btn-sm" id="pf-save">Save</button></div></div></div>
+      <div class="card"><div class="card-head"><div><h3>My calendar colour</h3><div class="faint" style="font-size:11.5px">Used for your events on the shared calendar, your avatar and your chat messages.</div></div>${avatarHtml(S.me,'lg')}</div><div class="card-body"><div class="swatches">${S.colors.map(c=>`<button class="sw ${me.color===c?'sel':''}" data-swatch="${c}" style="background:${c}" title="${c}" aria-label="${c}"></button>`).join('')}</div><div class="row" style="margin-top:12px;gap:10px"><span class="label">Preview</span><span class="ev" style="--c:${me.color};max-width:260px"><span class="t">14:00</span><span class="n">Vantage partners call</span></span></div><div class="faint" style="font-size:11px;margin-top:8px">Taken: ${S.users.filter(x=>x.id!==S.me&&x.status==='Active').map(x=>`<i class="dot" style="background:${x.color};vertical-align:middle"></i> ${esc(x.name.split(' ')[0])}`).join(' · ')}</div></div></div>
+      <div class="card"><div class="card-head"><h3>Password</h3></div><div class="card-body form-grid"><div class="field"><span class="label">Current password</span><input class="input" type="password"></div><div></div><div class="field"><span class="label">New password</span><input class="input" type="password"></div><div class="field"><span class="label">Confirm</span><input class="input" type="password"></div><div class="span2"><button class="btn btn-sm" onclick="toast('Password updated')">Update password</button></div></div></div></div>`,
+    notifications:`<div class="stack" style="gap:14px"><div class="card"><div class="card-head"><div><h3>My notifications</h3><div class="faint" style="font-size:11.5px">Per‑person. Task creators choose channels on each task; these settings can switch a channel off for you.</div></div><span class="chip chip-line">${esc(me.name)}</span></div>
+      <div class="table-wrap" style="border:none"><table class="prefs"><thead><tr><th>When…</th><th>In‑app</th><th>Email</th></tr></thead><tbody>${np.events.map(ev=>`<tr><td>${esc(ev.label)}</td>${['app','email'].map(ch=>`<td><button class="switch ${ev[ch]?'on':''}" data-pref="${ev.id}" data-ch="${ch}" aria-label="${ch}"></button></td>`).join('')}</tr>`).join('')}</tbody></table></div>
+      <div class="card-body form-grid" style="border-top:1px solid var(--line)"><div class="field"><span class="label">Email me unread chat after</span><div class="row"><select class="select" id="chat-hours" style="width:110px">${[2,4,8,24,48].map(h=>`<option value="${h}" ${np.chatHours===h?'selected':''}>${h} hours</option>`).join('')}<span class="faint" style="font-size:11px">One email per room, with the messages you missed</span></div></div><div class="field"><span class="label">Quiet hours (email held)</span><div class="row"><input class="input" id="quiet-from" value="${esc(np.quietFrom)}" style="width:90px"><span class="faint">to</span><input class="input" id="quiet-to" value="${esc(np.quietTo)}" style="width:90px"><span class="faint" style="font-size:11px">AEST</span></div></div><div class="field"><span class="label">Daily digest time</span><div class="row"><input class="input" id="digest-at" value="${esc(np.digest)}" style="width:90px"><span class="faint" style="font-size:11px">Overdue tasks, today's calendar, Claude summary — one email</span></div></div><div class="span2"><button class="btn btn-sm" id="prefs-save">Save</button></div></div></div>
+      <div class="card"><div class="card-head"><h3>What the unread‑chat email looks like</h3><span class="status ok"><span class="dot" style="background:var(--teal)"></span>Sent from notifications@gbxps.com</span></div><div class="card-body" style="display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:start">
+        <div class="mailcard"><div class="mh"><b>From</b><span>GBX Pipeline &lt;notifications@gbxps.com&gt;</span><b>To</b><span>patrick@gbxps.com</span><b>Subject</b><span>3 unread in #general — Ad copy approval process</span></div><div class="mb">Hi Patrick, you have not seen these in <b>#general</b> for ${np.chatHours} hours:<div class="q"><small>Anders · Mon 08:52</small>Harbourline's compliance manager wants to see our ad copy approval process…</div><div class="q"><small>Rose · Mon 16:40</small>Done — v2 attached. @Anders send this to Sarah with the scope.<br><span class="sp-tag"><i></i> Ad copy approval process v2.docx</span></div><span class="cta">Open #general</span><br><span class="faint" style="font-size:10.5px">Reply to this email and it posts to the room as you.</span></div></div>
+        <div class="stack" style="gap:8px;font-size:12px;color:var(--ink-2);line-height:1.55"><p>Every message tracks who has read it. A background job runs hourly: anything a member has not opened within the delay above is bundled into one email per room, with SharePoint attachments as links.</p><p>@mentions are emailed sooner (per the row above), and replying to the email posts back into the room. Nothing is emailed twice.</p><p>Task, lead and calendar notifications use the same sender and the same plain layout, with a reply‑to of the person who triggered them.</p></div>
       </div></div></div>`,
     fields:`<div class="card"><div class="card-head"><div><h3>Deal fields</h3><div class="faint" style="font-size:11.5px">Drag to reorder. "Card" shows the field as a chip on the board.</div></div><button class="btn btn-sm btn-primary" data-open="field">+ Add field</button></div><div id="fields">${S.fields.map(f=>`<div class="frow" draggable="true" data-fid="${f.id}"><span class="grip">⋮⋮</span><span class="fname">${esc(f.label)}${f.required?' <span class="faint" style="font-weight:400">· required</span>':''}</span><span class="ftype">${f.type}${f.options?` (${f.options.length})`:''}</span><label class="check fshow"><input type="checkbox" data-card="${f.id}" ${f.card?'checked':''}> Card</label>${f.system?'<span class="chip chip-line">System</span>':`<button class="btn btn-sm btn-quiet" data-editfield="${f.id}">Edit</button><button class="btn btn-sm btn-quiet" data-delfield="${f.id}">Remove</button>`}</div>`).join('')}</div></div>`,
     stages:`<div class="card"><div class="card-head"><div><h3>Pipeline stages</h3><div class="faint" style="font-size:11.5px">Won and Lost are fixed. Rename or add working stages between them.</div></div><button class="btn btn-sm btn-primary" id="add-stage">+ Add stage</button></div><div>${S.stages.map((s,i)=>`<div class="frow"><span class="mono faint" style="width:20px">${String(i+1).padStart(2,'0')}</span><input class="input" style="max-width:260px;height:28px" value="${esc(s.name)}" data-stage-name="${s.id}" ${s.closed?'disabled':''}><span class="faint mono" style="font-size:11px">${S.deals.filter(d=>d.stage===s.id).length} deals</span><span class="grow"></span>${s.closed?`<span class="chip ${s.closed==='won'?'chip-teal':'chip-line'}">${s.closed}</span>`:`<button class="btn btn-sm btn-quiet" data-delstage="${s.id}">Remove</button>`}</div>`).join('')}</div></div>`,
@@ -896,6 +1038,103 @@ function vSettings(sec){
     </div></div>`
   }[sec]||'';
   return`<div class="page"><div class="page-head"><div><h1>Settings</h1></div></div><div class="settings"><div class="settings-nav">${nav}</div><div>${body}</div></div></div>`;
+}
+</script>
+<script>
+/* ================= CHAT ================= */
+function dayLabel(day){const dd=dayDiff(day);if(dd===0)return'Today';if(dd===-1)return'Yesterday';return new Date(day+'T00:00:00').toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'})}
+function vChat(){
+  const u=S.ui;const rooms=myRooms();const r=room(u.room)&&rooms.includes(room(u.room))?room(u.room):rooms[0];u.room=r.id;
+  const msgs=S.messages.filter(m=>m.room===r.id).sort((a,b)=>a.at<b.at?-1:1);
+  const firstUnread=msgs.find(m=>!m.read.includes(S.me));
+  msgs.forEach(m=>{if(!m.read.includes(S.me))m.read.push(S.me)});
+  const h=S.settings.notifyPrefs.chatHours||24;
+  let lastDay='';
+  const log=msgs.map(m=>{let out='';const day=m.at.slice(0,10);if(day!==lastDay){lastDay=day;out+=`<div class="daysep">${dayLabel(day)}</div>`}
+    if(firstUnread&&m.id===firstUnread.id)out+=`<div class="daysep new">New messages</div>`;
+    const rs=readState(m);const txt=esc(m.text).replace(/@(\w+)/g,'<span class="men">@$1</span>');
+    out+=`<div class="cm"><div>${avatarHtml(m.who)}</div><div class="body"><div class="h"><b>${esc(user(m.who)?.name||'')}</b><span class="when">${fmtDT(m.at)}</span></div><div class="txt">${txt}</div>${m.file?`<a class="att" href="#" onclick="event.preventDefault();toast('Opening in SharePoint…')"><span class="sp-tag"><i></i></span>${esc(m.file.name)}</a>`:''}${m.deal&&deal(m.deal)?`<a class="att" href="#/deal/${m.deal}">↗ ${esc(deal(m.deal).practice)}</a>`:''}<div class="rs">${rs.seen.length?`<span>Read by ${esc(names(rs.seen).join(', '))}</span>`:''}${rs.em.length?`<span class="em">✉ Emailed ${esc(names(rs.em).join(', '))} · unread after ${h} h</span>`:''}${rs.pend.length?`<span>Unread by ${esc(names(rs.pend).join(', '))} · email in ${Math.ceil(rs.left)} h</span>`:''}</div></div></div>`;
+    return out}).join('');
+  const others=S.users.filter(x=>x.id!==S.me&&x.status==='Active');
+  const dmFor=uid=>S.rooms.find(x=>x.kind==='dm'&&x.members.includes(S.me)&&x.members.includes(uid));
+  return`<div class="page" style="gap:12px"><div class="page-head"><div><h1>Chat</h1><div class="sub">Internal only. Anything you have not read within ${h} hours is emailed to you, so nothing gets missed without living in the app.</div></div><a class="btn btn-quiet" href="#/settings/notifications">Notification settings</a></div>
+  <div class="chat">
+    <div class="chat-side">
+      <div class="group">Rooms<button id="new-room" title="New room">+</button></div>
+      ${rooms.filter(x=>x.kind==='room').map(x=>{const n=unreadIn(x.id);return`<button class="rm ${x.id===r.id?'active':''}" data-room="${x.id}"><span class="hash">#</span>${esc(x.name)}${n?`<span class="n">${n}</span>`:''}</button>`}).join('')}
+      <div class="group">Direct</div>
+      ${others.map(x=>{const d=dmFor(x.id);const n=d?unreadIn(d.id):0;return`<button class="rm ${d&&d.id===r.id?'active':''}" data-dm="${x.id}">${avatarHtml(x.id,'sm')}${esc(x.name.split(' ')[0])}${n?`<span class="n">${n}</span>`:`<span class="pres ${x.last==='Just now'||x.last.includes('h ago')?'on':''}"></span>`}</button>`}).join('')}
+    </div>
+    <div class="chat-main">
+      <div class="chat-head"><div class="grow"><h2>${esc(roomName(r))}</h2><div class="faint" style="font-size:11.5px">${r.kind==='room'?esc(r.desc||'')+' · '+r.members.length+' members':'Direct message'}</div></div><span class="avatars">${r.members.map(m=>avatarHtml(m,'sm')).join('')}</span>${r.kind==='room'?'<button class="btn btn-sm btn-quiet" onclick="toast(\'Member picker coming in v2\')">Add people</button>':''}</div>
+      <div class="chat-log" id="chat-log">${log||'<div class="empty">No messages yet. Say hello.</div>'}</div>
+      <form class="composer" id="chat-form"><textarea class="textarea" name="text" placeholder="Message ${esc(roomName(r))} — @name to mention, Enter to send"></textarea>
+        <div class="row wrap"><select class="select" name="file" style="width:220px;height:28px"><option value="">Attach a SharePoint file…</option>${S.files.map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join('')}</select><select class="select" name="deal" style="width:200px;height:28px"><option value="">Link a deal…</option>${S.deals.map(d=>`<option value="${d.id}">${esc(d.practice)}</option>`).join('')}</select><span class="grow"></span><button class="btn btn-primary btn-sm" type="submit">Send</button></div></form>
+    </div>
+  </div></div>`;
+}
+
+/* ================= CALENDAR ================= */
+function vCalendar(){
+  const u=S.ui;const a=u.calAnchor;const d=new Date(a+'T00:00:00');
+  const active=S.users.filter(x=>x.status==='Active');
+  const legend=`<div class="legend">${active.map(x=>`<label class="${(u.calHide||[]).includes(x.id)?'off':''}"><input type="checkbox" data-hide="${x.id}"><i style="background:${x.color}"></i>${esc(x.name.split(' ')[0])}</label>`).join('')}</div>`;
+  let title,body;
+  if(u.calView==='month'){
+    title=d.toLocaleDateString('en-AU',{month:'long',year:'numeric'});
+    const first=a.slice(0,8)+'01';const fd=new Date(first+'T00:00:00');const off=(fd.getDay()+6)%7;const start=addDays(first,-off);
+    const lastDay=new Date(fd.getFullYear(),fd.getMonth()+1,0).getDate();const rows=Math.ceil((off+lastDay)/7);
+    const cells=[];for(let i=0;i<rows*7;i++){const day=addDays(start,i);const other=day.slice(0,7)!==a.slice(0,7);const evs=eventsOn(day);const tks=u.calTasks?S.tasks.filter(t=>!t.done&&t.due===day):[];const items=[...evs.map(e=>evChip(e)),...tks.map(t=>`<div class="ev tk" data-task="${t.id}"><span class="n">${esc(t.title)}</span></div>`)];const dow=(i%7);
+      cells.push(`<div class="day ${other?'other':''} ${day==='2026-09-03'?'today':''} ${dow>=5?'wkend':''}" data-day="${day}"><div class="dn"><b>${+day.slice(8)}</b>${evs.length+tks.length>3?`<span class="more">+${evs.length+tks.length-3}</span>`:''}</div>${items.slice(0,3).join('')}</div>`)}
+    body=`<div class="cal"><div class="cal-head">${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(x=>`<div>${x}</div>`).join('')}</div><div class="cal-grid">${cells.join('')}</div></div>`;
+  }else{
+    const off=(d.getDay()+6)%7;const mon=addDays(a,-off);const days=[...Array(7)].map((_,i)=>addDays(mon,i));
+    title=`${fmtDate(days[0])} – ${fmtDate(days[6])} ${d.getFullYear()}`;
+    const hours=[...Array(12)].map((_,i)=>7+i);
+    body=`<div class="cal"><div class="wk">
+      <div class="wh"></div>${days.map(day=>`<div class="wh ${day==='2026-09-03'?'today':''}">${new Date(day+'T00:00:00').toLocaleDateString('en-AU',{weekday:'short'})}<b>${+day.slice(8)}</b></div>`).join('')}
+      <div class="ad" style="background:var(--surface-2)"></div>${days.map(day=>`<div class="ad" data-day="${day}">${eventsOn(day).filter(e=>e.allDay).map(e=>evChip(e)).join('')}${u.calTasks?S.tasks.filter(t=>!t.done&&t.due===day).map(t=>`<div class="ev tk" data-task="${t.id}"><span class="n">${esc(t.title)}</span></div>`).join(''):''}</div>`).join('')}
+      <div class="gut">${hours.map((h,i)=>`<div class="hr" style="top:${i*60}px">${String(h).padStart(2,'0')}:00</div>`).join('')}</div>
+      ${days.map(day=>`<div class="col" data-day="${day}">${hours.map((h,i)=>`<div class="hr" style="top:${i*60}px"></div>`).join('')}${eventsOn(day).filter(e=>!e.allDay&&e.start.slice(0,10)===day).map(e=>{const s=mins(e.start),en=mins(e.end)||s+30;const top=(s-420);const hgt=Math.max(22,en-s);return`<div class="wev" data-ev="${e.id}" style="top:${top}px;height:${hgt}px;background:${evColor(e)}"><span class="t">${tm(e.start)}–${tm(e.end)}</span>${esc(e.title)}</div>`}).join('')}</div>`).join('')}
+    </div></div>`;
+  }
+  return`<div class="page" style="gap:12px"><div class="page-head"><div><h1>${title}</h1><div class="sub">Shared team calendar · internal only, no Outlook sync · each person's colour is set under Settings → Profile</div></div>
+    <div class="toolbar"><div class="seg"><button id="cal-prev">‹</button><button id="cal-today">Today</button><button id="cal-next">›</button></div><div class="seg"><button class="${u.calView==='month'?'active':''}" data-calview="month">Month</button><button class="${u.calView==='week'?'active':''}" data-calview="week">Week</button></div><label class="check"><input type="checkbox" id="cal-tasks" ${u.calTasks?'checked':''}> Task deadlines</label><button class="btn btn-primary" data-open="event">+ New event</button></div></div>
+    ${legend}${body}</div>`;
+}
+function evChip(e){const c=evColor(e);return`<div class="ev" data-ev="${e.id}" style="--c:${c}">${e.allDay?'':`<span class="t">${tm(e.start)}</span>`}<span class="n">${esc(e.title)}</span>${e.who.length>1?`<span class="dots">${e.who.slice(1,4).map(w=>`<i style="background:${user(w)?.color||'#999'}"></i>`).join('')}</span>`:''}</div>`}
+function openEvent(id,day){
+  const e=id?S.events.find(x=>x.id===+id):null;
+  const dflt=day||'2026-09-04';
+  modal(e?'Edit event':'New event',`
+    <div class="field"><span class="label">Title *</span><input class="input" name="title" required value="${esc(e?.title||'')}" placeholder="e.g. Health Check — Practice name"></div>
+    <div class="form-grid">
+      <div class="field"><span class="label">Type</span><select class="select" name="kind">${Object.keys(KINDS).map(k=>`<option ${e?.kind===k?'selected':''}>${k}</option>`).join('')}</select></div>
+      <div class="field"><span class="label">Linked deal</span><select class="select" name="deal"><option value="0">— None</option>${S.deals.map(d=>`<option value="${d.id}" ${e?.deal===d.id?'selected':''}>${esc(d.practice)}</option>`).join('')}</select></div>
+      <div class="field"><span class="label">Date *</span><input class="input" type="date" name="date" required value="${e?e.start.slice(0,10):dflt}"></div>
+      <div class="field"><span class="label">End date (multi‑day)</span><input class="input" type="date" name="edate" value="${e&&e.allDay?(e.end||'').slice(0,10):''}"></div>
+      <div class="field"><label class="check" style="margin-top:20px"><input type="checkbox" name="allDay" id="ev-allday" ${e?.allDay?'checked':''}> All day</label></div>
+      <div class="field"><span class="label">Time</span><div class="row"><input class="input" type="time" name="st" value="${e&&!e.allDay?tm(e.start):'10:00'}" ${e?.allDay?'disabled':''} style="width:110px"><span class="faint">to</span><input class="input" type="time" name="en" value="${e&&!e.allDay?tm(e.end):'10:45'}" ${e?.allDay?'disabled':''} style="width:110px"></div></div>
+      <div class="field span2"><span class="label">People</span>${peoplePicker('who',e?e.who:[S.me])}<span class="faint" style="font-size:11px">Shown in the first person's colour. Everyone added gets an in‑app note and an email.</span></div>
+      <div class="field span2"><span class="label">Notes</span><textarea class="textarea" name="notes" style="min-height:64px">${esc(e?.notes||'')}</textarea></div>
+    </div>`,`${e?`<button class="btn btn-sm btn-danger" type="button" data-evdel="${e.id}">Delete</button><span class="grow"></span>`:''}<button class="btn btn-quiet" type="button" data-close-modal>Cancel</button><button class="btn btn-primary" type="submit">${e?'Save':'Add to calendar'}</button>`,{wide:true});
+  const form=$('#mform');
+  form.addEventListener('change',ev=>{const el=ev.target;if(el.closest('.people'))el.closest('.check').classList.toggle('on',el.checked);if(el.id==='ev-allday'){form.st.disabled=el.checked;form.en.disabled=el.checked}});
+  form.onclick=ev=>{const x=ev.target.closest('[data-evdel]');if(x&&confirm('Delete this event?')){S.events=S.events.filter(q=>q.id!==+x.dataset.evdel);closeModal();toast('Event deleted');route()}};
+  form.onsubmit=ev=>{ev.preventDefault();const fd=new FormData(form);const allDay=!!fd.get('allDay');const date=fd.get('date');
+    const o={title:fd.get('title').trim(),kind:fd.get('kind'),deal:+fd.get('deal'),who:fd.getAll('who'),notes:fd.get('notes').trim(),allDay,start:allDay?date:date+'T'+fd.get('st'),end:allDay?(fd.get('edate')||date):date+'T'+fd.get('en')};
+    if(!o.who.length)o.who=[S.me];
+    if(e)Object.assign(e,o);else{S.events.push({id:nextId(S.events),...o});const others=o.who.filter(x=>x!==S.me);if(others.length)S.notifs.unshift({id:Date.now(),text:`${user(S.me).name} added you to “${o.title}”`,p:`Sent to ${names(others).join(', ')} · ${fmtDate(o.start)}${allDay?'':' '+tm(o.start)} · email + in‑app`,at:'now',read:false,go:'#/calendar'});if(o.deal)logAct(o.deal,'meeting',o.kind+' scheduled',o.title)}
+    closeModal();toast(e?'Event saved':'Added to calendar');route()};
+}
+function openEventDetail(id){
+  const e=S.events.find(x=>x.id===+id);if(!e)return;const d=deal(e.deal);
+  modal(esc(e.title),`<div class="row wrap" style="gap:6px"><span class="chip" style="background:${evColor(e)};color:#fff">${e.kind}</span>${d?`<a class="chip chip-line" href="#/deal/${d.id}" onclick="closeModal()">${esc(d.practice)}</a>`:''}</div>
+    <div class="tdetail"><div class="prop"><span class="label">When</span><span class="val mono">${e.allDay?fmtDate(e.start)+(e.end&&e.end!==e.start?' – '+fmtDate(e.end):'')+' · all day':fmtDate(e.start)+' · '+tm(e.start)+'–'+tm(e.end)}</span></div><div class="prop"><span class="label">People</span><span class="val" style="flex-wrap:wrap">${e.who.map(w=>`<span class="row" style="gap:5px">${avatarHtml(w,'sm')}${esc(user(w)?.name||'')}</span>`).join('')}</span></div></div>
+    ${e.notes?`<p style="font-size:13px;line-height:1.6">${esc(e.notes)}</p>`:''}
+    <p class="faint" style="font-size:11px">Internal calendar only — not synced to Outlook. ${d?'Logged on the deal\'s activity.':''}</p>`,
+    `<button class="btn btn-quiet" type="button" data-close-modal>Close</button><button class="btn" type="button" data-evedit="${e.id}">Edit</button>`,{wide:false});
+  $('#mform').onclick=ev=>{const x=ev.target.closest('[data-evedit]');if(x){closeModal();openEvent(e.id)}};
 }
 </script>
 <script>
@@ -932,7 +1171,7 @@ function openTask(dealId,taskId){
       <div class="field"><span class="label">Linked deal</span><select class="select" name="deal" id="t-deal"><option value="0">— None (internal)</option>${S.deals.map(d=>`<option value="${d.id}" ${dId===d.id?'selected':''}>${esc(d.practice)}</option>`).join('')}</select></div>
       <div class="field span2"><span class="label">Responsible *</span>${peoplePicker('who',t?t.who:[S.me])}</div>
       <div class="field span2"><span class="label">Notify when done</span><div class="stack" style="gap:6px"><label class="check"><input type="checkbox" name="notifyBy" ${t?(t.notifyBy?'checked':''):'checked'}> The person who assigned it (${esc(user(t?.by||S.me)?.name||'me')})</label>${peoplePicker('notify',t?t.notify:[])}</div></div>
-      <div class="field span2"><span class="label">Notify via</span><div class="chans">${[['app','In‑app'],['email','Email'],['teams','Teams chat']].map(([k,l])=>{const on=t?(t.channels||[]).includes(k):true;return`<label class="check ${on?'on':''}"><input type="checkbox" name="channels" value="${k}" ${on?'checked':''}> ${l}</label>`}).join('')}</div><span class="faint" style="font-size:11px">Applies to the assignment and the completion notice. Each person's own preferences under Settings → Notifications can mute a channel.</span></div>
+      <div class="field span2"><span class="label">Notify via</span><div class="chans">${[['app','In‑app'],['email','Email']].map(([k,l])=>{const on=t?(t.channels||[]).includes(k):true;return`<label class="check ${on?'on':''}"><input type="checkbox" name="channels" value="${k}" ${on?'checked':''}> ${l}</label>`}).join('')}</div><span class="faint" style="font-size:11px">Applies to the assignment and the completion notice. Each person's own preferences under Settings → Notifications can mute a channel.</span></div>
       <div class="field"><span class="label">Repeat</span><div class="row"><select class="select" name="rep" id="t-rep" style="width:150px"><option value="">Does not repeat</option><option value="1" ${t?.repeat?'selected':''}>Every</option></select><input class="input" type="number" name="every" min="1" value="${t?.repeat?.every||1}" style="width:64px" ${t?.repeat?'':'disabled'}><select class="select" name="unit" style="width:110px" ${t?.repeat?'':'disabled'}>${Object.keys(UNITS).map(k=>`<option ${t?.repeat?.unit===k?'selected':''}>${k}</option>`).join('')}</select></div><span class="faint" style="font-size:11px">Next occurrence is created when this one is ticked off.</span></div>
       <div class="field"><span class="label">Attach files</span><div class="stack" style="gap:5px" id="t-files">${filesFor(dId).map(f=>`<label class="check"><input type="checkbox" name="file" value="${f.id}" ${chosen.includes(f.id)?'checked':''}><span class="sp-tag"><i></i></span>${esc(f.name)}</label>`).join('')||'<span class="faint" style="font-size:11px">No files in this deal\'s SharePoint folder yet.</span>'}</div></div>
       <div class="field span2"><span class="label">Add a link or upload</span><div class="row"><input class="input" name="url" placeholder="Paste a SharePoint / Teams / web link" value="${esc(links[0]?.url||'')}"><input class="input" type="file" name="upload" style="width:220px;padding-top:6px"></div><span class="faint" style="font-size:11px">Uploads go to the linked deal's client folder (or Client Files/Internal) in SharePoint; the task keeps the link.</span></div>
@@ -1027,11 +1266,20 @@ function bindView(r){
     let x;
     if(x=el('[data-tfilter]')){S.ui.taskFilter=x.dataset.tfilter;route();return}
     if(x=el('[data-pref]')){const ev=S.settings.notifyPrefs.events.find(q=>q.id===x.dataset.pref);ev[x.dataset.ch]=!ev[x.dataset.ch];x.classList.toggle('on');save();return}
-    if(x=el('#teams-channel-on')){S.settings.notifyPrefs.teamsChannelEvents=!S.settings.notifyPrefs.teamsChannelEvents;x.classList.toggle('on');save();return}
-    if(x=el('#prefs-save')){const p=S.settings.notifyPrefs;p.teamsChannel=$('#teams-channel').value;p.quietFrom=$('#quiet-from').value;p.quietTo=$('#quiet-to').value;save();toast('Notification preferences saved');return}
+    if(x=el('#prefs-save')){const p=S.settings.notifyPrefs;p.quietFrom=$('#quiet-from').value;p.quietTo=$('#quiet-to').value;p.digest=$('#digest-at').value;save();toast('Notification preferences saved');return}
+    if(x=el('#pf-save')){const me=user(S.me);me.name=$('#pf-name').value.trim()||me.name;me.focus=$('#pf-focus').value;save();toast('Profile saved');route();return}
+    if(x=el('[data-swatch]')){user(S.me).color=x.dataset.swatch;save();toast('Colour updated');route();return}
+    if(x=el('[data-room]')){S.ui.room=x.dataset.room;route();return}
+    if(x=el('[data-dm]')){const o=x.dataset.dm;let r=S.rooms.find(q=>q.kind==='dm'&&q.members.includes(S.me)&&q.members.includes(o));if(!r){r={id:'dm_'+S.me+'_'+o,name:'',kind:'dm',members:[S.me,o]};S.rooms.push(r)}S.ui.room=r.id;route();return}
+    if(x=el('#new-room')){const n=prompt('Room name');if(n){const id='r_'+Date.now().toString(36);S.rooms.push({id,name:n.replace(/^#/,''),kind:'room',members:S.users.filter(q=>q.status==='Active').map(q=>q.id),desc:''});S.ui.room=id;route()}return}
+    if(x=el('[data-calview]')){S.ui.calView=x.dataset.calview;route();return}
+    if(x=el('#cal-prev')||el('#cal-next')){const dir=x.id==='cal-prev'?-1:1;const a=S.ui.calAnchor;if(S.ui.calView==='month'){const d=new Date(a.slice(0,8)+'01T00:00:00');d.setMonth(d.getMonth()+dir);S.ui.calAnchor=ymd(d)}else S.ui.calAnchor=addDays(a,7*dir);route();return}
+    if(x=el('#cal-today')){S.ui.calAnchor='2026-09-03';route();return}
     if(x=el('.task-chk')){return}
     if(x=el('[data-task]')){openTaskDetail(x.dataset.task);return}
-    if(x=el('[data-open]')){const k=x.dataset.open;if(k==='add')openAdd();if(k==='task')openTask(x.dataset.deal);if(k==='compose')openCompose(x.dataset.deal);if(k==='field')openField();if(k==='invite')openInvite();if(k==='key')openKey();return}
+    if(x=el('[data-ev]')){openEventDetail(x.dataset.ev);return}
+    if(x=el('[data-day]')){openEvent(null,x.dataset.day);return}
+    if(x=el('[data-open]')){const k=x.dataset.open;if(k==='add')openAdd();if(k==='task')openTask(x.dataset.deal);if(k==='event')openEvent(null,x.dataset.day);if(k==='compose')openCompose(x.dataset.deal);if(k==='field')openField();if(k==='invite')openInvite();if(k==='key')openKey();return}
     if(x=el('[data-upload]')){openUpload(x.dataset.upload);return}
     if(x=el('[data-view]')){S.ui.view=x.dataset.view;route();return}
     if(x=el('.dcard')){location.hash='#/deal/'+x.dataset.id;return}
@@ -1063,6 +1311,9 @@ function bindView(r){
     const t=e.target;
     if(t.classList.contains('task-chk')){completeTask(+t.dataset.id,t.checked);route();return}
     if(t.id==='show-done'){S.ui.showDone=t.checked;route();return}
+    if(t.id==='cal-tasks'){S.ui.calTasks=t.checked;route();return}
+    if(t.dataset.hide){const h=S.ui.calHide||(S.ui.calHide=[]);const i=h.indexOf(t.dataset.hide);i>=0?h.splice(i,1):h.push(t.dataset.hide);route();return}
+    if(t.id==='chat-hours'){S.settings.notifyPrefs.chatHours=+t.value;save();toast('Unread chat is emailed after '+t.value+' hours');return}
     if(t.id==='f-owner'){S.ui.filterOwner=t.value;route()}if(t.id==='f-stage'){S.ui.filterStage=t.value;route()}
     if(t.id==='sel-all'){$$('.sel').forEach(q=>q.checked=t.checked);bulkBar()}if(t.classList.contains('sel'))bulkBar();
     if(t.id==='bulk-stage'&&t.value){$$('.sel:checked').forEach(q=>moveStage(+q.dataset.id,t.value,true));route()}
@@ -1075,7 +1326,9 @@ function bindView(r){
     if(t.id==='deal-notes'){const id=+location.hash.split('/')[2];deal(id).notes=t.value;logAct(id,'note','Notes updated');save();toast('Notes saved')}
   };
   c.oninput=e=>{if(e.target.id==='f-q'){S.ui.q=e.target.value;clearTimeout(c._t);c._t=setTimeout(()=>{route();const i=$('#f-q');if(i){i.focus();i.setSelectionRange(99,99)}},250)}};
-  c.onsubmit=e=>{if(e.target.id==='reply-form'){e.preventDefault();const th=S.threads.find(q=>q.id===+e.target.dataset.thread);const body=e.target.body.value.trim();if(!body)return;th.msgs.push({from:user(S.me).name,out:true,at:'2026-09-03T09:30',body});th.at='2026-09-03T09:30';if(th.deal)logAct(th.deal,'email','Email sent','Re: '+th.subject);toast('Sent via Microsoft 365');route()}};
+  c.onsubmit=e=>{if(e.target.id==='chat-form'){e.preventDefault();sendChat(e.target);return}
+    if(e.target.id==='reply-form'){e.preventDefault();const th=S.threads.find(q=>q.id===+e.target.dataset.thread);const body=e.target.body.value.trim();if(!body)return;th.msgs.push({from:user(S.me).name,out:true,at:'2026-09-03T09:30',body});th.at='2026-09-03T09:30';if(th.deal)logAct(th.deal,'email','Email sent','Re: '+th.subject);toast('Sent via Microsoft 365');route()}};
+  if(r==='chat'){const log=$('#chat-log');if(log)log.scrollTop=log.scrollHeight;const ta=$('#chat-form textarea');if(ta){ta.focus();ta.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat($('#chat-form'))}}}}
   // drag & drop: board
   if(r==='pipeline'&&S.ui.view==='board'){let dragId=null;
     $$('.dcard',c).forEach(k=>{k.addEventListener('dragstart',e=>{dragId=+k.dataset.id;k.classList.add('dragging');e.dataTransfer.effectAllowed='move'});k.addEventListener('dragend',()=>k.classList.remove('dragging'))});
@@ -1086,6 +1339,12 @@ function bindView(r){
     rows.forEach(rw=>{rw.addEventListener('dragstart',()=>{dragF=rw.dataset.fid;rw.classList.add('dragging')});rw.addEventListener('dragend',()=>{rw.classList.remove('dragging');rows.forEach(q=>q.classList.remove('over'))});rw.addEventListener('dragover',e=>{e.preventDefault();rw.classList.add('over')});rw.addEventListener('dragleave',()=>rw.classList.remove('over'));rw.addEventListener('drop',e=>{e.preventDefault();if(!dragF||dragF===rw.dataset.fid)return;const from=S.fields.findIndex(f=>f.id===dragF);const [f]=S.fields.splice(from,1);const to=S.fields.findIndex(q=>q.id===rw.dataset.fid);S.fields.splice(to,0,f);route()})});
   }
 }
+function sendChat(form){const text=form.text.value.trim();if(!text)return;const r=room(S.ui.room);const m={id:nextId(S.messages),room:r.id,who:S.me,at:'2026-09-03T09:'+String(S.messages.length%60).padStart(2,'0'),text,read:[S.me],emailed:[]};
+  const fid=+form.file.value;if(fid){const f=S.files.find(q=>q.id===fid);m.file={name:f.name,fileId:f.id}}const did=+form.deal.value;if(did)m.deal=did;
+  S.messages.push(m);
+  const mentioned=S.users.filter(u=>u.id!==S.me&&r.members.includes(u.id)&&new RegExp('@'+u.name.split(' ')[0],'i').test(text));
+  if(mentioned.length)S.notifs.unshift({id:Date.now(),text:`You mentioned ${names(mentioned.map(u=>u.id)).join(', ')} in ${roomName(r)}`,p:'They get an in‑app note now and an email if still unread after 1 h',at:'now',read:true,go:'#/chat'});
+  route()}
 function bulkBar(){const n=$$('.sel:checked').length;const b=$('#bulk');if(!b)return;b.hidden=!n;$('#bulk-n').textContent=n+' selected'}
 function moveStage(id,to,silent=false){const d=deal(id);if(!d||d.stage===to)return;const from=stage(d.stage).name;d.stage=to;if(to==='won'||to==='lost')d.close='2026-09-03';logAct(id,'stage',`Moved to ${stage(to).name}`,`from ${from}`);if(!silent){toast(`${d.practice} → ${stage(to).name}`);route()}}
 function inlineEdit(el){
