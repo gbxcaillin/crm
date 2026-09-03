@@ -334,6 +334,50 @@ td.check-col,th.check-col{width:32px;padding-right:0;cursor:default}
 .swatches{display:flex;gap:8px;flex-wrap:wrap}
 .sw{width:30px;height:30px;border:2px solid transparent;cursor:pointer;padding:0}
 .sw.sel{border-color:var(--ink);box-shadow:inset 0 0 0 2px var(--surface)}
+/* invoices */
+.inv-grid{display:grid;grid-template-columns:minmax(0,1fr) 520px;gap:18px;align-items:start}
+.li-table{width:100%;border-collapse:collapse}
+.li-table th{background:transparent;padding:4px 6px;cursor:default}
+.li-table td{padding:3px 4px;border-bottom:none;white-space:normal}
+.li-table .input{height:30px;font-size:12.5px}
+.li-table input[type=number]{-moz-appearance:textfield;appearance:textfield}.li-table input::-webkit-outer-spin-button,.li-table input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.li-table td.num .input{text-align:right;font-family:var(--font-mono)}
+.li-table .lt{font-family:var(--font-mono);font-size:12.5px;text-align:right;padding-right:8px;white-space:nowrap}
+.li-table .x{color:var(--ink-3);width:24px;text-align:center}
+.li-table .x:hover{color:var(--red)}
+.mode{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mode label{border:1px solid var(--line-2);padding:9px 12px;cursor:pointer;font-size:12px;display:flex;gap:8px;align-items:flex-start}
+.mode label.on{border-color:var(--teal);background:var(--teal-tint)}
+.mode label b{display:block;font-weight:600;font-size:12.5px}
+.mode label span{color:var(--ink-2);font-size:11px;line-height:1.4}
+.mode input{accent-color:var(--teal);margin-top:2px}
+.totals{display:grid;grid-template-columns:1fr auto;gap:4px 24px;font-size:12.5px;justify-content:end;margin-left:auto;width:max-content}
+.totals .k{color:var(--ink-2);text-align:right}
+.totals .v{font-family:var(--font-mono);text-align:right;min-width:110px}
+.totals .grand{font-family:var(--font-serif);font-size:20px;color:var(--ink);padding-top:6px;border-top:1px solid var(--ink);margin-top:4px}
+.totals .grand.v{font-family:var(--font-mono);font-size:16px;font-weight:500}
+.doc{background:#FFFDF8;color:#141414;border:1px solid var(--line);padding:36px 40px;font-size:12px;line-height:1.5;min-height:640px;display:flex;flex-direction:column;gap:22px;position:relative}
+.doc .dh{display:flex;justify-content:space-between;align-items:flex-start;gap:20px}
+.doc .dh .lockup{padding:0;border:none}
+.doc .dh .lockup .frame{border-color:#2E8B6E}.doc .dh .lockup .frame b,.doc .dh .lockup .word b{color:#141414}
+.doc .ttl{font-family:var(--font-serif);font-size:30px;font-weight:300;line-height:1;text-align:right}
+.doc .ttl small{display:block;font-family:var(--font-mono);font-size:11px;color:#5A5852;margin-top:6px}
+.doc .meta{display:grid;grid-template-columns:1fr 1fr;gap:18px;font-size:11.5px}
+.doc .meta .label{color:#8E8B83;margin-bottom:3px}
+.doc .meta p{white-space:pre-line;color:#141414}
+.doc .meta .kv2{display:grid;grid-template-columns:auto 1fr;gap:2px 12px}
+.doc .meta .kv2 b{font-weight:500;color:#5A5852}
+.doc table{width:100%;border-collapse:collapse;font-size:12px}
+.doc th{background:transparent;color:#5A5852;border-bottom:1px solid #141414;padding:6px 4px;cursor:default}
+.doc td{padding:7px 4px;border-bottom:1px solid #E3DFD5;white-space:normal;vertical-align:top}
+.doc td.num,.doc th.num{text-align:right;font-family:var(--font-mono);white-space:nowrap}
+.doc .totals{margin-top:6px}
+.doc .totals .k{color:#5A5852}.doc .totals .grand{color:#141414;border-top-color:#141414}
+.doc .pay{display:grid;grid-template-columns:1fr 1fr;gap:18px;font-size:11px;color:#5A5852;border-top:1px solid #E3DFD5;padding-top:14px;margin-top:auto}
+.doc .pay b{color:#141414;font-weight:500}
+.doc .stamp{position:absolute;top:50%;left:50%;border:3px solid #2E8B6E;color:#2E8B6E;font-family:var(--font-sans);font-size:30px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;padding:8px 26px;transform:translate(-50%,-50%) rotate(-14deg);opacity:.16;pointer-events:none}
+.doc .stamp.red{border-color:#B4463F;color:#B4463F}.doc .stamp.grey{border-color:#8E8B83;color:#8E8B83}
+@media print{body{overflow:visible!important}.rail,.topbar,.page-head,.inv-form,.toasts,.overlay{display:none!important}.shell{display:block;height:auto}.content{overflow:visible}.page{padding:0}.inv-grid{display:block}.doc{border:none;min-height:auto}}
 .today-ev{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px;align-items:flex-start;cursor:pointer}
 .today-ev:last-child{border-bottom:none}
 .today-ev .bar{width:3px;align-self:stretch;background:var(--c);flex-shrink:0}
@@ -506,6 +550,8 @@ td.check-col,th.check-col{width:32px;padding-right:0;cursor:default}
       <a class="nav" href="#/email" data-r="email"><svg viewBox="0 0 16 16"><rect x="1.5" y="3" width="13" height="10"/><path d="M1.5 4l6.5 4.5L14.5 4"/></svg>Email<span class="count" id="nav-mail"></span></a>
       <a class="nav" href="#/chat" data-r="chat"><svg viewBox="0 0 16 16"><path d="M2 3h12v8H6l-3 3v-3H2z"/></svg>Chat<span class="count" id="nav-chat"></span></a>
       <a class="nav" href="#/files" data-r="files"><svg viewBox="0 0 16 16"><path d="M1.5 3.5h5l1.5 1.5h6.5v8h-13z"/></svg>Files</a>
+      <div class="group">Finance</div>
+      <a class="nav" href="#/invoices" data-r="invoices"><svg viewBox="0 0 16 16"><path d="M3 1.5h8l2 2v11H3z"/><path d="M5.5 6h5M5.5 8.5h5M5.5 11h3"/></svg>Invoices<span class="count" id="nav-inv"></span></a>
       <div class="group">Configure</div>
       <a class="nav" href="#/integrations" data-r="integrations"><svg viewBox="0 0 16 16"><path d="M5.5 2v4M10.5 10v4"/><path d="M5.5 6a2.5 2.5 0 002.5 2.5h0M10.5 10a2.5 2.5 0 00-2.5-2.5h0"/></svg>Integrations</a>
       <a class="nav" href="#/settings/profile" data-r="settings"><svg viewBox="0 0 16 16"><path d="M2 4.5h12M2 8h12M2 11.5h12"/><circle cx="5" cy="4.5" r="1.3" fill="currentColor"/><circle cx="11" cy="8" r="1.3" fill="currentColor"/><circle cx="7" cy="11.5" r="1.3" fill="currentColor"/></svg>Settings</a>
@@ -684,7 +730,13 @@ const SEED = {
     {id:3,text:'Task overdue: Send exec summary to partners',p:'Vantage Wealth Partners · due 2 Sep',at:'Yesterday',read:false,go:'#/tasks'},
     {id:4,text:'Meta sync completed',p:'2 leads imported from "Broker KPI dashboard" form',at:'Yesterday',read:true,go:'#/integrations'}
   ],
-  settings:{notifyPrefs:{events:[
+  invoices:[
+    {id:1,number:'GBX-1040',deal:11,client:{name:'Horizon Lending',contact:'Wei Liu',email:'wei@horizonlending.com.au',address:'Level 3, 20 St Georges Tce, Perth WA 6000',abn:'44 120 998 301'},issued:'2026-08-22',due:'2026-09-05',mode:'net',items:[{desc:'Business Analytics dashboard build — 50% deposit',qty:1,unit:9750}],status:'Paid',paidAt:'2026-08-25',notes:'',ref:'PO-2291'},
+    {id:2,number:'GBX-1041',deal:5,client:{name:'Solara Private Advice',contact:'Amy Zhang',email:'amy@solaraadvice.com',address:'10 Marina Blvd, Singapore 018983',abn:''},issued:'2026-08-22',due:'2026-09-05',mode:'net',items:[{desc:'Health Check & scoping engagement',qty:1,unit:4500}],status:'Sent',notes:'Kick‑off scheduled 15 Sep.',ref:''},
+    {id:3,number:'GBX-1042',deal:1,client:{name:'Harbourline Financial Planning',contact:'Sarah Whitfield',email:'sarah@harbourline.com.au',address:'Suite 4, 88 Bay St, Port Melbourne VIC 3207',abn:'71 552 310 887'},issued:'2026-08-16',due:'2026-08-30',mode:'gross',items:[{desc:'Practice Health Check (fixed fee, inc GST)',qty:1,unit:2750}],status:'Sent',notes:'',ref:''},
+    {id:4,number:'GBX-1043',deal:3,client:{name:'Vantage Wealth Partners',contact:'Lisa Park',email:'lisa@vantagewealth.com.au',address:'Level 22, 1 Martin Pl, Sydney NSW 2000',abn:'29 004 771 542'},issued:'2026-09-03',due:'2026-09-17',mode:'net',items:[{desc:'Custom mandate design — phase 1',qty:1,unit:24000},{desc:'Adviser workshop (half day)',qty:2,unit:1800}],status:'Draft',notes:'',ref:''}
+  ],
+  settings:{invoice:{prefix:'GBX-',next:1044,entity:'GBX PS Pty Ltd',abn:'61 668 412 903',address:'Level 8, 120 Collins Street\nMelbourne VIC 3000',email:'accounts@gbxps.com',phone:'+61 3 9021 0400',terms:14,gst:10,bank:'GBX PS Pty Ltd · BSB 083‑004 · Acc 12 345 6789',footer:'Payment by EFT please. Quote the invoice number as reference.',saveTo:'sharepoint'},notifyPrefs:{events:[
       {id:'assigned',label:'A task is assigned to me',app:true,email:true},
       {id:'completed_by',label:'A task I set is completed',app:true,email:true},
       {id:'completed_cc',label:'A task I am on the notify list for is completed',app:true,email:true},
@@ -701,7 +753,7 @@ const SEED = {
 /* ================= STATE ================= */
 const KEY='gbx-pipeline-v1';
 let S;
-function load(){try{const raw=localStorage.getItem(KEY);if(raw){S=JSON.parse(raw);if(S._v===4)return}}catch(e){}S=JSON.parse(JSON.stringify(SEED));S._v=4;S.me='u1';S.ui={view:'board',sort:'created',dir:'desc',filterOwner:'',filterStage:'',folder:'inbox',thread:1,fileDeal:0,dealTab:{},taskFilter:'mine',showDone:false,room:'general',calView:'month',calAnchor:'2026-09-03',calTasks:true,calHide:[]}}
+function load(){try{const raw=localStorage.getItem(KEY);if(raw){S=JSON.parse(raw);if(S._v===5)return}}catch(e){}S=JSON.parse(JSON.stringify(SEED));S._v=5;S.me='u1';S.ui={view:'board',sort:'created',dir:'desc',filterOwner:'',filterStage:'',folder:'inbox',thread:1,fileDeal:0,dealTab:{},taskFilter:'mine',showDone:false,room:'general',calView:'month',calAnchor:'2026-09-03',calTasks:true,calHide:[]}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function reset(){try{localStorage.removeItem(KEY)}catch(e){}load();route()}
 load();
@@ -741,6 +793,13 @@ function myRooms(){return S.rooms.filter(r=>r.members.includes(S.me))}
 function unreadIn(rid){return S.messages.filter(m=>m.room===rid&&!m.read.includes(S.me)).length}
 function sweepChat(){const h=S.settings.notifyPrefs.chatHours||24;S.messages.forEach(m=>{const r=room(m.room);if(!r)return;r.members.forEach(u=>{if(u!==m.who&&!m.read.includes(u)&&!m.emailed.includes(u)&&hoursSince(m.at)>=h)m.emailed.push(u)})})}
 function readState(m){const r=room(m.room);const h=S.settings.notifyPrefs.chatHours||24;const others=r.members.filter(u=>u!==m.who);const seen=others.filter(u=>m.read.includes(u));const em=others.filter(u=>m.emailed.includes(u)&&!m.read.includes(u));const pend=others.filter(u=>!m.read.includes(u)&&!m.emailed.includes(u));return{seen,em,pend,left:Math.max(0,h-hoursSince(m.at))}}
+/* invoices */
+const money=n=>'A$'+(Math.round((+n||0)*100)/100).toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2});
+function calcInvoice(inv){const rate=(S.settings.invoice.gst||10)/100;const lines=inv.items.map(li=>({...li,total:(+li.qty||0)*(+li.unit||0)}));const sum=lines.reduce((a,l)=>a+l.total,0);let sub,gst,total;if(inv.mode==='gross'){total=sum;sub=sum/(1+rate);gst=total-sub}else{sub=sum;gst=sum*rate;total=sum+gst}return{lines,sub,gst,total,rate}}
+function invStatus(inv){if(inv.status==='Sent'&&dayDiff(inv.due)<0)return'Overdue';return inv.status}
+function invChip(inv){const s=invStatus(inv);return`<span class="chip ${s==='Paid'?'chip-teal':s==='Overdue'?'chip-red':s==='Sent'?'chip-amber':'chip-line'}">${s}</span>`}
+function invoice(id){return S.invoices.find(i=>i.id===+id)}
+function newInvoice(dealId){const d=deal(dealId);const st=S.settings.invoice;const inv={id:nextId(S.invoices),number:st.prefix+st.next,deal:d?d.id:0,client:{name:d?d.practice:'',contact:d?d.contact:'',email:d?d.email:'',address:d?(d.city||''):'',abn:''},issued:'2026-09-03',due:addDays('2026-09-03',st.terms||14),mode:'net',items:[{desc:d?d.service:'',qty:1,unit:0}],status:'Draft',notes:'',ref:''};st.next++;S.invoices.push(inv);return inv}
 /* calendar */
 const KINDS={'Health Check':'HC','Client call':'Call','Internal':'Int','Training':'Trn','Out of office':'OOO','Event':'Evt'};
 function evColor(e){return user(e.who[0])?.color||'var(--ink-3)'}
@@ -765,7 +824,7 @@ function completeTask(id,done=true){
 }
 
 /* ================= ROUTER ================= */
-const ROUTES={dashboard:'Dashboard',pipeline:'Pipeline',tasks:'Tasks',calendar:'Calendar',email:'Email',chat:'Chat',files:'Files',integrations:'Integrations',settings:'Settings',deal:'Pipeline'};
+const ROUTES={dashboard:'Dashboard',pipeline:'Pipeline',tasks:'Tasks',calendar:'Calendar',email:'Email',chat:'Chat',files:'Files',invoices:'Invoices',invoice:'Invoices',integrations:'Integrations',settings:'Settings',deal:'Pipeline'};
 function route(){
   if(!S.loggedIn){$('#login').hidden=false;$('#shell').hidden=true;return}
   $('#login').hidden=true;$('#shell').hidden=false;
@@ -774,9 +833,9 @@ function route(){
   $$('#nav .nav').forEach(n=>n.classList.toggle('active',n.dataset.r===rr));
   const c=$('#content');c.scrollTop=0;
   sweepChat();
-  const view={dashboard:vDashboard,pipeline:vPipeline,tasks:vTasks,calendar:vCalendar,email:vEmail,chat:vChat,files:vFiles,integrations:vIntegrations,settings:()=>vSettings(a||'profile'),deal:()=>vDeal(a)}[rr];
+  const view={dashboard:vDashboard,pipeline:vPipeline,tasks:vTasks,calendar:vCalendar,email:vEmail,chat:vChat,files:vFiles,invoices:vInvoices,invoice:()=>vInvoice(a),integrations:vIntegrations,settings:()=>vSettings(a||'profile'),deal:()=>vDeal(a)}[rr];
   c.innerHTML=view();
-  const crumbs={dashboard:'Dashboard',pipeline:'Pipeline',tasks:'Tasks',calendar:'Calendar',email:'Email',chat:'Chat',files:'Files',integrations:'Integrations',settings:`Settings<span class="sep">/</span>${{profile:'Profile',fields:'Fields',stages:'Stages',team:'Team',notifications:'Notifications',storage:'Storage',security:'Security'}[a]||'Profile'}`,deal:`<a href="#/pipeline" style="color:var(--ink-3)">Pipeline</a><span class="sep">/</span>${esc(deal(a)?.practice||'Deal')}`};
+  const crumbs={dashboard:'Dashboard',pipeline:'Pipeline',tasks:'Tasks',calendar:'Calendar',email:'Email',chat:'Chat',files:'Files',invoices:'Invoices',invoice:`<a href="#/invoices" style="color:var(--ink-3)">Invoices</a><span class="sep">/</span>${esc(invoice(a)?.number||'Invoice')}`,integrations:'Integrations',settings:`Settings<span class="sep">/</span>${{profile:'Profile',fields:'Fields',stages:'Stages',team:'Team',notifications:'Notifications',invoicing:'Invoicing',storage:'Storage',security:'Security'}[a]||'Profile'}`,deal:`<a href="#/pipeline" style="color:var(--ink-3)">Pipeline</a><span class="sep">/</span>${esc(deal(a)?.practice||'Deal')}`};
   $('#crumb').innerHTML=crumbs[rr];
   const me=user(S.me);$('#me-av').textContent=initials(me.name);$('#me-name').textContent=me.name;$('#me-role').textContent=me.role;
   $('#nav-deals').textContent=S.deals.filter(d=>!stage(d.stage)?.closed).length;
@@ -784,6 +843,7 @@ function route(){
   $('#nav-mail').textContent=S.threads.filter(t=>t.unread).length||'';
   $('#nav-chat').textContent=myRooms().reduce((a,r)=>a+unreadIn(r.id),0)||'';
   $('#nav-cal').textContent=eventsOn('2026-09-03').filter(e=>e.who.includes(S.me)).length||'';
+  $('#nav-inv').textContent=S.invoices.filter(i=>invStatus(i)==='Overdue').length||'';
   $('#notif-pip').hidden=!S.notifs.some(n=>!n.read);
   bindView(rr);
   save();
@@ -909,7 +969,7 @@ function vDeal(id){
   };
   return`<div class="page">
     <div class="deal-hero"><div><h1>${esc(d.practice)}</h1><div class="meta"><span>${esc(d.contact)}</span><span>·</span><span>${esc(d.service)}</span><span>·</span><span class="mono" style="font-size:14px;color:var(--ink)">${aud(d.value)}</span>${chipSrc(d.source)}${chipPri(d.priority)}</div></div>
-      <div class="toolbar"><button class="btn btn-quiet" data-open="compose" data-deal="${d.id}">Email</button><button class="btn btn-quiet" data-open="task" data-deal="${d.id}">Task</button>${stage(d.stage).closed?'':`<button class="btn" data-close="lost" data-id="${d.id}">Mark lost</button><button class="btn btn-primary" data-close="won" data-id="${d.id}">Mark won</button>`}<button class="btn btn-icon" data-del="${d.id}" title="Delete deal">✕</button></div></div>
+      <div class="toolbar"><button class="btn btn-quiet" data-open="compose" data-deal="${d.id}">Email</button><button class="btn btn-quiet" data-open="task" data-deal="${d.id}">Task</button><button class="btn btn-quiet" data-invoice="${d.id}">Invoice</button>${stage(d.stage).closed?'':`<button class="btn" data-close="lost" data-id="${d.id}">Mark lost</button><button class="btn btn-primary" data-close="won" data-id="${d.id}">Mark won</button>`}<button class="btn btn-icon" data-del="${d.id}" title="Delete deal">✕</button></div></div>
     <div class="stage-track">${S.stages.map((s,i)=>`<button data-stage="${s.id}" data-id="${d.id}" class="${i<idx?'done':i===idx?'cur':''}">${esc(s.name)}</button>`).join('')}</div>
     <div class="tabs">${['overview','activity','email','files'].map(t=>`<button class="${tab===t?'active':''}" data-tab="${t}" data-id="${d.id}">${t}<span class="cnt">${{overview:'',activity:acts.length,email:threads.length,files:files.length}[t]}</span></button>`).join('')}</div>
     ${tabs[tab]}
@@ -1007,9 +1067,20 @@ function vIntegrations(){
 
 /* ================= SETTINGS ================= */
 function vSettings(sec){
-  const nav=['profile','fields','stages','team','notifications','storage','security'].map(k=>`<a class="${sec===k?'active':''}" href="#/settings/${k}">${k}</a>`).join('');
-  const st=S.settings;const np=st.notifyPrefs;const me=user(S.me);
+  const nav=['profile','fields','stages','team','notifications','invoicing','storage','security'].map(k=>`<a class="${sec===k?'active':''}" href="#/settings/${k}">${k}</a>`).join('');
+  const st=S.settings;const np=st.notifyPrefs;const me=user(S.me);const iv=st.invoice;
   const body={
+    invoicing:`<div class="card"><div class="card-head"><div><h3>Invoicing</h3><div class="faint" style="font-size:11.5px">Printed on every tax invoice. Numbers increment automatically; you can override per invoice.</div></div></div><div class="card-body form-grid">
+      <div class="field"><span class="label">Legal entity</span><input class="input" data-ivs="entity" value="${esc(iv.entity)}"></div><div class="field"><span class="label">ABN</span><input class="input mono" data-ivs="abn" value="${esc(iv.abn)}"></div>
+      <div class="field span2"><span class="label">Address</span><textarea class="textarea" data-ivs="address" style="min-height:52px">${esc(iv.address)}</textarea></div>
+      <div class="field"><span class="label">Accounts email (sender)</span><input class="input" data-ivs="email" value="${esc(iv.email)}"></div><div class="field"><span class="label">Phone</span><input class="input" data-ivs="phone" value="${esc(iv.phone)}"></div>
+      <div class="field"><span class="label">Invoice prefix</span><input class="input mono" data-ivs="prefix" value="${esc(iv.prefix)}"></div><div class="field"><span class="label">Next number</span><input class="input mono" type="number" data-ivs="next" value="${iv.next}"></div>
+      <div class="field"><span class="label">Payment terms (days)</span><input class="input mono" type="number" data-ivs="terms" value="${iv.terms}"></div><div class="field"><span class="label">GST rate (%)</span><input class="input mono" type="number" data-ivs="gst" value="${iv.gst}"></div>
+      <div class="field span2"><span class="label">Bank details</span><input class="input" data-ivs="bank" value="${esc(iv.bank)}"></div>
+      <div class="field span2"><span class="label">Footer note</span><input class="input" data-ivs="footer" value="${esc(iv.footer)}"></div>
+      <div class="field span2"><span class="label">PDF copies</span><label class="check"><input type="checkbox" checked disabled> Save every sent invoice to the client's SharePoint folder under <span class="mono">/Invoices</span></label></div>
+      <div class="span2 row"><button class="btn btn-sm" id="invs-save">Save</button><span class="faint" style="font-size:11px">Accounting export (Xero / MYOB CSV) can be added later without changing the invoice format.</span></div>
+    </div></div>`,
     profile:`<div class="stack" style="gap:14px"><div class="card"><div class="card-head"><h3>My profile</h3><span class="chip chip-line">${esc(me.role)}</span></div><div class="card-body form-grid"><div class="field"><span class="label">Name</span><input class="input" id="pf-name" value="${esc(me.name)}"></div><div class="field"><span class="label">Work email</span><input class="input" value="${esc(me.email)}" readonly></div><div class="field span2"><span class="label">Focus</span><input class="input" id="pf-focus" value="${esc(me.focus)}"></div><div class="span2"><button class="btn btn-sm" id="pf-save">Save</button></div></div></div>
       <div class="card"><div class="card-head"><div><h3>My calendar colour</h3><div class="faint" style="font-size:11.5px">Used for your events on the shared calendar, your avatar and your chat messages.</div></div>${avatarHtml(S.me,'lg')}</div><div class="card-body"><div class="swatches">${S.colors.map(c=>`<button class="sw ${me.color===c?'sel':''}" data-swatch="${c}" style="background:${c}" title="${c}" aria-label="${c}"></button>`).join('')}</div><div class="row" style="margin-top:12px;gap:10px"><span class="label">Preview</span><span class="ev" style="--c:${me.color};max-width:260px"><span class="t">14:00</span><span class="n">Vantage partners call</span></span></div><div class="faint" style="font-size:11px;margin-top:8px">Taken: ${S.users.filter(x=>x.id!==S.me&&x.status==='Active').map(x=>`<i class="dot" style="background:${x.color};vertical-align:middle"></i> ${esc(x.name.split(' ')[0])}`).join(' · ')}</div></div></div>
       <div class="card"><div class="card-head"><h3>Password</h3></div><div class="card-body form-grid"><div class="field"><span class="label">Current password</span><input class="input" type="password"></div><div></div><div class="field"><span class="label">New password</span><input class="input" type="password"></div><div class="field"><span class="label">Confirm</span><input class="input" type="password"></div><div class="span2"><button class="btn btn-sm" onclick="toast('Password updated')">Update password</button></div></div></div></div>`,
@@ -1136,6 +1207,65 @@ function openEventDetail(id){
     `<button class="btn btn-quiet" type="button" data-close-modal>Close</button><button class="btn" type="button" data-evedit="${e.id}">Edit</button>`,{wide:false});
   $('#mform').onclick=ev=>{const x=ev.target.closest('[data-evedit]');if(x){closeModal();openEvent(e.id)}};
 }
+</script>
+<script>
+/* ================= INVOICES ================= */
+function vInvoices(){
+  const u=S.ui;const f=u.invFilter||'all';
+  const all=S.invoices.slice().sort((a,b)=>a.number<b.number?1:-1);
+  const rows=all.filter(i=>f==='all'||invStatus(i)===f);
+  const sum=(pred)=>all.filter(pred).reduce((a,i)=>a+calcInvoice(i).total,0);
+  const outstanding=sum(i=>['Sent','Overdue'].includes(invStatus(i)));const overdue=sum(i=>invStatus(i)==='Overdue');const paid=sum(i=>i.status==='Paid'&&dayDiff(i.paidAt||i.issued)>=-30);const drafts=sum(i=>i.status==='Draft');
+  return`<div class="page"><div class="page-head"><div><h1>Invoices</h1><div class="sub">Tax invoices issued by ${esc(S.settings.invoice.entity)} · ABN ${esc(S.settings.invoice.abn)} · GST ${S.settings.invoice.gst}%</div></div><div class="toolbar"><a class="btn btn-quiet" href="#/settings/invoicing">Invoicing settings</a><button class="btn btn-primary" id="inv-new">+ New invoice</button></div></div>
+  <div class="stats"><div class="stat"><span class="label">Outstanding</span><span class="v">${audK(outstanding)}</span><span class="d">${all.filter(i=>['Sent','Overdue'].includes(invStatus(i))).length} invoices sent, unpaid</span></div><div class="stat"><span class="label">Overdue</span><span class="v" style="color:${overdue?'var(--red)':'inherit'}">${audK(overdue)}</span><span class="d">${all.filter(i=>invStatus(i)==='Overdue').length} past due date</span></div><div class="stat"><span class="label">Paid · 30 days</span><span class="v">${audK(paid)}</span><span class="d"><b>${all.filter(i=>i.status==='Paid').length}</b> received</span></div><div class="stat"><span class="label">Drafts</span><span class="v">${audK(drafts)}</span><span class="d">${all.filter(i=>i.status==='Draft').length} not yet sent</span></div></div>
+  <div class="toolbar"><div class="seg">${[['all','All'],['Draft','Draft'],['Sent','Sent'],['Overdue','Overdue'],['Paid','Paid']].map(([k,l])=>`<button class="${f===k?'active':''}" data-invfilter="${k}">${l}</button>`).join('')}</div></div>
+  <div class="table-wrap"><table><thead><tr><th>Invoice</th><th>Client</th><th>Deal</th><th>Issued</th><th>Due</th><th>Basis</th><th class="num">Ex GST</th><th class="num">GST</th><th class="num">Total</th><th>Status</th></tr></thead><tbody>${rows.length?rows.map(i=>{const c=calcInvoice(i);const dd=dayDiff(i.due);return`<tr class="link" data-inv="${i.id}"><td class="mono">${esc(i.number)}</td><td><span class="name">${esc(i.client.name)}</span><br><span class="faint" style="font-size:11px">${esc(i.client.contact)}</span></td><td>${deal(i.deal)?`<a href="#/deal/${i.deal}">${esc(deal(i.deal).practice)}</a>`:'—'}</td><td class="mono" style="font-size:11px">${fmtDate(i.issued)}</td><td class="mono" style="font-size:11px;color:${invStatus(i)==='Overdue'?'var(--red)':'inherit'}">${fmtDate(i.due)}${invStatus(i)==='Overdue'?' · '+Math.abs(dd)+'d':''}</td><td><span class="chip chip-line">${i.mode==='gross'?'Gross':'Net'}</span></td><td class="num">${money(c.sub)}</td><td class="num">${money(c.gst)}</td><td class="num" style="font-weight:500">${money(c.total)}</td><td>${invChip(i)}${i.status==='Paid'?`<span class="faint" style="font-size:10.5px"> ${fmtDate(i.paidAt)}</span>`:''}</td></tr>`}).join(''):'<tr><td colspan="10"><div class="empty">No invoices in this view</div></td></tr>'}</tbody></table></div></div>`;
+}
+function vInvoice(id){
+  const inv=invoice(id);if(!inv)return'<div class="page"><div class="empty"><h3>Invoice not found</h3><a href="#/invoices">Back to invoices</a></div></div>';
+  const st=S.settings.invoice;const c=calcInvoice(inv);const locked=inv.status==='Paid';
+  const dis=locked?'disabled':'';
+  return`<div class="page"><div class="page-head"><div><h1>${esc(inv.number)}</h1><div class="sub" id="inv-sub">${invChip(inv)} <span style="margin-left:6px">${esc(inv.client.name||'No client yet')}</span> · <span class="mono">${money(c.total)}</span> inc GST</div></div>
+    <div class="toolbar"><button class="btn btn-quiet" id="inv-print">Print / PDF</button><button class="btn btn-quiet" id="inv-pdf">Save to SharePoint</button>${inv.status==='Draft'?`<button class="btn btn-primary" id="inv-send">Email to client</button>`:inv.status==='Paid'?`<span class="chip chip-teal" style="height:32px;padding:0 12px">Paid ${fmtDate(inv.paidAt)}</span>`:`<button class="btn btn-quiet" id="inv-send">Resend</button><button class="btn btn-primary" id="inv-paid">Record payment</button>`}<button class="btn btn-icon" id="inv-del" title="Delete invoice">✕</button></div></div>
+  <div class="inv-grid">
+    <div class="card inv-form"><div class="card-body" style="display:flex;flex-direction:column;gap:16px">
+      <div class="form-grid">
+        <div class="field"><span class="label">Client (from pipeline)</span><select class="select" data-invsel="deal" ${dis}><option value="0">— Other / type below</option>${S.deals.slice().sort((a,b)=>a.practice<b.practice?-1:1).map(d=>`<option value="${d.id}" ${inv.deal===d.id?'selected':''}>${esc(d.practice)}</option>`).join('')}</select></div>
+        <div class="field"><span class="label">Invoice number</span><input class="input mono" data-invf="number" value="${esc(inv.number)}" ${dis}></div>
+        <div class="field"><span class="label">Client name *</span><input class="input" data-invc="name" value="${esc(inv.client.name)}" ${dis}></div>
+        <div class="field"><span class="label">Attention</span><input class="input" data-invc="contact" value="${esc(inv.client.contact)}" ${dis}></div>
+        <div class="field"><span class="label">Client email</span><input class="input" data-invc="email" value="${esc(inv.client.email)}" ${dis}></div>
+        <div class="field"><span class="label">Client ABN</span><input class="input mono" data-invc="abn" value="${esc(inv.client.abn)}" placeholder="optional" ${dis}></div>
+        <div class="field span2"><span class="label">Client address</span><textarea class="textarea" data-invc="address" style="min-height:52px" ${dis}>${esc(inv.client.address)}</textarea></div>
+        <div class="field"><span class="label">Issue date</span><input class="input" type="date" data-invf="issued" value="${inv.issued}" ${dis}></div>
+        <div class="field"><span class="label">Due date</span><input class="input" type="date" data-invf="due" value="${inv.due}" ${dis}><span class="faint" style="font-size:11px">Default ${st.terms} days from issue</span></div>
+        <div class="field"><span class="label">Client reference / PO</span><input class="input" data-invf="ref" value="${esc(inv.ref||'')}" placeholder="optional" ${dis}></div>
+        <div class="field"><span class="label">Status</span><div style="padding-top:8px">${invChip(inv)}</div></div>
+      </div>
+      <div class="field"><span class="label">Amounts entered are</span><div class="mode"><label class="${inv.mode==='net'?'on':''}"><input type="radio" name="mode" value="net" ${inv.mode==='net'?'checked':''} ${dis}><div><b>Net — excluding GST</b><span>GST ${st.gst}% is added on top. Total = line items × 1.${String(st.gst).padStart(2,'0')}</span></div></label><label class="${inv.mode==='gross'?'on':''}"><input type="radio" name="mode" value="gross" ${inv.mode==='gross'?'checked':''} ${dis}><div><b>Gross — including GST</b><span>GST is extracted (÷ 11). Total is exactly what you typed.</span></div></label></div></div>
+      <div class="field"><span class="label">Line items</span><table class="li-table"><thead><tr><th style="width:52%">Description</th><th class="num" style="width:84px">Qty</th><th class="num" style="width:120px">Unit (${inv.mode==='gross'?'inc':'ex'} GST)</th><th class="num">Line</th><th></th></tr></thead><tbody>${inv.items.map((li,i)=>`<tr><td><input class="input" data-li="${i}" data-k="desc" value="${esc(li.desc)}" placeholder="Describe the work" ${dis}></td><td class="num"><input class="input" type="number" step="0.5" min="0" data-li="${i}" data-k="qty" value="${li.qty}" ${dis}></td><td class="num"><input class="input" type="number" step="50" min="0" data-li="${i}" data-k="unit" value="${li.unit}" ${dis}></td><td class="lt" data-lt="${i}">${money(c.lines[i].total)}</td><td>${locked?'':`<button class="x" data-li-del="${i}" title="Remove line" type="button">✕</button>`}</td></tr>`).join('')}</tbody></table>${locked?'':'<div><button class="btn btn-sm btn-quiet" id="li-add" type="button">+ Add line</button></div>'}</div>
+      <div id="inv-totals">${totalsHtml(c)}</div>
+      <div class="field"><span class="label">Notes on invoice</span><textarea class="textarea" data-invf="notes" style="min-height:52px" placeholder="e.g. 50% deposit, balance on delivery" ${dis}>${esc(inv.notes||'')}</textarea></div>
+      <div class="faint" style="font-size:11px">Saved automatically. Sending emails a PDF to the client from ${esc(st.email)}, files a copy in the client's SharePoint folder and logs it on the deal.</div>
+    </div></div>
+    <div id="inv-preview">${invDoc(inv)}</div>
+  </div></div>`;
+}
+function totalsHtml(c){return`<div class="totals"><span class="k">Subtotal (ex GST)</span><span class="v">${money(c.sub)}</span><span class="k">GST ${Math.round(c.rate*100)}%</span><span class="v">${money(c.gst)}</span><span class="k grand">Total (inc GST)</span><span class="v grand">${money(c.total)}</span></div>`}
+function invDoc(inv){
+  const st=S.settings.invoice;const c=calcInvoice(inv);const s=invStatus(inv);
+  return`<div class="doc">
+    ${s==='Paid'?'<div class="stamp">Paid</div>':s==='Overdue'?'<div class="stamp red">Overdue</div>':s==='Draft'?'<div class="stamp grey">Draft</div>':''}
+    <div class="dh"><div class="lockup"><div class="frame"><b>GBX</b><i></i></div><div class="word"><b>GBX</b><span>Professional Services</span></div></div><div class="ttl">Tax Invoice<small>${esc(inv.number)}</small></div></div>
+    <div class="meta"><div><div class="label">From</div><p><b style="font-weight:500">${esc(st.entity)}</b>\nABN ${esc(st.abn)}\n${esc(st.address)}\n${esc(st.email)} · ${esc(st.phone)}</p></div><div><div class="label">Bill to</div><p><b style="font-weight:500">${esc(inv.client.name||'—')}</b>${inv.client.contact?'\nAttn: '+esc(inv.client.contact):''}${inv.client.abn?'\nABN '+esc(inv.client.abn):''}\n${esc(inv.client.address||'')}${inv.client.email?'\n'+esc(inv.client.email):''}</p></div>
+      <div class="kv2"><b>Issue date</b><span>${fmtDate(inv.issued)} ${inv.issued.slice(0,4)}</span><b>Due date</b><span>${fmtDate(inv.due)} ${inv.due.slice(0,4)}</span><b>Terms</b><span>${Math.max(0,Math.round((new Date(inv.due)-new Date(inv.issued))/864e5))} days</span></div><div class="kv2">${inv.ref?`<b>Your reference</b><span>${esc(inv.ref)}</span>`:''}${deal(inv.deal)?`<b>Engagement</b><span>${esc(deal(inv.deal).service)}</span>`:''}<b>Amounts</b><span>${inv.mode==='gross'?'Inclusive of GST':'Exclusive of GST'}</span></div></div>
+    <table><thead><tr><th>Description</th><th class="num">Qty</th><th class="num">Unit</th><th class="num">Amount</th></tr></thead><tbody>${c.lines.map(l=>`<tr><td>${esc(l.desc)||'<span style="color:#8E8B83">—</span>'}</td><td class="num">${l.qty}</td><td class="num">${money(l.unit)}</td><td class="num">${money(l.total)}</td></tr>`).join('')}</tbody></table>
+    ${totalsHtml(c)}
+    ${inv.notes?`<p style="font-size:11.5px;color:#5A5852">${esc(inv.notes)}</p>`:''}
+    <div class="pay"><div><div class="label">Payment</div><b>${esc(st.bank)}</b><br>Reference: ${esc(inv.number)}<br>Due ${fmtDate(inv.due)} ${inv.due.slice(0,4)}</div><div><div class="label">Notes</div>${esc(st.footer)}<br>Questions: ${esc(st.email)}</div></div>
+  </div>`;
+}
+function refreshInv(inv){const c=calcInvoice(inv);const p=$('#inv-preview');if(p)p.innerHTML=invDoc(inv);const t=$('#inv-totals');if(t)t.innerHTML=totalsHtml(c);c.lines.forEach((l,i)=>{const el=$(`[data-lt="${i}"]`);if(el)el.textContent=money(l.total)});const sub=$('#inv-sub');if(sub)sub.innerHTML=`${invChip(inv)} <span style="margin-left:6px">${esc(inv.client.name||'No client yet')}</span> · <span class="mono">${money(c.total)}</span> inc GST`;save()}
 </script>
 <script>
 /* ================= MODALS ================= */
@@ -1265,6 +1395,18 @@ function bindView(r){
     const t=e.target;const el=s=>t.closest(s);
     let x;
     if(x=el('[data-tfilter]')){S.ui.taskFilter=x.dataset.tfilter;route();return}
+    if(x=el('[data-invfilter]')){S.ui.invFilter=x.dataset.invfilter;route();return}
+    if(x=el('#inv-new')){const inv=newInvoice(0);location.hash='#/invoice/'+inv.id;return}
+    if(x=el('[data-invoice]')){const inv=newInvoice(+x.dataset.invoice);toast('Draft invoice '+inv.number+' created');location.hash='#/invoice/'+inv.id;return}
+    if(x=el('tr[data-inv]')){if(t.tagName==='A')return;location.hash='#/invoice/'+x.dataset.inv;return}
+    if(x=el('#li-add')){curInv().items.push({desc:'',qty:1,unit:0});route();return}
+    if(x=el('[data-li-del]')){const inv=curInv();inv.items.splice(+x.dataset.liDel,1);if(!inv.items.length)inv.items.push({desc:'',qty:1,unit:0});route();return}
+    if(x=el('#inv-print')){window.print();return}
+    if(x=el('#inv-pdf')){const inv=curInv();S.files.unshift({id:nextId(S.files),deal:inv.deal,name:inv.number+'.pdf',size:'96 KB',by:S.me,at:'2026-09-03',kind:'PDF'});if(inv.deal)logAct(inv.deal,'file','Invoice saved to SharePoint',inv.number+'.pdf');save();toast(`Saved ${inv.number}.pdf to ${inv.client.name||'client'}/Invoices`);return}
+    if(x=el('#inv-send')){const inv=curInv();if(!inv.client.name||!inv.client.email){toast('Add a client name and email first');return}const c=calcInvoice(inv);inv.status='Sent';S.files.unshift({id:nextId(S.files),deal:inv.deal,name:inv.number+'.pdf',size:'96 KB',by:S.me,at:'2026-09-03',kind:'PDF'});S.threads.unshift({id:nextId(S.threads),deal:inv.deal,folder:'sent',from:inv.client.contact||inv.client.name,addr:inv.client.email,subject:`${inv.number} — Tax invoice from GBX Professional Services (${money(c.total)})`,unread:false,at:'2026-09-03T09:40',msgs:[{from:user(S.me).name,out:true,at:'2026-09-03T09:40',body:`Hi ${(inv.client.contact||'there').split(' ')[0]},\n\nPlease find attached tax invoice ${inv.number} for ${money(c.total)} inc GST, due ${fmtDate(inv.due)}.\n\nPayment details are on the invoice. Let us know if you need anything changed.\n\n${user(S.me).name}\nGBX Professional Services\n\n📎 ${inv.number}.pdf`}]});if(inv.deal)logAct(inv.deal,'email',`Invoice ${inv.number} sent`,money(c.total)+' inc GST · due '+fmtDate(inv.due));save();toast(`Emailed ${inv.number} to ${inv.client.email}`);route();return}
+    if(x=el('#inv-paid')){const inv=curInv();inv.status='Paid';inv.paidAt='2026-09-03';if(inv.deal)logAct(inv.deal,'note',`Invoice ${inv.number} paid`,money(calcInvoice(inv).total));save();toast('Payment recorded');route();return}
+    if(x=el('#inv-del')){const inv=curInv();if(confirm(`Delete ${inv.number}?`)){S.invoices=S.invoices.filter(q=>q.id!==inv.id);location.hash='#/invoices'}return}
+    if(x=el('#invs-save')){$$('[data-ivs]').forEach(i=>{const k=i.dataset.ivs;S.settings.invoice[k]=['next','terms','gst'].includes(k)?+i.value:i.value});save();toast('Invoicing settings saved');return}
     if(x=el('[data-pref]')){const ev=S.settings.notifyPrefs.events.find(q=>q.id===x.dataset.pref);ev[x.dataset.ch]=!ev[x.dataset.ch];x.classList.toggle('on');save();return}
     if(x=el('#prefs-save')){const p=S.settings.notifyPrefs;p.quietFrom=$('#quiet-from').value;p.quietTo=$('#quiet-to').value;p.digest=$('#digest-at').value;save();toast('Notification preferences saved');return}
     if(x=el('#pf-save')){const me=user(S.me);me.name=$('#pf-name').value.trim()||me.name;me.focus=$('#pf-focus').value;save();toast('Profile saved');route();return}
@@ -1314,6 +1456,8 @@ function bindView(r){
     if(t.id==='cal-tasks'){S.ui.calTasks=t.checked;route();return}
     if(t.dataset.hide){const h=S.ui.calHide||(S.ui.calHide=[]);const i=h.indexOf(t.dataset.hide);i>=0?h.splice(i,1):h.push(t.dataset.hide);route();return}
     if(t.id==='chat-hours'){S.settings.notifyPrefs.chatHours=+t.value;save();toast('Unread chat is emailed after '+t.value+' hours');return}
+    if(t.dataset.invsel==='deal'){const inv=curInv();const d=deal(t.value);inv.deal=d?d.id:0;if(d){inv.client={name:d.practice,contact:d.contact,email:d.email,address:d.city||'',abn:inv.client.abn||''};if(inv.items.length===1&&!inv.items[0].desc)inv.items[0].desc=d.service}route();return}
+    if(t.name==='mode'&&t.closest('.mode')){const inv=curInv();inv.mode=t.value;route();return}
     if(t.id==='f-owner'){S.ui.filterOwner=t.value;route()}if(t.id==='f-stage'){S.ui.filterStage=t.value;route()}
     if(t.id==='sel-all'){$$('.sel').forEach(q=>q.checked=t.checked);bulkBar()}if(t.classList.contains('sel'))bulkBar();
     if(t.id==='bulk-stage'&&t.value){$$('.sel:checked').forEach(q=>moveStage(+q.dataset.id,t.value,true));route()}
@@ -1325,7 +1469,9 @@ function bindView(r){
     if(t.name==='storage'){S.settings.storage=t.value;route();toast(t.value==='sharepoint'?'Files will be stored in SharePoint':'Files will be stored on the CRM server')}
     if(t.id==='deal-notes'){const id=+location.hash.split('/')[2];deal(id).notes=t.value;logAct(id,'note','Notes updated');save();toast('Notes saved')}
   };
-  c.oninput=e=>{if(e.target.id==='f-q'){S.ui.q=e.target.value;clearTimeout(c._t);c._t=setTimeout(()=>{route();const i=$('#f-q');if(i){i.focus();i.setSelectionRange(99,99)}},250)}};
+  c.oninput=e=>{const t=e.target;
+    if(t.dataset.invf!==undefined||t.dataset.invc!==undefined||t.dataset.li!==undefined){const inv=curInv();if(!inv)return;if(t.dataset.invf!==undefined)inv[t.dataset.invf]=t.value;if(t.dataset.invc!==undefined)inv.client[t.dataset.invc]=t.value;if(t.dataset.li!==undefined){const li=inv.items[+t.dataset.li];if(li)li[t.dataset.k]=t.dataset.k==='desc'?t.value:+t.value||0}refreshInv(inv);return}
+    if(e.target.id==='f-q'){S.ui.q=e.target.value;clearTimeout(c._t);c._t=setTimeout(()=>{route();const i=$('#f-q');if(i){i.focus();i.setSelectionRange(99,99)}},250)}};
   c.onsubmit=e=>{if(e.target.id==='chat-form'){e.preventDefault();sendChat(e.target);return}
     if(e.target.id==='reply-form'){e.preventDefault();const th=S.threads.find(q=>q.id===+e.target.dataset.thread);const body=e.target.body.value.trim();if(!body)return;th.msgs.push({from:user(S.me).name,out:true,at:'2026-09-03T09:30',body});th.at='2026-09-03T09:30';if(th.deal)logAct(th.deal,'email','Email sent','Re: '+th.subject);toast('Sent via Microsoft 365');route()}};
   if(r==='chat'){const log=$('#chat-log');if(log)log.scrollTop=log.scrollHeight;const ta=$('#chat-form textarea');if(ta){ta.focus();ta.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat($('#chat-form'))}}}}
@@ -1339,6 +1485,7 @@ function bindView(r){
     rows.forEach(rw=>{rw.addEventListener('dragstart',()=>{dragF=rw.dataset.fid;rw.classList.add('dragging')});rw.addEventListener('dragend',()=>{rw.classList.remove('dragging');rows.forEach(q=>q.classList.remove('over'))});rw.addEventListener('dragover',e=>{e.preventDefault();rw.classList.add('over')});rw.addEventListener('dragleave',()=>rw.classList.remove('over'));rw.addEventListener('drop',e=>{e.preventDefault();if(!dragF||dragF===rw.dataset.fid)return;const from=S.fields.findIndex(f=>f.id===dragF);const [f]=S.fields.splice(from,1);const to=S.fields.findIndex(q=>q.id===rw.dataset.fid);S.fields.splice(to,0,f);route()})});
   }
 }
+function curInv(){return invoice(location.hash.split('/')[2])}
 function sendChat(form){const text=form.text.value.trim();if(!text)return;const r=room(S.ui.room);const m={id:nextId(S.messages),room:r.id,who:S.me,at:'2026-09-03T09:'+String(S.messages.length%60).padStart(2,'0'),text,read:[S.me],emailed:[]};
   const fid=+form.file.value;if(fid){const f=S.files.find(q=>q.id===fid);m.file={name:f.name,fileId:f.id}}const did=+form.deal.value;if(did)m.deal=did;
   S.messages.push(m);
