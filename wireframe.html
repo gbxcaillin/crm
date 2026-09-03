@@ -1,0 +1,939 @@
+<title>Relay</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Figtree:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+:root {
+  --ink: #1C2030;
+  --graphite: #6E7389;
+  --fog: #A4A8B8;
+  --saffron: #D98B3B;
+  --saffron-hover: #C47A2E;
+  --saffron-subtle: #FEF5EA;
+  --jade: #2D9E80;
+  --jade-subtle: #EAF6F2;
+  --coral: #CF5262;
+  --coral-subtle: #FCECEE;
+  --peri: #6B7FE3;
+  --peri-subtle: #EEEFFE;
+  --bg: #F4F3F0;
+  --surface: #FFFFFF;
+  --surface-raised: #FFFFFF;
+  --border: #E4E2DD;
+  --border-strong: #D0CEC7;
+  --text-1: #1C2030;
+  --text-2: #6E7389;
+  --text-3: #A4A8B8;
+  --sidebar-bg: #1C2030;
+  --sidebar-text: #9298AD;
+  --sidebar-active: #FFFFFF;
+  --sidebar-hover: rgba(255,255,255,0.06);
+  --panel-bg: var(--surface);
+  --input-bg: var(--bg);
+  --radius: 8px;
+  --radius-sm: 5px;
+  --radius-lg: 12px;
+  --shadow-sm: 0 1px 2px rgba(28,32,48,0.05);
+  --shadow: 0 2px 8px rgba(28,32,48,0.07);
+  --shadow-lg: 0 8px 24px rgba(28,32,48,0.12);
+  --col-new: #6B7FE3;
+  --col-contacted: #D98B3B;
+  --col-qualified: #9B6FBF;
+  --col-proposal: #4A90D9;
+  --col-negotiation: #CF5262;
+  --col-won: #2D9E80;
+  --col-lost: #8E8E8E;
+}
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg: #0E1018;
+    --surface: #181B26;
+    --surface-raised: #20243A;
+    --border: #282D3E;
+    --border-strong: #353A4E;
+    --text-1: #E2E3EA;
+    --text-2: #8A8EA2;
+    --text-3: #5C6076;
+    --sidebar-bg: #0A0C14;
+    --sidebar-hover: rgba(255,255,255,0.04);
+    --saffron-subtle: #2A2114;
+    --jade-subtle: #132A23;
+    --coral-subtle: #2A1418;
+    --peri-subtle: #141C2E;
+    --panel-bg: #181B26;
+    --input-bg: #10121C;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
+    --shadow: 0 2px 8px rgba(0,0,0,0.25);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg: #0E1018;
+  --surface: #181B26;
+  --surface-raised: #20243A;
+  --border: #282D3E;
+  --border-strong: #353A4E;
+  --text-1: #E2E3EA;
+  --text-2: #8A8EA2;
+  --text-3: #5C6076;
+  --sidebar-bg: #0A0C14;
+  --sidebar-hover: rgba(255,255,255,0.04);
+  --saffron-subtle: #2A2114;
+  --jade-subtle: #132A23;
+  --coral-subtle: #2A1418;
+  --peri-subtle: #141C2E;
+  --panel-bg: #181B26;
+  --input-bg: #10121C;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
+  --shadow: 0 2px 8px rgba(0,0,0,0.25);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Figtree',system-ui,-apple-system,sans-serif;color:var(--text-1);background:var(--bg);line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:'Outfit',system-ui,sans-serif;font-weight:600;line-height:1.2}
+input,button,select,textarea{font:inherit;color:inherit}
+a{color:var(--saffron);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--border);background:var(--surface);border-radius:var(--radius-sm);font-family:'Outfit',sans-serif;font-weight:500;font-size:.875rem;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn:hover{border-color:var(--border-strong);background:var(--bg)}
+.btn-primary{background:var(--saffron);color:#fff;border-color:var(--saffron)}
+.btn-primary:hover{background:var(--saffron-hover);border-color:var(--saffron-hover)}
+.btn-sm{padding:5px 10px;font-size:.8125rem}
+.btn-full{width:100%;justify-content:center}
+.btn-ghost{border-color:transparent;background:transparent}
+.btn-ghost:hover{background:var(--bg);border-color:var(--border)}
+.btn-danger{color:var(--coral);border-color:var(--coral-subtle)}
+.btn-danger:hover{background:var(--coral-subtle)}
+
+/* ── Inputs ── */
+.input{display:block;width:100%;padding:8px 12px;background:var(--input-bg);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.875rem;transition:border-color .15s}
+.input:focus{outline:none;border-color:var(--saffron)}
+.input-label{display:block;font-size:.75rem;font-weight:600;font-family:'Outfit',sans-serif;color:var(--text-2);letter-spacing:.03em;text-transform:uppercase;margin-bottom:5px}
+.field-group{margin-bottom:16px}
+
+/* ── Badge ── */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:.6875rem;font-weight:600;font-family:'Outfit',sans-serif;letter-spacing:.02em;white-space:nowrap}
+.badge-saffron{background:var(--saffron-subtle);color:var(--saffron)}
+.badge-jade{background:var(--jade-subtle);color:var(--jade)}
+.badge-coral{background:var(--coral-subtle);color:var(--coral)}
+.badge-peri{background:var(--peri-subtle);color:var(--peri)}
+.badge-neutral{background:var(--bg);color:var(--text-2)}
+
+/* ── Toggle ── */
+.toggle-track{position:relative;width:36px;height:20px;background:var(--border-strong);border-radius:10px;cursor:pointer;transition:background .2s}
+.toggle-track.on{background:var(--saffron)}
+.toggle-knob{position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:var(--shadow-sm)}
+.toggle-track.on .toggle-knob{transform:translateX(16px)}
+
+/* ═══════════════ LOGIN ═══════════════ */
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--sidebar-bg);padding:24px}
+.login-card{width:100%;max-width:380px;background:var(--surface);border-radius:var(--radius-lg);padding:40px 32px;box-shadow:var(--shadow-lg)}
+.login-mark{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px}
+.login-mark svg{flex-shrink:0}
+.login-mark h1{font-size:1.5rem;letter-spacing:-.01em}
+.login-sub{text-align:center;color:var(--text-2);font-size:.875rem;margin-bottom:28px}
+.login-card form{display:flex;flex-direction:column;gap:16px}
+.login-footer{text-align:center;font-size:.8125rem;color:var(--text-2);margin-top:4px}
+
+/* ═══════════════ APP SHELL ═══════════════ */
+.app-shell{display:flex;height:100vh;overflow:hidden}
+
+/* ── Sidebar ── */
+.sidebar{width:232px;flex-shrink:0;background:var(--sidebar-bg);display:flex;flex-direction:column;padding:20px 12px 16px;overflow-y:auto}
+.sidebar-mark{display:flex;align-items:center;gap:9px;padding:0 8px 24px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:12px}
+.sidebar-mark svg{flex-shrink:0}
+.sidebar-mark span{font-family:'Outfit',sans-serif;font-weight:700;font-size:1.125rem;color:#fff;letter-spacing:-.01em}
+.sidebar-nav{display:flex;flex-direction:column;gap:2px;flex:1}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--radius-sm);color:var(--sidebar-text);font-family:'Outfit',sans-serif;font-weight:500;font-size:.875rem;cursor:pointer;transition:all .12s;text-decoration:none;position:relative}
+.nav-item:hover{background:var(--sidebar-hover);color:#fff;text-decoration:none}
+.nav-item.active{background:rgba(255,255,255,.1);color:#fff}
+.nav-item svg{flex-shrink:0;opacity:.7}
+.nav-item.active svg,.nav-item:hover svg{opacity:1}
+.nav-badge{margin-left:auto;background:var(--saffron);color:#fff;font-size:.6875rem;font-weight:600;padding:1px 7px;border-radius:10px}
+.sidebar-section{font-size:.65rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.25);padding:20px 10px 6px;font-family:'Outfit',sans-serif}
+.sidebar-footer{border-top:1px solid rgba(255,255,255,.08);padding-top:12px;margin-top:8px}
+.sidebar-user{display:flex;align-items:center;gap:10px;padding:6px 10px;margin-bottom:8px}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--saffron);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-weight:600;font-size:.75rem;flex-shrink:0}
+.sidebar-user .user-name{color:#fff;font-size:.8125rem;font-weight:500;font-family:'Outfit',sans-serif}
+.sidebar-user .user-role{color:var(--sidebar-text);font-size:.6875rem}
+
+/* ── Content ── */
+.content{flex:1;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column}
+.view{display:flex;flex-direction:column;flex:1;min-height:0}
+.view-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 28px 16px;flex-wrap:wrap}
+.view-header h2{font-size:1.25rem;font-weight:700;letter-spacing:-.01em}
+.view-controls{display:flex;align-items:center;gap:10px}
+.view-toggle{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
+.toggle-btn{padding:6px 14px;font-family:'Outfit',sans-serif;font-weight:500;font-size:.8125rem;border:none;background:transparent;cursor:pointer;color:var(--text-2);transition:all .12s}
+.toggle-btn.active{background:var(--saffron);color:#fff}
+.search-box{display:flex;align-items:center;gap:6px;padding:0 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);height:34px}
+.search-box svg{flex-shrink:0;color:var(--text-3)}
+.search-box input{border:none;background:transparent;outline:none;font-size:.875rem;width:160px}
+
+/* ═══════════════ KANBAN ═══════════════ */
+.kanban{display:flex;gap:14px;padding:0 28px 28px;flex:1;overflow-x:auto;min-height:0}
+.kanban::-webkit-scrollbar{height:6px}
+.kanban::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px}
+.kanban-col{min-width:272px;width:272px;flex-shrink:0;display:flex;flex-direction:column;max-height:100%}
+.col-header{display:flex;align-items:center;gap:8px;padding:10px 4px 12px;border-top:3px solid var(--col-color,var(--text-3));font-family:'Outfit',sans-serif}
+.col-header .col-name{font-weight:600;font-size:.8125rem;flex:1}
+.col-header .col-count{font-size:.75rem;color:var(--text-3);font-weight:500}
+.col-header .col-value{font-size:.6875rem;color:var(--text-2);font-weight:500;font-variant-numeric:tabular-nums}
+.col-cards{display:flex;flex-direction:column;gap:8px;overflow-y:auto;flex:1;padding-bottom:16px}
+.col-cards::-webkit-scrollbar{width:4px}
+.col-cards::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* ── Deal Card ── */
+.deal-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;transition:all .15s;position:relative;box-shadow:var(--shadow-sm)}
+.deal-card:hover{border-color:var(--border-strong);box-shadow:var(--shadow)}
+.deal-card-stripe{position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:0 2px 2px 0}
+.deal-card-company{font-family:'Outfit',sans-serif;font-weight:600;font-size:.875rem;margin-left:8px;margin-bottom:2px}
+.deal-card-contact{font-size:.8125rem;color:var(--text-2);margin-left:8px;margin-bottom:10px}
+.deal-card-meta{display:flex;align-items:center;gap:8px;margin-left:8px;flex-wrap:wrap}
+.deal-card-value{font-family:'Outfit',sans-serif;font-weight:600;font-size:.8125rem;font-variant-numeric:tabular-nums}
+.deal-card-age{font-size:.6875rem;color:var(--text-3);margin-left:auto}
+.deal-card-tags{display:flex;gap:4px;margin-top:8px;margin-left:8px;flex-wrap:wrap}
+
+/* ═══════════════ LIST ═══════════════ */
+.list-view{padding:0 28px 28px;overflow-x:auto;flex:1}
+.data-table{width:100%;border-collapse:separate;border-spacing:0;font-size:.875rem}
+.data-table th{position:sticky;top:0;background:var(--bg);text-align:left;padding:10px 14px;font-family:'Outfit',sans-serif;font-weight:600;font-size:.75rem;color:var(--text-2);letter-spacing:.03em;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap}
+.data-table td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap}
+.data-table tbody tr{background:var(--surface);cursor:pointer;transition:background .1s}
+.data-table tbody tr:hover{background:var(--saffron-subtle)}
+.data-table .td-company{font-family:'Outfit',sans-serif;font-weight:600}
+.data-table .td-value{font-variant-numeric:tabular-nums;font-weight:500}
+.stage-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+
+/* ═══════════════ PANEL ═══════════════ */
+.overlay{position:fixed;inset:0;z-index:100;display:flex;justify-content:flex-end}
+.overlay-bg{position:absolute;inset:0;background:rgba(0,0,0,.35)}
+.panel{position:relative;width:520px;max-width:100%;background:var(--panel-bg);box-shadow:var(--shadow-lg);display:flex;flex-direction:column;overflow-y:auto;animation:slideIn .2s ease}
+@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.panel-header{display:flex;align-items:flex-start;gap:12px;padding:24px 24px 0;margin-bottom:4px}
+.panel-close{background:none;border:none;cursor:pointer;color:var(--text-3);padding:4px;border-radius:var(--radius-sm);flex-shrink:0;margin-left:auto}
+.panel-close:hover{color:var(--text-1);background:var(--bg)}
+.panel-company{font-size:1.25rem;font-weight:700;flex:1;font-family:'Outfit',sans-serif}
+.panel-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);padding:0 24px;margin-top:8px}
+.panel-tab{padding:10px 14px;font-family:'Outfit',sans-serif;font-weight:500;font-size:.8125rem;color:var(--text-2);cursor:pointer;border-bottom:2px solid transparent;transition:all .12s;background:none;border-top:none;border-left:none;border-right:none}
+.panel-tab.active{color:var(--saffron);border-bottom-color:var(--saffron)}
+.panel-tab:hover{color:var(--text-1)}
+.panel-body{padding:20px 24px 32px;flex:1}
+.panel-section{margin-bottom:24px}
+.panel-section-title{font-family:'Outfit',sans-serif;font-weight:600;font-size:.8125rem;color:var(--text-2);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.detail-item label{display:block;font-size:.6875rem;color:var(--text-3);font-weight:600;font-family:'Outfit',sans-serif;letter-spacing:.03em;text-transform:uppercase;margin-bottom:2px}
+.detail-item span{font-size:.875rem}
+.ai-card{background:var(--peri-subtle);border:1px solid var(--peri);border-radius:var(--radius);padding:14px 16px;border-left:3px solid var(--peri)}
+.ai-card h4{font-size:.8125rem;color:var(--peri);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.ai-card p{font-size:.8125rem;color:var(--text-2);line-height:1.55}
+.ai-score{display:inline-flex;align-items:center;gap:4px;font-family:'Outfit',sans-serif;font-weight:700;font-size:1rem;color:var(--peri)}
+.timeline{display:flex;flex-direction:column;gap:0}
+.tl-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:.8125rem}
+.tl-item:last-child{border-bottom:none}
+.tl-dot{width:8px;height:8px;border-radius:50%;background:var(--border-strong);margin-top:5px;flex-shrink:0}
+.tl-content{flex:1}
+.tl-content strong{font-weight:600}
+.tl-time{color:var(--text-3);font-size:.75rem;white-space:nowrap}
+
+/* ═══════════════ EMAIL ═══════════════ */
+.email-split{display:flex;flex:1;min-height:0;border-top:1px solid var(--border)}
+.email-threads{width:340px;flex-shrink:0;border-right:1px solid var(--border);overflow-y:auto}
+.email-thread{padding:14px 20px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+.email-thread:hover,.email-thread.active{background:var(--saffron-subtle)}
+.email-thread .et-from{font-family:'Outfit',sans-serif;font-weight:600;font-size:.8125rem;margin-bottom:2px;display:flex;justify-content:space-between}
+.email-thread .et-subject{font-size:.8125rem;font-weight:500;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.email-thread .et-preview{font-size:.75rem;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.email-thread .et-time{font-size:.6875rem;color:var(--text-3);font-variant-numeric:tabular-nums}
+.email-thread .et-unread{width:6px;height:6px;border-radius:50%;background:var(--saffron);flex-shrink:0}
+.email-detail{flex:1;padding:24px;overflow-y:auto;display:flex;flex-direction:column;gap:20px}
+.email-detail .ed-subject{font-family:'Outfit',sans-serif;font-size:1.125rem;font-weight:600}
+.email-message{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;font-size:.875rem}
+.email-message .em-header{display:flex;justify-content:space-between;margin-bottom:10px;font-size:.8125rem}
+.email-message .em-from{font-weight:600}
+.email-message .em-date{color:var(--text-3)}
+.email-message .em-body{color:var(--text-2);line-height:1.6}
+.email-empty{display:flex;align-items:center;justify-content:center;flex:1;color:var(--text-3);font-size:.875rem}
+
+/* ═══════════════ INTEGRATIONS ═══════════════ */
+.int-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;padding:0 28px 28px}
+.int-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;box-shadow:var(--shadow-sm)}
+.int-card-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.int-card-icon{width:40px;height:40px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0}
+.int-card-header h3{font-size:1rem;font-weight:600;flex:1}
+.int-status{display:inline-flex;align-items:center;gap:5px;font-size:.75rem;font-weight:600;font-family:'Outfit',sans-serif}
+.int-status .dot{width:6px;height:6px;border-radius:50%}
+.int-status.connected .dot{background:var(--jade)}
+.int-status.connected{color:var(--jade)}
+.int-status.disconnected .dot{background:var(--coral)}
+.int-status.disconnected{color:var(--coral)}
+.int-detail{display:flex;flex-direction:column;gap:12px;padding-top:12px;border-top:1px solid var(--border)}
+.int-row{display:flex;align-items:center;justify-content:space-between;font-size:.8125rem}
+.int-row label{color:var(--text-2);font-weight:500}
+.int-row code{font-size:.75rem;background:var(--input-bg);padding:3px 8px;border-radius:var(--radius-sm);border:1px solid var(--border);font-family:'Figtree',monospace}
+.int-desc{font-size:.8125rem;color:var(--text-2);line-height:1.5}
+
+/* ═══════════════ FIELDS ═══════════════ */
+.fields-list{padding:0 28px 28px;display:flex;flex-direction:column;gap:6px}
+.field-row{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;transition:box-shadow .1s}
+.field-row:hover{box-shadow:var(--shadow)}
+.field-drag{color:var(--text-3);cursor:grab;flex-shrink:0;display:flex;align-items:center}
+.field-name{font-family:'Outfit',sans-serif;font-weight:600;font-size:.875rem;flex:1;min-width:0}
+.field-type{font-size:.75rem;color:var(--text-2);background:var(--bg);padding:3px 10px;border-radius:20px;font-weight:500}
+.field-required{font-size:.6875rem;color:var(--text-3);font-weight:500;width:70px;text-align:center}
+.field-actions{display:flex;gap:4px}
+
+/* ═══════════════ TEAM ═══════════════ */
+.team-table-wrap{padding:0 28px 28px;overflow-x:auto}
+.data-table .role-badge{display:inline-flex;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:600;font-family:'Outfit',sans-serif}
+.role-admin{background:var(--saffron-subtle);color:var(--saffron)}
+.role-manager{background:var(--peri-subtle);color:var(--peri)}
+.role-member{background:var(--bg);color:var(--text-2)}
+.status-active{color:var(--jade);font-weight:500}
+.status-invited{color:var(--saffron);font-weight:500;font-style:italic}
+
+/* ── Utilities ── */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+@media(max-width:768px){
+  .sidebar{width:60px;padding:16px 6px}
+  .sidebar-mark span,.nav-item span,.sidebar-user .user-name,.sidebar-user .user-role,.nav-badge,.sidebar-section{display:none}
+  .nav-item{justify-content:center;padding:10px}
+  .sidebar-user{justify-content:center}
+  .view-header{padding:16px 20px 12px}
+  .kanban{padding:0 20px 20px}
+  .email-threads{width:240px}
+}
+</style>
+
+<!-- ═══════════════ LOGIN SCREEN ═══════════════ -->
+<div id="login-screen" class="login-screen">
+  <div class="login-card">
+    <div class="login-mark">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <rect x="2" y="2" width="24" height="24" rx="6" fill="var(--saffron)"/>
+        <path d="M8 10h4v8H8zM16 8h4v10h-4z" fill="#fff" opacity=".9"/>
+        <path d="M12 14h4" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <h1>Relay</h1>
+    </div>
+    <p class="login-sub">Sign in to your deal pipeline</p>
+    <form id="login-form" autocomplete="off">
+      <div class="field-group">
+        <label class="input-label" for="login-email">Email</label>
+        <input class="input" id="login-email" type="email" placeholder="you@company.com" value="jane@relay.io">
+      </div>
+      <div class="field-group">
+        <label class="input-label" for="login-pw">Password</label>
+        <input class="input" id="login-pw" type="password" placeholder="••••••••" value="password123">
+      </div>
+      <button type="submit" class="btn btn-primary btn-full" style="margin-top:4px">Sign In</button>
+      <p class="login-footer">Don't have an account? <a href="#" onclick="event.preventDefault()">Create one</a></p>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════ APP SHELL ═══════════════ -->
+<div id="app-shell" class="app-shell" hidden>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-mark">
+      <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
+        <rect x="2" y="2" width="24" height="24" rx="6" fill="var(--saffron)"/>
+        <path d="M8 10h4v8H8zM16 8h4v10h-4z" fill="#fff" opacity=".9"/>
+        <path d="M12 14h4" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span>Relay</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">Main</div>
+      <a class="nav-item active" data-view="pipeline">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><rect x="1.5" y="4" width="3.5" height="10" rx="1"/><rect x="7.25" y="2" width="3.5" height="14" rx="1"/><rect x="13" y="6" width="3.5" height="8" rx="1"/></svg>
+        <span>Pipeline</span>
+      </a>
+      <a class="nav-item" data-view="email">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="14" height="10" rx="1.5"/><path d="M2 5.5l7 4.5 7-4.5"/></svg>
+        <span>Email</span>
+        <span class="nav-badge">3</span>
+      </a>
+
+      <div class="sidebar-section">Configure</div>
+      <a class="nav-item" data-view="integrations">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M6.5 2v5M11.5 11v5"/><path d="M6.5 7c0 1.66 1.34 3 3 3h0"/><path d="M11.5 11c0-1.66-1.34-3-3-3h0"/></svg>
+        <span>Integrations</span>
+      </a>
+      <a class="nav-item" data-view="fields">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><line x1="2" y1="5" x2="16" y2="5"/><line x1="2" y1="9" x2="16" y2="9"/><line x1="2" y1="13" x2="16" y2="13"/><circle cx="6" cy="5" r="1.5" fill="currentColor"/><circle cx="12" cy="9" r="1.5" fill="currentColor"/><circle cx="8" cy="13" r="1.5" fill="currentColor"/></svg>
+        <span>Fields</span>
+      </a>
+      <a class="nav-item" data-view="team">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="7" cy="6" r="2.5"/><path d="M2 15c0-2.76 2.24-5 5-5s5 2.24 5 5"/><circle cx="13" cy="7" r="1.8"/><path d="M13.5 11c1.93.5 3.5 2.24 3.5 4"/></svg>
+        <span>Team</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="avatar">JD</div>
+        <div>
+          <div class="user-name">Jane Doe</div>
+          <div class="user-role">Admin</div>
+        </div>
+      </div>
+      <a class="nav-item" id="logout-btn">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M6 2H4a2 2 0 00-2 2v10a2 2 0 002 2h2"/><path d="M11 13l4-4-4-4"/><line x1="15" y1="9" x2="7" y2="9"/></svg>
+        <span>Log Out</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- ═══ Content ═══ -->
+  <main class="content">
+
+    <!-- ── Pipeline View ── -->
+    <div id="v-pipeline" class="view">
+      <div class="view-header">
+        <h2>Pipeline</h2>
+        <div class="view-controls">
+          <div class="view-toggle" id="view-toggle">
+            <button class="toggle-btn active" data-mode="kanban">Board</button>
+            <button class="toggle-btn" data-mode="list">List</button>
+          </div>
+          <div class="search-box">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="6" cy="6" r="4.5"/><line x1="9.2" y1="9.2" x2="12.5" y2="12.5"/></svg>
+            <input type="text" placeholder="Search deals..." id="search-input">
+          </div>
+          <button class="btn btn-primary" id="add-deal-btn">+ Add Lead</button>
+        </div>
+      </div>
+      <div id="kanban" class="kanban"></div>
+      <div id="list-view" class="list-view" hidden>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Company</th>
+              <th>Contact</th>
+              <th>Value</th>
+              <th>Stage</th>
+              <th>Source</th>
+              <th>Priority</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody id="list-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Email View ── -->
+    <div id="v-email" class="view" hidden>
+      <div class="view-header">
+        <h2>Email</h2>
+        <div class="view-controls">
+          <button class="btn btn-primary">Compose</button>
+        </div>
+      </div>
+      <div class="email-split">
+        <div class="email-threads" id="email-threads"></div>
+        <div class="email-detail" id="email-detail">
+          <div class="email-empty">Select a thread to view</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Integrations View ── -->
+    <div id="v-integrations" class="view" hidden>
+      <div class="view-header">
+        <h2>Integrations</h2>
+      </div>
+      <div class="int-grid">
+        <!-- Google Ads -->
+        <div class="int-card">
+          <div class="int-card-header">
+            <div class="int-card-icon" style="background:#E8F0FE;color:#4285F4">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="currentColor"><path d="M3 15.5L9.5 4l3 5.2-4.5 7.8a2 2 0 01-3.46 0L3 15.5z"/><circle cx="16" cy="16" r="3"/><path d="M12.5 9.2L16 3l5 8.7h-6z" opacity=".6"/></svg>
+            </div>
+            <h3>Google Ads</h3>
+            <span class="int-status connected"><span class="dot"></span> Connected</span>
+          </div>
+          <p class="int-desc">Automatically capture leads from Google Ads campaigns. New form submissions create deals in your pipeline.</p>
+          <div class="int-detail">
+            <div class="int-row"><label>Webhook URL</label><code>relay.io/api/hooks/gads_7x...</code></div>
+            <div class="int-row"><label>Last sync</label><span style="font-size:.8125rem">2 min ago</span></div>
+            <div class="int-row"><label>Leads today</label><span style="font-size:.8125rem;font-weight:600">14</span></div>
+          </div>
+        </div>
+        <!-- Meta -->
+        <div class="int-card">
+          <div class="int-card-header">
+            <div class="int-card-icon" style="background:#E7F0FF;color:#0668E1">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="currentColor"><path d="M11 2C5.48 2 2 6.48 2 11c0 4.02 2.72 7.4 6.4 8.4v-5.94H6.36V11h2.04V9.14c0-2.02 1.2-3.14 3.04-3.14.88 0 1.8.16 1.8.16v1.98h-1.02c-1 0-1.32.62-1.32 1.26V11h2.22l-.36 2.46h-1.86v5.94C17.28 18.4 20 15.02 20 11c0-4.52-3.48-9-9-9z"/></svg>
+            </div>
+            <h3>Meta Lead Ads</h3>
+            <span class="int-status connected"><span class="dot"></span> Connected</span>
+          </div>
+          <p class="int-desc">Sync leads from Meta (Facebook/Instagram) lead ad forms directly into your pipeline as new deals.</p>
+          <div class="int-detail">
+            <div class="int-row"><label>Webhook URL</label><code>relay.io/api/hooks/meta_3k...</code></div>
+            <div class="int-row"><label>Last sync</label><span style="font-size:.8125rem">18 min ago</span></div>
+            <div class="int-row"><label>Leads today</label><span style="font-size:.8125rem;font-weight:600">8</span></div>
+          </div>
+        </div>
+        <!-- Claude API -->
+        <div class="int-card">
+          <div class="int-card-header">
+            <div class="int-card-icon" style="background:var(--peri-subtle);color:var(--peri)">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M11 3v2M11 17v2M3 11h2M17 11h2"/><circle cx="11" cy="11" r="4"/><path d="M5.6 5.6l1.4 1.4M15 15l1.4 1.4M5.6 16.4l1.4-1.4M15 7l1.4-1.4"/></svg>
+            </div>
+            <h3>Claude API</h3>
+            <span class="int-status connected"><span class="dot"></span> Active</span>
+          </div>
+          <p class="int-desc">Feed deal data to a Claude instance for AI-powered lead scoring, follow-up drafts, and pipeline insights.</p>
+          <div class="int-detail">
+            <div class="int-row"><label>API endpoint</label><code>relay.io/api/v1/deals</code></div>
+            <div class="int-row"><label>Model</label><span style="font-size:.8125rem">claude-sonnet-5</span></div>
+            <div class="int-row"><label>Trigger</label><span style="font-size:.8125rem">On stage change</span></div>
+          </div>
+        </div>
+        <!-- REST API -->
+        <div class="int-card">
+          <div class="int-card-header">
+            <div class="int-card-icon" style="background:var(--jade-subtle);color:var(--jade)">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h14M4 11h14M4 15h14"/><path d="M7 4l-3 3 3 3" opacity=".5"/><path d="M15 12l3 3-3 3" opacity=".5"/></svg>
+            </div>
+            <h3>REST API</h3>
+            <span class="int-status connected"><span class="dot"></span> Enabled</span>
+          </div>
+          <p class="int-desc">Full REST API for custom integrations. Create, read, update, and manage deals programmatically.</p>
+          <div class="int-detail">
+            <div class="int-row"><label>Base URL</label><code>relay.io/api/v1</code></div>
+            <div class="int-row"><label>Auth</label><span style="font-size:.8125rem">Bearer token</span></div>
+            <div class="int-row"><label>Rate limit</label><span style="font-size:.8125rem">1,000 req/min</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Fields View ── -->
+    <div id="v-fields" class="view" hidden>
+      <div class="view-header">
+        <h2>Deal Fields</h2>
+        <div class="view-controls">
+          <button class="btn btn-primary" id="add-field-btn">+ Add Field</button>
+        </div>
+      </div>
+      <p style="padding:0 28px 16px;color:var(--text-2);font-size:.875rem">Drag to reorder. These fields appear on every deal card.</p>
+      <div class="fields-list" id="fields-list"></div>
+    </div>
+
+    <!-- ── Team View ── -->
+    <div id="v-team" class="view" hidden>
+      <div class="view-header">
+        <h2>Team</h2>
+        <div class="view-controls">
+          <button class="btn btn-primary" id="invite-btn">+ Invite User</button>
+        </div>
+      </div>
+      <div class="team-table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr><th>User</th><th>Email</th><th>Role</th><th>Status</th><th>Last Active</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><div style="display:flex;align-items:center;gap:10px"><div class="avatar">JD</div><span class="td-company">Jane Doe</span></div></td><td>jane@relay.io</td><td><span class="role-badge role-admin">Admin</span></td><td class="status-active">Active</td><td>Just now</td></tr>
+            <tr><td><div style="display:flex;align-items:center;gap:10px"><div class="avatar" style="background:var(--peri)">MR</div><span class="td-company">Marcus Reyes</span></div></td><td>marcus@relay.io</td><td><span class="role-badge role-manager">Manager</span></td><td class="status-active">Active</td><td>4 hours ago</td></tr>
+            <tr><td><div style="display:flex;align-items:center;gap:10px"><div class="avatar" style="background:var(--jade)">SP</div><span class="td-company">Sofia Park</span></div></td><td>sofia@relay.io</td><td><span class="role-badge role-member">Member</span></td><td class="status-active">Active</td><td>Yesterday</td></tr>
+            <tr><td><div style="display:flex;align-items:center;gap:10px"><div class="avatar" style="background:var(--text-3)">AK</div><span class="td-company">Amir Khan</span></div></td><td>amir@relay.io</td><td><span class="role-badge role-member">Member</span></td><td class="status-invited">Invited</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══════════════ DEAL PANEL ═══════════════ -->
+<div id="deal-overlay" class="overlay" hidden>
+  <div class="overlay-bg" id="overlay-bg"></div>
+  <div class="panel" id="deal-panel"></div>
+</div>
+
+<script>
+const STAGES = [
+  {id:'new',name:'New Lead',color:'var(--col-new)'},
+  {id:'contacted',name:'Contacted',color:'var(--col-contacted)'},
+  {id:'qualified',name:'Qualified',color:'var(--col-qualified)'},
+  {id:'proposal',name:'Proposal',color:'var(--col-proposal)'},
+  {id:'negotiation',name:'Negotiation',color:'var(--col-negotiation)'},
+  {id:'won',name:'Won',color:'var(--col-won)'},
+  {id:'lost',name:'Lost',color:'var(--col-lost)'}
+];
+
+const SOURCES = {
+  google:{label:'Google Ads',color:'#4285F4'},
+  meta:{label:'Meta',color:'#0668E1'},
+  referral:{label:'Referral',color:'var(--jade)'},
+  website:{label:'Website',color:'#8B6FC0'},
+  cold:{label:'Cold Outreach',color:'var(--graphite)'}
+};
+
+const DEALS = [
+  {id:1,company:'Meridian Software',contact:'Sarah Chen',email:'sarah@meridian.io',phone:'+1 415-555-0182',value:45000,stage:'qualified',source:'google',priority:'High',industry:'SaaS',companySize:'50-100',created:'2026-08-21',followUp:'2026-09-05',notes:'Interested in enterprise plan. Demo went well.'},
+  {id:2,company:'BrightPath Labs',contact:'James Okafor',email:'james@brightpath.co',phone:'+1 312-555-0234',value:28500,stage:'new',source:'meta',priority:'Medium',industry:'Biotech',companySize:'20-50',created:'2026-09-01',followUp:'2026-09-04',notes:'Downloaded whitepaper, filled lead form.'},
+  {id:3,company:'Vertex Design Co',contact:'Lisa Park',email:'lisa@vertexdesign.com',phone:'+1 646-555-0391',value:62000,stage:'proposal',source:'referral',priority:'High',industry:'Design Agency',companySize:'10-20',created:'2026-08-12',followUp:'2026-09-06',notes:'Proposal sent Aug 28. Following up on pricing.'},
+  {id:4,company:'Cascade Analytics',contact:'Tom Rivera',email:'tom@cascade.ai',phone:'+1 206-555-0147',value:18000,stage:'contacted',source:'google',priority:'Low',industry:'Data Analytics',companySize:'5-10',created:'2026-08-28',followUp:'2026-09-07',notes:'Initial call scheduled for Thursday.'},
+  {id:5,company:'Solara Health',contact:'Amy Zhang',email:'amy@solarahealth.com',phone:'+1 650-555-0268',value:95000,stage:'negotiation',source:'meta',priority:'High',industry:'Healthcare',companySize:'200-500',created:'2026-07-30',followUp:'2026-09-04',notes:'Legal review in progress. Expected close this week.'},
+  {id:6,company:'NorthStar Logistics',contact:'David Kim',email:'david@northstar.co',phone:'+44 20-7946-0123',value:34000,stage:'new',source:'website',priority:'Medium',industry:'Logistics',companySize:'100-200',created:'2026-09-02',followUp:'2026-09-05',notes:'Came in via pricing page inquiry.'},
+  {id:7,company:'Pinnacle Media',contact:'Rachel Adams',email:'rachel@pinnacle.media',phone:'+1 323-555-0412',value:52000,stage:'qualified',source:'google',priority:'Medium',industry:'Media',companySize:'20-50',created:'2026-08-18',followUp:'2026-09-08',notes:'Needs integration with existing CMS.'},
+  {id:8,company:'Atlas Engineering',contact:'Mark Thompson',email:'mark@atlas-eng.com',phone:'+1 512-555-0389',value:41000,stage:'contacted',source:'cold',priority:'Medium',industry:'Engineering',companySize:'50-100',created:'2026-08-25',followUp:'2026-09-06',notes:'Responded to cold email sequence.'},
+  {id:9,company:'Greenfield Ventures',contact:'Nina Patel',email:'nina@greenfield.vc',phone:'+1 415-555-0544',value:78000,stage:'proposal',source:'meta',priority:'High',industry:'Venture Capital',companySize:'10-20',created:'2026-08-08',followUp:'2026-09-05',notes:'Multiple stakeholders. Need exec summary.'},
+  {id:10,company:'Summit Financial',contact:'Carlos Ruiz',email:'carlos@summitfin.com',phone:'+1 305-555-0221',value:120000,stage:'negotiation',source:'referral',priority:'High',industry:'Finance',companySize:'500+',created:'2026-07-22',followUp:'2026-09-03',notes:'Referred by Solara. Contract redlines in progress.'},
+  {id:11,company:'Horizon Tech',contact:'Wei Liu',email:'wei@horizontech.cn',phone:'+86 21-5555-0177',value:23000,stage:'won',source:'google',priority:'Low',industry:'Technology',companySize:'10-20',created:'2026-07-15',followUp:'',notes:'Closed Aug 20. Onboarding started.'},
+  {id:12,company:'BlueWave Digital',contact:'Jordan Taylor',email:'jordan@bluewave.co',phone:'+1 917-555-0633',value:56000,stage:'contacted',source:'meta',priority:'Medium',industry:'Digital Marketing',companySize:'20-50',created:'2026-08-30',followUp:'2026-09-09',notes:'Second touchpoint. Interested in analytics module.'},
+  {id:13,company:'CorePath Systems',contact:'Aisha Johnson',email:'aisha@corepath.io',phone:'+1 202-555-0194',value:37000,stage:'new',source:'google',priority:'Medium',industry:'IT Services',companySize:'50-100',created:'2026-09-02',followUp:'2026-09-04',notes:'Clicked retargeting ad. High intent.'},
+  {id:14,company:'Luminary Corp',contact:'Ben Foster',email:'ben@luminary.co',phone:'+1 720-555-0856',value:89000,stage:'lost',source:'website',priority:'Low',industry:'Consulting',companySize:'100-200',created:'2026-07-10',followUp:'',notes:'Lost to competitor on pricing. Revisit in Q1.'}
+];
+
+const FIELDS = [
+  {name:'Company',type:'Text',required:true,system:true},
+  {name:'Contact Name',type:'Text',required:true,system:true},
+  {name:'Email',type:'Email',required:true,system:true},
+  {name:'Phone',type:'Phone',required:false,system:true},
+  {name:'Deal Value',type:'Currency',required:true,system:true},
+  {name:'Stage',type:'Dropdown',required:true,system:true},
+  {name:'Source',type:'Auto (Integration)',required:false,system:true},
+  {name:'Industry',type:'Dropdown',required:false,system:false},
+  {name:'Company Size',type:'Text',required:false,system:false},
+  {name:'Priority',type:'Dropdown',required:false,system:false},
+  {name:'Next Follow-up',type:'Date',required:false,system:false},
+  {name:'Notes',type:'Textarea',required:false,system:false}
+];
+
+const EMAILS = [
+  {id:1,dealId:3,from:'Lisa Park',email:'lisa@vertexdesign.com',subject:'Re: Vertex Design — Proposal Follow-up',time:'10:42 AM',unread:true,messages:[
+    {from:'You',date:'Aug 28','body':'Hi Lisa, attached is our proposal for the enterprise design toolkit. Let me know if you have any questions about the pricing tiers.'},
+    {from:'Lisa Park',date:'Sep 2','body':'Thanks for sending this over. The team reviewed it and we have a few questions about the annual commitment and the onboarding timeline. Could we schedule a call this week?'},
+    {from:'You',date:'Sep 3','body':'Absolutely — how does Thursday at 2pm PT work? I can walk through the onboarding process and address the commitment structure.'}
+  ]},
+  {id:2,dealId:5,from:'Amy Zhang',email:'amy@solarahealth.com',subject:'Solara Health — Contract Status',time:'9:15 AM',unread:true,messages:[
+    {from:'Amy Zhang',date:'Sep 3','body':'Hi, just wanted to check in on the contract. Our legal team has finished their review and sent back redlines yesterday. Have you had a chance to look?'}
+  ]},
+  {id:3,dealId:10,from:'Carlos Ruiz',email:'carlos@summitfin.com',subject:'Summit Financial — Integration Requirements',time:'Yesterday',unread:false,messages:[
+    {from:'Carlos Ruiz',date:'Sep 1','body':'We need the API to support SSO via SAML 2.0. Can you confirm this is available on the enterprise tier?'},
+    {from:'You',date:'Sep 1','body':'Yes, SAML SSO is included in Enterprise. I\'ll send over the technical documentation and our security whitepaper.'}
+  ]},
+  {id:4,dealId:1,from:'Sarah Chen',email:'sarah@meridian.io',subject:'Re: Demo Follow-up — Meridian',time:'Yesterday',unread:true,messages:[
+    {from:'Sarah Chen',date:'Sep 2','body':'The demo was great. Our VP of Engineering wants to see the API docs before we proceed. Can you share those?'}
+  ]}
+];
+
+function fmt(n){return'$'+n.toLocaleString('en-US')}
+function daysAgo(d){const ms=Date.now()-new Date(d).getTime();const days=Math.floor(ms/864e5);return days===0?'Today':days===1?'1d ago':days+'d ago'}
+
+// ── Render Kanban ──
+function renderKanban(filter=''){
+  const el=document.getElementById('kanban');
+  const filtered=filter?DEALS.filter(d=>d.company.toLowerCase().includes(filter)||d.contact.toLowerCase().includes(filter)):DEALS;
+  el.innerHTML=STAGES.map(s=>{
+    const deals=filtered.filter(d=>d.stage===s.id);
+    const total=deals.reduce((a,d)=>a+d.value,0);
+    return`<div class="kanban-col">
+      <div class="col-header" style="--col-color:${s.color}">
+        <span class="col-name">${s.name}</span>
+        <span class="col-count">${deals.length}</span>
+        <span class="col-value">${fmt(total)}</span>
+      </div>
+      <div class="col-cards">${deals.map(d=>{
+        const src=SOURCES[d.source];
+        return`<div class="deal-card" data-id="${d.id}">
+          <div class="deal-card-stripe" style="background:${src.color}"></div>
+          <div class="deal-card-company">${d.company}</div>
+          <div class="deal-card-contact">${d.contact}</div>
+          <div class="deal-card-meta">
+            <span class="deal-card-value">${fmt(d.value)}</span>
+            <span class="deal-card-age">${daysAgo(d.created)}</span>
+          </div>
+          <div class="deal-card-tags">
+            <span class="badge badge-neutral">${src.label}</span>
+            ${d.priority==='High'?'<span class="badge badge-coral">High</span>':''}
+          </div>
+        </div>`}).join('')}
+      </div>
+    </div>`}).join('');
+}
+
+// ── Render List ──
+function renderList(filter=''){
+  const el=document.getElementById('list-body');
+  const filtered=filter?DEALS.filter(d=>d.company.toLowerCase().includes(filter)||d.contact.toLowerCase().includes(filter)):DEALS;
+  el.innerHTML=filtered.map(d=>{
+    const s=STAGES.find(s=>s.id===d.stage);
+    const src=SOURCES[d.source];
+    const priClass=d.priority==='High'?'badge-coral':d.priority==='Medium'?'badge-saffron':'badge-neutral';
+    return`<tr data-id="${d.id}">
+      <td class="td-company">${d.company}</td>
+      <td>${d.contact}</td>
+      <td class="td-value">${fmt(d.value)}</td>
+      <td><span class="stage-dot" style="background:${s.color}"></span>${s.name}</td>
+      <td><span class="badge badge-neutral">${src.label}</span></td>
+      <td><span class="badge ${priClass}">${d.priority}</span></td>
+      <td style="color:var(--text-2)">${daysAgo(d.created)}</td>
+    </tr>`}).join('');
+}
+
+// ── Render Fields ──
+function renderFields(){
+  const el=document.getElementById('fields-list');
+  el.innerHTML=FIELDS.map((f,i)=>`<div class="field-row">
+    <span class="field-drag">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><circle cx="5" cy="3" r="1.2"/><circle cx="9" cy="3" r="1.2"/><circle cx="5" cy="7" r="1.2"/><circle cx="9" cy="7" r="1.2"/><circle cx="5" cy="11" r="1.2"/><circle cx="9" cy="11" r="1.2"/></svg>
+    </span>
+    <span class="field-name">${f.name}</span>
+    <span class="field-type">${f.type}</span>
+    <span class="field-required">${f.required?'<span style="color:var(--saffron);font-weight:600">Required</span>':'Optional'}</span>
+    <span class="field-actions">
+      ${f.system?'<span class="badge badge-neutral" style="font-size:.6rem">System</span>':'<button class="btn btn-sm btn-ghost">Edit</button><button class="btn btn-sm btn-ghost btn-danger">Del</button>'}
+    </span>
+  </div>`).join('');
+}
+
+// ── Render Email Threads ──
+function renderEmailThreads(){
+  const el=document.getElementById('email-threads');
+  el.innerHTML=EMAILS.map(e=>`<div class="email-thread${e.id===1?' active':''}" data-eid="${e.id}">
+    <div class="et-from"><span>${e.from}</span><span class="et-time">${e.time}</span></div>
+    <div class="et-subject" style="display:flex;align-items:center;gap:6px">${e.unread?'<span class="et-unread"></span>':''}${e.subject}</div>
+    <div class="et-preview">${e.messages[e.messages.length-1].body.slice(0,80)}...</div>
+  </div>`).join('');
+  showEmailThread(1);
+}
+
+function showEmailThread(eid){
+  const e=EMAILS.find(x=>x.id===eid);
+  if(!e)return;
+  document.querySelectorAll('.email-thread').forEach(t=>t.classList.toggle('active',+t.dataset.eid===eid));
+  const deal=DEALS.find(d=>d.id===e.dealId);
+  document.getElementById('email-detail').innerHTML=`
+    <div class="ed-subject">${e.subject}</div>
+    ${deal?`<div style="margin-bottom:8px"><span class="badge badge-peri" style="cursor:pointer" data-id="${deal.id}">${deal.company}</span></div>`:''}
+    ${e.messages.map(m=>`<div class="email-message">
+      <div class="em-header"><span class="em-from">${m.from}</span><span class="em-date">${m.date}</span></div>
+      <div class="em-body">${m.body}</div>
+    </div>`).join('')}
+    <div style="padding-top:4px">
+      <button class="btn" style="width:100%">Reply</button>
+    </div>`;
+}
+
+// ── Deal Panel ──
+function openDeal(id){
+  const d=DEALS.find(x=>x.id===id);
+  if(!d)return;
+  const s=STAGES.find(x=>x.id===d.stage);
+  const src=SOURCES[d.source];
+  const panel=document.getElementById('deal-panel');
+  const priClass=d.priority==='High'?'badge-coral':d.priority==='Medium'?'badge-saffron':'badge-neutral';
+
+  panel.innerHTML=`
+    <div class="panel-header">
+      <div>
+        <div class="panel-company">${d.company}</div>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <span class="badge" style="background:${s.color}20;color:${s.color};border:1px solid ${s.color}40">${s.name}</span>
+          <span class="badge badge-neutral">${src.label}</span>
+          <span class="badge ${priClass}">${d.priority}</span>
+        </div>
+      </div>
+      <button class="panel-close" id="panel-close-btn" aria-label="Close">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="5" y1="5" x2="15" y2="15"/><line x1="15" y1="5" x2="5" y2="15"/></svg>
+      </button>
+    </div>
+
+    <div class="panel-tabs">
+      <button class="panel-tab active" data-tab="overview">Overview</button>
+      <button class="panel-tab" data-tab="activity">Activity</button>
+      <button class="panel-tab" data-tab="ai">AI Insights</button>
+    </div>
+
+    <div class="panel-body">
+      <!-- Overview Tab -->
+      <div class="tab-content" id="tab-overview">
+        <div class="panel-section">
+          <div class="panel-section-title">Contact</div>
+          <div class="detail-grid">
+            <div class="detail-item"><label>Name</label><span>${d.contact}</span></div>
+            <div class="detail-item"><label>Email</label><span><a href="#">${d.email}</a></span></div>
+            <div class="detail-item"><label>Phone</label><span>${d.phone}</span></div>
+            <div class="detail-item"><label>Company</label><span>${d.company}</span></div>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="panel-section-title">Deal</div>
+          <div class="detail-grid">
+            <div class="detail-item"><label>Value</label><span style="font-family:'Outfit',sans-serif;font-weight:700;font-size:1.1rem;font-variant-numeric:tabular-nums">${fmt(d.value)}</span></div>
+            <div class="detail-item"><label>Created</label><span>${daysAgo(d.created)}</span></div>
+            <div class="detail-item"><label>Source</label><span>${src.label}</span></div>
+            <div class="detail-item"><label>Next Follow-up</label><span>${d.followUp||'—'}</span></div>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="panel-section-title">Custom Fields</div>
+          <div class="detail-grid">
+            <div class="detail-item"><label>Industry</label><span>${d.industry}</span></div>
+            <div class="detail-item"><label>Company Size</label><span>${d.companySize}</span></div>
+            <div class="detail-item"><label>Priority</label><span>${d.priority}</span></div>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="panel-section-title">Notes</div>
+          <div style="background:var(--input-bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:.875rem;color:var(--text-2);min-height:60px;line-height:1.6">${d.notes}</div>
+        </div>
+      </div>
+
+      <!-- Activity Tab -->
+      <div class="tab-content" id="tab-activity" hidden>
+        <div class="timeline">
+          <div class="tl-item"><div class="tl-dot" style="background:var(--saffron)"></div><div class="tl-content"><strong>Email sent</strong> — Follow-up on proposal</div><div class="tl-time">Today</div></div>
+          <div class="tl-item"><div class="tl-dot" style="background:var(--col-${d.stage})"></div><div class="tl-content"><strong>Stage changed</strong> to ${s.name}</div><div class="tl-time">2d ago</div></div>
+          <div class="tl-item"><div class="tl-dot"></div><div class="tl-content"><strong>Note added</strong> — "${d.notes.slice(0,40)}..."</div><div class="tl-time">3d ago</div></div>
+          <div class="tl-item"><div class="tl-dot" style="background:var(--jade)"></div><div class="tl-content"><strong>Email received</strong> from ${d.contact}</div><div class="tl-time">4d ago</div></div>
+          <div class="tl-item"><div class="tl-dot"></div><div class="tl-content"><strong>Deal created</strong> via ${src.label}</div><div class="tl-time">${daysAgo(d.created)}</div></div>
+        </div>
+      </div>
+
+      <!-- AI Insights Tab -->
+      <div class="tab-content" id="tab-ai" hidden>
+        <div class="panel-section">
+          <div class="ai-card" style="margin-bottom:16px">
+            <h4>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="7" cy="7" r="3"/><path d="M7 1v2M7 11v2M1 7h2M11 7h2M3 3l1.4 1.4M9.6 9.6L11 11M3 11l1.4-1.4M9.6 4.4L11 3"/></svg>
+              Lead Score
+            </h4>
+            <div style="display:flex;align-items:baseline;gap:12px">
+              <span class="ai-score">${d.priority==='High'?'87':'64'}/100</span>
+              <span style="font-size:.75rem;color:var(--text-2)">${d.priority==='High'?'High likelihood to close':'Moderate engagement'}</span>
+            </div>
+          </div>
+        </div>
+        <div class="panel-section">
+          <div class="ai-card" style="margin-bottom:16px;border-left-color:var(--jade);background:var(--jade-subtle)">
+            <h4 style="color:var(--jade)">Suggested Next Action</h4>
+            <p>${d.stage==='new'?'Send personalised intro email within 24 hours. Leads from '+src.label+' respond best to value-focused messaging.':d.stage==='contacted'?'Schedule a discovery call. '+d.contact+' has opened 3 emails — high engagement signal.':d.stage==='qualified'?'Prepare a tailored proposal. Highlight integrations relevant to '+d.industry+'.':d.stage==='proposal'?'Follow up on proposal. Decision makers in '+d.industry+' typically need 5-7 days for review.':d.stage==='negotiation'?'Address contract concerns promptly. '+d.company+' is near close — suggest a 15-min call to resolve remaining items.':'No action needed.'}</p>
+          </div>
+        </div>
+        <div class="panel-section">
+          <div class="ai-card" style="border-left-color:var(--saffron);background:var(--saffron-subtle)">
+            <h4 style="color:var(--saffron)">Deal Summary</h4>
+            <p>${d.company} (${d.industry}, ${d.companySize} employees) entered the pipeline via ${src.label} on ${d.created}. ${d.contact} is the primary contact. ${d.notes} Current deal value is ${fmt(d.value)}.</p>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('deal-overlay').hidden=false;
+  document.body.style.overflow='hidden';
+
+  document.getElementById('panel-close-btn').onclick=closeDeal;
+  document.getElementById('overlay-bg').onclick=closeDeal;
+  panel.querySelectorAll('.panel-tab').forEach(t=>t.onclick=()=>{
+    panel.querySelectorAll('.panel-tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    panel.querySelectorAll('.tab-content').forEach(c=>c.hidden=true);
+    document.getElementById('tab-'+t.dataset.tab).hidden=false;
+  });
+}
+
+function closeDeal(){
+  document.getElementById('deal-overlay').hidden=true;
+  document.body.style.overflow='';
+}
+
+// ── Navigation ──
+function navigate(view){
+  document.querySelectorAll('.nav-item[data-view]').forEach(n=>n.classList.toggle('active',n.dataset.view===view));
+  ['pipeline','email','integrations','fields','team'].forEach(v=>{
+    const el=document.getElementById('v-'+v);
+    if(el)el.hidden=v!==view;
+  });
+}
+
+// ── Init ──
+function init(){
+  renderKanban();
+  renderList();
+  renderFields();
+  renderEmailThreads();
+
+  // Login
+  document.getElementById('login-form').onsubmit=e=>{
+    e.preventDefault();
+    document.getElementById('login-screen').hidden=true;
+    document.getElementById('app-shell').hidden=false;
+  };
+
+  // Logout
+  document.getElementById('logout-btn').onclick=()=>{
+    document.getElementById('app-shell').hidden=true;
+    document.getElementById('login-screen').hidden=false;
+  };
+
+  // Nav
+  document.querySelectorAll('.nav-item[data-view]').forEach(n=>{
+    n.onclick=e=>{e.preventDefault();navigate(n.dataset.view)};
+  });
+
+  // View toggle
+  document.getElementById('view-toggle').onclick=e=>{
+    const btn=e.target.closest('.toggle-btn');
+    if(!btn)return;
+    document.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const mode=btn.dataset.mode;
+    document.getElementById('kanban').hidden=mode!=='kanban';
+    document.getElementById('list-view').hidden=mode!=='list';
+  };
+
+  // Search
+  document.getElementById('search-input').oninput=e=>{
+    const q=e.target.value.toLowerCase();
+    renderKanban(q);
+    renderList(q);
+  };
+
+  // Deal card clicks (kanban)
+  document.getElementById('kanban').onclick=e=>{
+    const card=e.target.closest('.deal-card');
+    if(card)openDeal(+card.dataset.id);
+  };
+
+  // Deal row clicks (list)
+  document.getElementById('list-body').onclick=e=>{
+    const row=e.target.closest('tr');
+    if(row)openDeal(+row.dataset.id);
+  };
+
+  // Email thread clicks
+  document.getElementById('email-threads').onclick=e=>{
+    const thread=e.target.closest('.email-thread');
+    if(thread)showEmailThread(+thread.dataset.eid);
+  };
+
+  // Email detail deal badge click
+  document.getElementById('email-detail').onclick=e=>{
+    const badge=e.target.closest('[data-id]');
+    if(badge)openDeal(+badge.dataset.id);
+  };
+
+  // Escape to close panel
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape')closeDeal();
+  });
+}
+
+init();
+</script>
