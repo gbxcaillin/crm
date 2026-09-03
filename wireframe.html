@@ -226,12 +226,27 @@ td.check-col,th.check-col{width:32px;padding-right:0;cursor:default}
 .ai .score{font-family:var(--font-serif);font-size:38px;font-weight:300;line-height:1;color:var(--teal-ink)}
 .ai .bar{height:4px;background:var(--teal-tint-2);margin:4px 0 2px}
 .ai .bar i{display:block;height:100%;background:var(--teal)}
-.task{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.task{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:12.5px;cursor:pointer}
 .task:last-child{border-bottom:none}
-.task.done span.t{text-decoration:line-through;color:var(--ink-3)}
-.task .due{margin-left:auto;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3)}
+.task:hover .t{color:var(--teal-ink)}
+.task.done .t{text-decoration:line-through;color:var(--ink-3)}
+.task input{accent-color:var(--teal);width:14px;height:14px;flex-shrink:0;cursor:pointer}
+.task .t{font-weight:500}
+.task .sub{font-size:11px;color:var(--ink-3);display:flex;gap:6px;flex-wrap:wrap}
+.task .due{margin-left:auto;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3);white-space:nowrap}
 .task .due.over{color:var(--red)}
 .task .due.today{color:var(--amber)}
+.avatars{display:flex;flex-shrink:0}
+.avatars .avatar{margin-left:-6px;border:1.5px solid var(--surface)}
+.avatars .avatar:first-child{margin-left:0}
+.rep{display:inline-flex;align-items:center;gap:3px;font-family:var(--font-mono);font-size:10px;color:var(--teal-ink)}
+.rep::before{content:"↻"}
+.people{display:flex;flex-wrap:wrap;gap:6px}
+.people .check{border:1px solid var(--line-2);padding:4px 9px 4px 6px;font-size:12px}
+.people .check.on{border-color:var(--teal);background:var(--teal-tint)}
+.tdetail{display:grid;grid-template-columns:1fr 1fr;gap:12px 20px}
+.tdetail .prop{padding:6px 0;border-bottom:none}
+.hist{font-size:11.5px;color:var(--ink-3);display:flex;flex-direction:column;gap:3px}
 .file{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px}
 .file:last-child{border-bottom:none}
 .file .fi{width:26px;height:30px;border:1px solid var(--line-2);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:8px;font-weight:500;color:var(--ink-2);flex-shrink:0;background:var(--surface)}
@@ -488,14 +503,18 @@ const SEED = {
     {id:10,deal:10,type:'email',who:'',text:'Email received from Carlos Ruiz',detail:'Re: Summit — Mandate scope redlines',at:'2026-09-02T17:22'}
   ],
   tasks:[
-    {id:1,deal:5,text:'Chase engagement letter signature',who:'u1',due:'2026-09-03',done:false},
-    {id:2,deal:4,text:'Run Health Check — Cascade Conveyancing',who:'u2',due:'2026-09-04',done:false},
-    {id:3,deal:13,text:'First call within 24 h of lead',who:'',due:'2026-09-04',done:false},
-    {id:4,deal:3,text:'Send exec summary to partners',who:'u1',due:'2026-09-02',done:false},
-    {id:5,deal:10,text:'Return mandate redlines',who:'u1',due:'2026-09-05',done:false},
-    {id:6,deal:7,text:'Draft training calendar',who:'u4',due:'2026-09-10',done:false},
-    {id:7,deal:1,text:'Share funnel wireframe',who:'u3',due:'2026-09-01',done:true},
-    {id:8,deal:8,text:'Confirm Health Check 9 Sep',who:'u3',due:'2026-09-08',done:false}
+    {id:1,title:'Chase engagement letter signature',desc:'Amy said legal has cleared it. Get the countersigned copy back and file it in the client folder.',deal:5,due:'2026-09-03',who:['u1'],by:'u3',notify:[],notifyBy:true,repeat:null,files:[{name:'Solara_Engagement_Letter.pdf',fileId:4}],done:false,created:'2026-09-01T09:10'},
+    {id:2,title:'Run Health Check — Cascade Conveyancing',desc:'45 min on Teams. Use the conveyancing KPI template and capture settlement volumes for the last two quarters.',deal:4,due:'2026-09-04',who:['u2','u4'],by:'u1',notify:['u3'],notifyBy:true,repeat:null,files:[{name:'Health Check template — Conveyancing.docx',url:'https://gbxps.sharepoint.com/sites/Clients/Client%20Files/Templates/HealthCheck_Conveyancing.docx'}],done:false,created:'2026-08-28T14:00'},
+    {id:3,title:'First call within 24 h of lead',desc:'Auto‑created by the Google Ads lead rule. Call, qualify, and book a Health Check if there is fit.',deal:13,due:'2026-09-04',who:[],by:'',notify:['u3'],notifyBy:false,repeat:null,files:[],done:false,created:'2026-09-03T08:41',auto:'Google Ads lead rule'},
+    {id:4,title:'Send exec summary to partners',desc:'One page: scope, commitment options, onboarding timeline. Lisa needs it before the Thursday call.',deal:3,due:'2026-09-02',who:['u1'],by:'u1',notify:['u3'],notifyBy:false,repeat:null,files:[{name:'Vantage_Proposal_v2.pdf',fileId:1}],done:false,created:'2026-08-31T10:25'},
+    {id:5,title:'Return mandate redlines',desc:'Accept review‑frequency change; propose alternative wording on data ownership.',deal:10,due:'2026-09-05',who:['u1'],by:'u1',notify:['u3'],notifyBy:false,repeat:null,files:[{name:'Summit_Mandate_v3_redlines.docx',fileId:5}],done:false,created:'2026-09-02T17:30'},
+    {id:6,title:'Draft training calendar',desc:'Two offices, monthly sessions, compliance topics first.',deal:7,due:'2026-09-10',who:['u4'],by:'u1',notify:['u2'],notifyBy:true,repeat:null,files:[],done:false,created:'2026-08-29T11:00'},
+    {id:7,title:'Share funnel wireframe',desc:'',deal:1,due:'2026-09-01',who:['u3'],by:'u3',notify:['u1'],notifyBy:false,repeat:null,files:[{name:'Harbourline_Funnel_Wireframe.pdf',fileId:6}],done:true,doneAt:'2026-09-01T15:20',doneBy:'u3',created:'2026-08-29T15:15'},
+    {id:8,title:'Confirm Health Check 9 Sep',desc:'',deal:8,due:'2026-09-08',who:['u3'],by:'u3',notify:[],notifyBy:false,repeat:null,files:[],done:false,created:'2026-08-25T16:00'},
+    {id:9,title:'Weekly pipeline review',desc:'Before the Monday 9am meeting: update stage, owner and expected close on every open deal. Flag anything stuck more than 14 days.',deal:0,due:'2026-09-08',who:['u1','u2','u3','u4'],by:'u1',notify:[],notifyBy:true,repeat:{every:1,unit:'week'},files:[{name:'Pipeline review template.xlsx',url:'https://gbxps.sharepoint.com/sites/Clients/Client%20Files/Templates/Pipeline%20review.xlsx'}],done:false,created:'2026-07-07T09:00',series:'s9'},
+    {id:10,title:'Reconcile Google Ads & Meta lead spend',desc:'Export cost per lead from both ad accounts and update the source ROI sheet.',deal:0,due:'2026-09-30',who:['u2'],by:'u1',notify:['u1'],notifyBy:true,repeat:{every:1,unit:'month'},files:[{name:'Source ROI.xlsx',url:'https://gbxps.sharepoint.com/sites/Clients/Client%20Files/Reporting/Source%20ROI.xlsx'}],done:false,created:'2026-06-30T09:00',series:'s10'},
+    {id:11,title:'Check webhook log for failed leads',desc:'Look for 4xx/5xx rows in Integrations → Webhook log and re‑queue anything that failed.',deal:0,due:'2026-09-03',who:['u2'],by:'u1',notify:[],notifyBy:false,repeat:{every:1,unit:'day'},files:[],done:false,created:'2026-08-01T09:00',series:'s11'},
+    {id:12,title:'Quarterly compliance training refresh',desc:'Refresh the training deck for regulatory changes and re‑issue to all client practices on a training plan.',deal:0,due:'2026-10-01',who:['u4'],by:'u1',notify:['u1','u3'],notifyBy:true,repeat:{every:3,unit:'month'},files:[],done:false,created:'2026-07-01T09:00',series:'s12'}
   ],
   threads:[
     {id:1,deal:3,folder:'inbox',from:'Lisa Park',addr:'lisa@vantagewealth.com.au',subject:'Re: Vantage Wealth — Proposal v2',unread:true,at:'2026-09-03T08:02',msgs:[
@@ -538,7 +557,7 @@ const SEED = {
 /* ================= STATE ================= */
 const KEY='gbx-pipeline-v1';
 let S;
-function load(){try{const raw=localStorage.getItem(KEY);if(raw){S=JSON.parse(raw);if(S._v===1)return}}catch(e){}S=JSON.parse(JSON.stringify(SEED));S._v=1;S.me='u1';S.ui={view:'board',sort:'created',dir:'desc',filterOwner:'',filterStage:'',folder:'inbox',thread:1,fileDeal:0,dealTab:{}}}
+function load(){try{const raw=localStorage.getItem(KEY);if(raw){S=JSON.parse(raw);if(S._v===2)return}}catch(e){}S=JSON.parse(JSON.stringify(SEED));S._v=2;S.me='u1';S.ui={view:'board',sort:'created',dir:'desc',filterOwner:'',filterStage:'',folder:'inbox',thread:1,fileDeal:0,dealTab:{},taskFilter:'mine',showDone:false}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function reset(){try{localStorage.removeItem(KEY)}catch(e){}load();route()}
 load();
@@ -564,6 +583,24 @@ function score(d){let s=40;if(d.priority==='High')s+=25;if(d.priority==='Medium'
 function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;$('#toasts').appendChild(t);setTimeout(()=>t.remove(),2800)}
 function logAct(dealId,type,text,detail=''){S.activity.unshift({id:Date.now(),deal:dealId,type,who:S.me,text,detail,at:new Date().toISOString().slice(0,16)})}
 function nextId(arr){return arr.reduce((m,x)=>Math.max(m,x.id),0)+1}
+const UNITS={day:'day',week:'week',month:'month',quarter:'quarter',year:'year'};
+function addInterval(iso,n,unit){const d=new Date(iso+'T00:00:00');if(unit==='day')d.setDate(d.getDate()+n);if(unit==='week')d.setDate(d.getDate()+7*n);if(unit==='month')d.setMonth(d.getMonth()+n);if(unit==='quarter')d.setMonth(d.getMonth()+3*n);if(unit==='year')d.setFullYear(d.getFullYear()+n);return d.toISOString().slice(0,10)}
+function repeatLabel(r){if(!r)return'';return r.every===1?`Every ${r.unit}`:`Every ${r.every} ${r.unit}s`}
+function names(ids){return ids.map(i=>user(i)?.name.split(' ')[0]).filter(Boolean)}
+function notifyList(t,completer){const s=new Set(t.notify||[]);if(t.notifyBy&&t.by)s.add(t.by);s.delete(completer);return[...s].filter(i=>user(i))}
+function completeTask(id,done=true){
+  const t=S.tasks.find(q=>q.id===id);if(!t)return;
+  t.done=done;
+  if(done){t.doneAt=new Date().toISOString().slice(0,16);t.doneBy=S.me;
+    const to=notifyList(t,S.me);
+    if(to.length)S.notifs.unshift({id:Date.now(),text:`${user(S.me).name} completed “${t.title}”`,p:`Notified ${names(to).join(', ')} · email + in‑app`,at:'now',read:false,go:'#/tasks'});
+    if(t.deal)logAct(t.deal,'task','Task completed',t.title);
+    let next=null;
+    if(t.repeat){next={...t,id:nextId(S.tasks),due:addInterval(t.due,t.repeat.every,t.repeat.unit),done:false,doneAt:undefined,doneBy:undefined,created:t.doneAt};S.tasks.push(next)}
+    toast(`Done${to.length?' · '+names(to).join(' & ')+' notified':''}${next?' · next due '+fmtDate(next.due):''}`);
+  }else{t.doneAt=undefined;t.doneBy=undefined;toast('Reopened')}
+  save();
+}
 
 /* ================= ROUTER ================= */
 const ROUTES={dashboard:'Dashboard',pipeline:'Pipeline',tasks:'Tasks',email:'Email',files:'Files',integrations:'Integrations',settings:'Settings',deal:'Pipeline'};
@@ -580,7 +617,7 @@ function route(){
   $('#crumb').innerHTML=crumbs[rr];
   const me=user(S.me);$('#me-av').textContent=initials(me.name);$('#me-name').textContent=me.name;$('#me-role').textContent=me.role;
   $('#nav-deals').textContent=S.deals.filter(d=>!stage(d.stage)?.closed).length;
-  $('#nav-tasks').textContent=S.tasks.filter(t=>!t.done&&dayDiff(t.due)<=0).length||'';
+  $('#nav-tasks').textContent=S.tasks.filter(t=>!t.done&&dayDiff(t.due)<=0&&(t.who.includes(S.me)||!t.who.length)).length||'';
   $('#nav-mail').textContent=S.threads.filter(t=>t.unread).length||'';
   $('#notif-pip').hidden=!S.notifs.some(n=>!n.read);
   bindView(rr);
@@ -597,7 +634,7 @@ function vDashboard(){
   const newWeek=S.deals.filter(d=>dayDiff(d.created)>=-7).length;
   const bySrc={};S.deals.forEach(d=>{bySrc[d.source]=(bySrc[d.source]||0)+1});
   const maxSrc=Math.max(...Object.values(bySrc));
-  const due=S.tasks.filter(t=>!t.done&&dayDiff(t.due)<=0);
+  const due=S.tasks.filter(t=>!t.done&&dayDiff(t.due)<=0&&(t.who.includes(S.me)||!t.who.length));
   const byStage=S.stages.filter(s=>!s.closed).map(s=>({s,v:open.filter(d=>d.stage===s.id).reduce((a,d)=>a+d.value,0),n:open.filter(d=>d.stage===s.id).length}));
   const maxV=Math.max(...byStage.map(x=>x.v),1);
   const me=user(S.me);
@@ -723,18 +760,30 @@ function aiSummary(d){
   else parts.push(`Closed ${s.closed}. ${d.notes}`);
   return parts.join(' ');
 }
-function taskRow(t,withDeal=false){const dd=dayDiff(t.due);const d=deal(t.deal);return`<label class="task ${t.done?'done':''}"><input type="checkbox" class="task-chk" data-id="${t.id}" ${t.done?'checked':''} style="accent-color:var(--teal)"><span class="t grow">${esc(t.text)}${withDeal&&d?` <a href="#/deal/${d.id}" class="faint" style="font-size:11px">· ${esc(d.practice)}</a>`:''}</span>${avatarHtml(t.who,'sm')}<span class="due ${t.done?'':dd<0?'over':dd===0?'today':''}">${dd===0?'Today':dd<0?Math.abs(dd)+'d overdue':fmtDate(t.due)}</span></label>`}
+function taskRow(t,withDeal=false){const dd=dayDiff(t.due);const d=deal(t.deal);const who=t.who.length?`<span class="avatars">${t.who.slice(0,3).map(u=>avatarHtml(u,'sm')).join('')}${t.who.length>3?`<span class="avatar sm" style="background:var(--line-2);color:var(--ink-2)">+${t.who.length-3}</span>`:''}</span>`:avatarHtml('','sm');
+  return`<div class="task ${t.done?'done':''}" data-task="${t.id}"><input type="checkbox" class="task-chk" data-id="${t.id}" ${t.done?'checked':''} aria-label="Mark done"><span class="grow"><div class="t">${esc(t.title)}</div><div class="sub">${withDeal&&d?`<a href="#/deal/${d.id}">${esc(d.practice)}</a>`:''}${t.repeat?`<span class="rep">${repeatLabel(t.repeat)}</span>`:''}${t.files?.length?`<span>${t.files.length} file${t.files.length>1?'s':''}</span>`:''}${t.by&&t.by!==S.me?`<span>from ${esc(user(t.by)?.name.split(' ')[0]||'')}</span>`:''}${t.auto?`<span>auto · ${esc(t.auto)}</span>`:''}</div></span>${who}<span class="due ${t.done?'':dd<0?'over':dd===0?'today':''}">${t.done?'Done '+fmtDate(t.doneAt):dd===0?'Today':dd<0?Math.abs(dd)+'d overdue':fmtDate(t.due)}</span></div>`}
 function fileRow(f){return`<div class="file"><span class="fi">${f.kind}</span><div class="grow"><div class="fn ellip">${esc(f.name)}</div><div class="fm">${f.size} · ${esc(user(f.by)?.name.split(' ')[0]||'')} · ${fmtDate(f.at)}</div></div><button class="btn btn-sm btn-quiet" onclick="toast('Opening in SharePoint…')">Open</button></div>`}
 function actRow(a,withDeal=false){const ic={email:'<path d="M1 3h10v7H1z"/><path d="M1 3.5l5 3.5 5-3.5"/>',stage:'<path d="M2 6h8M7 3l3 3-3 3"/>',note:'<path d="M2 1.5h6l2 2v7H2z"/><path d="M4 6h4M4 8h3"/>',file:'<path d="M2 3h3l1 1h4v6H2z"/>',meeting:'<rect x="1.5" y="2.5" width="9" height="8"/><path d="M1.5 5h9M4 1v3M8 1v3"/>',created:'<circle cx="6" cy="6" r="4"/><path d="M6 4v4M4 6h4"/>',ai:'<circle cx="6" cy="6" r="2.5"/><path d="M6 1v1.5M6 9.5V11M1 6h1.5M9.5 6H11"/>',task:'<path d="M2 6l3 3 5-6"/>'}[a.type]||'<circle cx="6" cy="6" r="3"/>';const d=deal(a.deal);return`<div class="act"><span class="ic"><svg viewBox="0 0 12 12">${ic}</svg></span><div class="body"><b>${esc(a.text)}</b>${withDeal&&d?` <a href="#/deal/${d.id}" class="faint" style="font-size:11px">· ${esc(d.practice)}</a>`:''}${a.detail?`<p>${esc(a.detail)}</p>`:''}</div><span class="when">${fmtDT(a.at)}</span></div>`}
 </script>
 <script>
 /* ================= TASKS ================= */
 function vTasks(){
+  const u=S.ui;const f=u.taskFilter||'mine';
+  let ts=S.tasks.filter(t=>f==='all'||(f==='mine'?(t.who.includes(S.me)||!t.who.length):t.by===S.me));
   const g={over:[],today:[],week:[],later:[],done:[]};
-  S.tasks.slice().sort((a,b)=>a.due<b.due?-1:1).forEach(t=>{const dd=dayDiff(t.due);(t.done?g.done:dd<0?g.over:dd===0?g.today:dd<=7?g.week:g.later).push(t)});
+  ts.slice().sort((a,b)=>a.due<b.due?-1:1).forEach(t=>{const dd=dayDiff(t.due);(t.done?g.done:dd<0?g.over:dd===0?g.today:dd<=7?g.week:g.later).push(t)});
   const sec=(k,l)=>g[k].length?`<div class="card"><div class="card-head"><h3>${l}</h3><span class="mono faint">${g[k].length}</span></div><div class="card-body" style="padding:4px 16px">${g[k].map(t=>taskRow(t,true)).join('')}</div></div>`:'';
-  return`<div class="page"><div class="page-head"><div><h1>Tasks</h1><div class="sub">${g.over.length} overdue · ${g.today.length} due today</div></div><button class="btn btn-primary" data-open="task">+ New task</button></div>
-  <div class="stack" style="gap:14px;max-width:820px">${sec('over','Overdue')}${sec('today','Today')}${sec('week','This week')}${sec('later','Later')}${sec('done','Completed')}</div></div>`;
+  const series=S.tasks.filter(t=>t.repeat&&!t.done).sort((a,b)=>a.due<b.due?-1:1);
+  const openN=ts.filter(t=>!t.done).length;
+  return`<div class="page"><div class="page-head"><div><h1>Tasks</h1><div class="sub">${g.over.length} overdue · ${g.today.length} due today · ${openN} open</div></div>
+    <div class="toolbar"><div class="seg">${[['mine','My tasks'],['by','Assigned by me'],['all','Everyone']].map(([k,l])=>`<button class="${f===k?'active':''}" data-tfilter="${k}">${l}</button>`).join('')}</div><label class="check"><input type="checkbox" id="show-done" ${u.showDone?'checked':''}> Show completed</label><button class="btn btn-primary" data-open="task">+ New task</button></div></div>
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;align-items:start">
+    <div class="stack" style="gap:14px">${sec('over','Overdue')}${sec('today','Today')}${sec('week','This week')}${sec('later','Later')}${u.showDone?sec('done','Completed'):''}${openN===0?'<div class="empty"><h3>All clear</h3>No open tasks in this view.</div>':''}</div>
+    <div class="stack" style="gap:14px">
+      <div class="card dark-band"><div class="card-body" style="display:flex;flex-direction:column;gap:8px"><span class="label">How tasks work</span><p style="font-size:12px;line-height:1.55;color:#C9C9C3">Anyone can assign a task to one or more people with a deadline, notes and SharePoint files. When it is ticked off, the person who set it and anyone on the notify list get an email and an in‑app notification. Recurring tasks re‑create themselves on completion.</p></div></div>
+      <div class="card"><div class="card-head"><h3>Recurring</h3><span class="mono faint">${series.length}</span></div><div class="card-body" style="padding:4px 16px">${series.length?series.map(t=>`<div class="task" data-task="${t.id}" style="cursor:pointer"><span class="grow"><div class="t">${esc(t.title)}</div><div class="sub"><span class="rep">${repeatLabel(t.repeat)}</span><span>next ${fmtDate(t.due)}</span></div></span><span class="avatars">${t.who.slice(0,3).map(x=>avatarHtml(x,'sm')).join('')}</span></div>`).join(''):'<div class="empty" style="padding:14px">No recurring tasks</div>'}</div></div>
+    </div>
+  </div></div>`;
 }
 
 /* ================= EMAIL ================= */
@@ -834,9 +883,62 @@ function openAdd(){
     `<button class="btn btn-quiet" type="button" data-close-modal>Cancel</button><button class="btn btn-primary" type="submit">Create lead</button>`,{wide:true});
   $('#mform').onsubmit=e=>{e.preventDefault();const fd=new FormData(e.target);const d={id:nextId(S.deals),stage:'new',created:'2026-09-03',close:''};S.fields.forEach(f=>{let v=fd.get(f.id)||'';if(['currency','number'].includes(f.type))v=+v||0;d[f.id]=v});d.source=fd.get('source');d.owner=fd.get('owner');S.deals.unshift(d);logAct(d.id,'created','Lead created manually');S.activity.unshift({id:Date.now()+1,deal:d.id,type:'ai',who:'',text:`Claude scored lead ${score(d)} / 100`,detail:'Queued for first‑touch draft.',at:new Date().toISOString().slice(0,16)});closeModal();toast(`Created ${d.practice}`);location.hash='#/deal/'+d.id;route()}
 }
-function openTask(dealId){
-  modal('New task',`<div class="field"><span class="label">Task</span><input class="input" name="text" required placeholder="e.g. Call to confirm Health Check"></div><div class="form-grid"><div class="field"><span class="label">Deal</span><select class="select" name="deal">${S.deals.map(d=>`<option value="${d.id}" ${+dealId===d.id?'selected':''}>${esc(d.practice)}</option>`).join('')}</select></div><div class="field"><span class="label">Due</span><input class="input" type="date" name="due" value="2026-09-05" required></div><div class="field"><span class="label">Assign to</span><select class="select" name="who">${S.users.filter(u=>u.status==='Active').map(u=>`<option value="${u.id}" ${u.id===S.me?'selected':''}>${esc(u.name)}</option>`).join('')}</select></div></div>`,`<button class="btn btn-quiet" type="button" data-close-modal>Cancel</button><button class="btn btn-primary" type="submit">Add task</button>`);
-  $('#mform').onsubmit=e=>{e.preventDefault();const fd=new FormData(e.target);S.tasks.push({id:nextId(S.tasks),deal:+fd.get('deal'),text:fd.get('text'),who:fd.get('who'),due:fd.get('due'),done:false});logAct(+fd.get('deal'),'task','Task added',fd.get('text'));closeModal();toast('Task added');route()}
+function peoplePicker(name,selected,exclude=[]){return`<div class="people" data-picker="${name}">${S.users.filter(u=>u.status==='Active'&&!exclude.includes(u.id)).map(u=>`<label class="check ${selected.includes(u.id)?'on':''}"><input type="checkbox" name="${name}" value="${u.id}" ${selected.includes(u.id)?'checked':''}>${avatarHtml(u.id,'sm')} ${esc(u.name.split(' ')[0])}</label>`).join('')}</div>`}
+function openTask(dealId,taskId){
+  const t=taskId?S.tasks.find(q=>q.id===+taskId):null;
+  const dId=t?t.deal:+dealId||0;
+  const filesFor=did=>S.files.filter(f=>!did||f.deal===did);
+  const chosen=t?t.files.filter(f=>f.fileId).map(f=>f.fileId):[];
+  const links=t?t.files.filter(f=>f.url):[];
+  modal(t?'Edit task':'New task',`
+    <div class="field"><span class="label">Title *</span><input class="input" name="title" required value="${esc(t?.title||'')}" placeholder="e.g. Call to confirm Health Check"></div>
+    <div class="field"><span class="label">Description</span><textarea class="textarea" name="desc" placeholder="What needs doing, and what does done look like?">${esc(t?.desc||'')}</textarea></div>
+    <div class="form-grid">
+      <div class="field"><span class="label">Deadline *</span><input class="input" type="date" name="due" value="${t?.due||'2026-09-05'}" required></div>
+      <div class="field"><span class="label">Linked deal</span><select class="select" name="deal" id="t-deal"><option value="0">— None (internal)</option>${S.deals.map(d=>`<option value="${d.id}" ${dId===d.id?'selected':''}>${esc(d.practice)}</option>`).join('')}</select></div>
+      <div class="field span2"><span class="label">Responsible *</span>${peoplePicker('who',t?t.who:[S.me])}</div>
+      <div class="field span2"><span class="label">Notify when done</span><div class="stack" style="gap:6px"><label class="check"><input type="checkbox" name="notifyBy" ${t?(t.notifyBy?'checked':''):'checked'}> The person who assigned it (${esc(user(t?.by||S.me)?.name||'me')})</label>${peoplePicker('notify',t?t.notify:[])}</div></div>
+      <div class="field"><span class="label">Repeat</span><div class="row"><select class="select" name="rep" id="t-rep" style="width:150px"><option value="">Does not repeat</option><option value="1" ${t?.repeat?'selected':''}>Every</option></select><input class="input" type="number" name="every" min="1" value="${t?.repeat?.every||1}" style="width:64px" ${t?.repeat?'':'disabled'}><select class="select" name="unit" style="width:110px" ${t?.repeat?'':'disabled'}>${Object.keys(UNITS).map(k=>`<option ${t?.repeat?.unit===k?'selected':''}>${k}</option>`).join('')}</select></div><span class="faint" style="font-size:11px">Next occurrence is created when this one is ticked off.</span></div>
+      <div class="field"><span class="label">Attach files</span><div class="stack" style="gap:5px" id="t-files">${filesFor(dId).map(f=>`<label class="check"><input type="checkbox" name="file" value="${f.id}" ${chosen.includes(f.id)?'checked':''}><span class="sp-tag"><i></i></span>${esc(f.name)}</label>`).join('')||'<span class="faint" style="font-size:11px">No files in this deal\'s SharePoint folder yet.</span>'}</div></div>
+      <div class="field span2"><span class="label">Add a link or upload</span><div class="row"><input class="input" name="url" placeholder="Paste a SharePoint / Teams / web link" value="${esc(links[0]?.url||'')}"><input class="input" type="file" name="upload" style="width:220px;padding-top:6px"></div><span class="faint" style="font-size:11px">Uploads go to the linked deal's client folder (or Client Files/Internal) in SharePoint; the task keeps the link.</span></div>
+    </div>`,
+    `<button class="btn btn-quiet" type="button" data-close-modal>Cancel</button><button class="btn btn-primary" type="submit">${t?'Save':'Create task'}</button>`,{wide:true});
+  const form=$('#mform');
+  form.addEventListener('change',e=>{const el=e.target;if(el.closest('.people'))el.closest('.check').classList.toggle('on',el.checked);
+    if(el.id==='t-rep'){const on=!!el.value;form.every.disabled=!on;form.unit.disabled=!on}
+    if(el.id==='t-deal'){const did=+el.value;$('#t-files').innerHTML=filesFor(did).map(f=>`<label class="check"><input type="checkbox" name="file" value="${f.id}"><span class="sp-tag"><i></i></span>${esc(f.name)}</label>`).join('')||'<span class="faint" style="font-size:11px">No files in this deal\'s SharePoint folder yet.</span>'}});
+  form.onsubmit=e=>{e.preventDefault();const fd=new FormData(e.target);
+    const who=fd.getAll('who');const notify=fd.getAll('notify');
+    const files=fd.getAll('file').map(id=>{const f=S.files.find(q=>q.id===+id);return{name:f.name,fileId:f.id}});
+    if(fd.get('url'))files.push({name:fd.get('url').split('/').pop().replace(/%20/g,' ')||'Link',url:fd.get('url')});
+    const up=fd.get('upload');if(up&&up.name){const did=+fd.get('deal');const nf={id:nextId(S.files),deal:did,name:up.name,size:Math.max(1,Math.round(up.size/1024))+' KB',by:S.me,at:'2026-09-03',kind:up.name.split('.').pop().toUpperCase().slice(0,3)};S.files.unshift(nf);files.push({name:nf.name,fileId:nf.id})}
+    const rep=fd.get('rep')?{every:Math.max(1,+fd.get('every')||1),unit:fd.get('unit')}:null;
+    const o={title:fd.get('title').trim(),desc:fd.get('desc').trim(),deal:+fd.get('deal'),due:fd.get('due'),who,notify,notifyBy:!!fd.get('notifyBy'),repeat:rep,files};
+    if(t){Object.assign(t,o);toast('Task saved')}
+    else{const nt={id:nextId(S.tasks),...o,by:S.me,done:false,created:new Date().toISOString().slice(0,16),series:rep?'s'+Date.now().toString(36):undefined};S.tasks.push(nt);if(nt.deal)logAct(nt.deal,'task','Task added',nt.title);
+      const others=who.filter(x=>x!==S.me);if(others.length)S.notifs.unshift({id:Date.now(),text:`${user(S.me).name} assigned you “${nt.title}”`,p:`Sent to ${names(others).join(', ')} · due ${fmtDate(nt.due)} · email + in‑app`,at:'now',read:false,go:'#/tasks'});
+      toast(`Task created${others.length?' · '+names(others).join(' & ')+' notified':''}`)}
+    closeModal();route()}
+}
+function openTaskDetail(id){
+  const t=S.tasks.find(q=>q.id===+id);if(!t)return;const d=deal(t.deal);const dd=dayDiff(t.due);
+  const to=notifyList(t,'');
+  modal(esc(t.title),`
+    <div class="row wrap" style="gap:6px">${t.done?'<span class="chip chip-teal">Done</span>':dd<0?`<span class="chip chip-red">${Math.abs(dd)}d overdue</span>`:dd===0?'<span class="chip chip-amber">Due today</span>':'<span class="chip chip-line">Open</span>'}${t.repeat?`<span class="chip chip-teal">${repeatLabel(t.repeat)}</span>`:''}${d?`<a class="chip chip-line" href="#/deal/${d.id}" onclick="closeModal()">${esc(d.practice)}</a>`:'<span class="chip chip-line">Internal</span>'}${t.auto?`<span class="chip chip-line">Auto · ${esc(t.auto)}</span>`:''}</div>
+    ${t.desc?`<p style="font-size:13px;line-height:1.6;max-width:60ch">${esc(t.desc)}</p>`:'<p class="faint" style="font-size:12px">No description.</p>'}
+    <div class="tdetail">
+      <div class="prop"><span class="label">Deadline</span><span class="val mono">${fmtDate(t.due)} ${t.due?`<span class="faint" style="font-family:var(--font-sans)">· ${new Date(t.due).toLocaleDateString('en-AU',{weekday:'long'})}</span>`:''}</span></div>
+      <div class="prop"><span class="label">Assigned by</span><span class="val">${t.by?avatarHtml(t.by,'sm')+' '+esc(user(t.by)?.name||''):'<span class="faint">System</span>'} <span class="faint mono" style="font-size:10.5px">${fmtDT(t.created||t.due)}</span></span></div>
+      <div class="prop"><span class="label">Responsible</span><span class="val" style="flex-wrap:wrap">${t.who.length?t.who.map(u=>`<span class="row" style="gap:5px">${avatarHtml(u,'sm')}${esc(user(u)?.name||'')}</span>`).join(''):'<span class="faint">Unassigned</span>'}</span></div>
+      <div class="prop"><span class="label">Notified when done</span><span class="val" style="flex-wrap:wrap">${to.length?to.map(u=>`<span class="row" style="gap:5px">${avatarHtml(u,'sm')}${esc(user(u)?.name||'')}</span>`).join(''):'<span class="faint">Nobody</span>'}</span></div>
+    </div>
+    <div><span class="label">Files</span><div style="margin-top:4px">${t.files.length?t.files.map(f=>`<div class="file"><span class="fi">${f.url?'LNK':(S.files.find(q=>q.id===f.fileId)?.kind||'DOC')}</span><div class="grow"><div class="fn ellip">${esc(f.name)}</div><div class="fm">${f.url?esc(f.url.replace(/^https?:\/\//,'').slice(0,60)):'SharePoint · '+esc(d?.practice||'')}</div></div><button class="btn btn-sm btn-quiet" type="button" onclick="toast('Opening in SharePoint…')">Open</button></div>`).join(''):'<span class="faint" style="font-size:12px">No files attached.</span>'}</div></div>
+    ${t.done?`<div class="hist"><span>Completed by ${esc(user(t.doneBy)?.name||'')} · ${fmtDT(t.doneAt)}</span>${to.length?`<span>Notified ${esc(names(to).join(', '))} by email and in‑app</span>`:''}${t.repeat?'<span>Next occurrence was created automatically</span>':''}</div>`:''}`,
+    `<button class="btn btn-sm btn-danger" type="button" data-tdel="${t.id}">Delete</button><span class="grow"></span><button class="btn btn-quiet" type="button" data-tedit="${t.id}">Edit</button>${t.done?`<button class="btn" type="button" data-tdone="${t.id}" data-undo="1">Reopen</button>`:`<button class="btn btn-primary" type="button" data-tdone="${t.id}">Mark done</button>`}`,{wide:true});
+  $('#mform').onclick=e=>{const x=e.target.closest('[data-tdel],[data-tedit],[data-tdone]');if(!x)return;
+    if(x.dataset.tdel){if(confirm('Delete this task?')){S.tasks=S.tasks.filter(q=>q.id!==t.id);closeModal();toast('Task deleted');route()}}
+    if(x.dataset.tedit){closeModal();openTask(0,t.id)}
+    if(x.dataset.tdone){completeTask(t.id,!x.dataset.undo);closeModal();route()}};
 }
 function openCompose(dealId,draft=''){
   const d=deal(dealId);
@@ -886,6 +988,9 @@ function bindView(r){
   c.onclick=e=>{
     const t=e.target;const el=s=>t.closest(s);
     let x;
+    if(x=el('[data-tfilter]')){S.ui.taskFilter=x.dataset.tfilter;route();return}
+    if(x=el('.task-chk')){return}
+    if(x=el('[data-task]')){openTaskDetail(x.dataset.task);return}
     if(x=el('[data-open]')){const k=x.dataset.open;if(k==='add')openAdd();if(k==='task')openTask(x.dataset.deal);if(k==='compose')openCompose(x.dataset.deal);if(k==='field')openField();if(k==='invite')openInvite();if(k==='key')openKey();return}
     if(x=el('[data-upload]')){openUpload(x.dataset.upload);return}
     if(x=el('[data-view]')){S.ui.view=x.dataset.view;route();return}
@@ -916,7 +1021,8 @@ function bindView(r){
   };
   c.onchange=e=>{
     const t=e.target;
-    if(t.classList.contains('task-chk')){const tk=S.tasks.find(q=>q.id===+t.dataset.id);tk.done=t.checked;if(tk.done)logAct(tk.deal,'task','Task completed',tk.text);save();route();return}
+    if(t.classList.contains('task-chk')){completeTask(+t.dataset.id,t.checked);route();return}
+    if(t.id==='show-done'){S.ui.showDone=t.checked;route();return}
     if(t.id==='f-owner'){S.ui.filterOwner=t.value;route()}if(t.id==='f-stage'){S.ui.filterStage=t.value;route()}
     if(t.id==='sel-all'){$$('.sel').forEach(q=>q.checked=t.checked);bulkBar()}if(t.classList.contains('sel'))bulkBar();
     if(t.id==='bulk-stage'&&t.value){$$('.sel:checked').forEach(q=>moveStage(+q.dataset.id,t.value,true));route()}
