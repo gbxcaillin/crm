@@ -1,0 +1,28 @@
+{
+  "name": "GBX Pipeline",
+  "short_name": "GBX",
+  "description": "GBX Professional Services CRM: pipeline, clients, tasks, chat, calendar, email and invoicing.",
+  "id": "/",
+  "start_url": "./index.html#/dashboard",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#0A0A0A",
+  "theme_color": "#0A0A0A",
+  "lang": "en-AU",
+  "dir": "ltr",
+  "categories": ["business", "productivity", "finance"],
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "New lead", "short_name": "New lead", "url": "./index.html#/pipeline?new=1", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Pipeline", "url": "./index.html#/pipeline", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Tasks", "url": "./index.html#/tasks", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Chat", "url": "./index.html#/chat", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
