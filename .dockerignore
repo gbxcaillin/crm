@@ -1,4 +1,6 @@
 .git
 node_modules
+server/node_modules
 dist
+data
 *.png.tmp

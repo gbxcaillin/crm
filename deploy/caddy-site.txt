@@ -1,18 +1,14 @@
 # Paste this block into /root/familyoffice/deploy/Caddyfile on the VPS,
 # alongside the office.gbxps.com and play.gbxps.com blocks.
-#
-# The basic_auth line keeps the preview private while it holds sample data
-# and has no real login. Generate the hash on the server with:
-#   docker run --rm caddy:2 caddy hash-password --plaintext 'choose-a-strong-password'
-# and replace the placeholder. Remove the basic_auth block once the real
-# backend with its own login is deployed.
+# The app has its own login now, so no basic_auth is needed.
 
 crm.gbxps.com {
-	basic_auth {
-		gbx $2a$14$REPLACE_WITH_HASH_FROM_caddy_hash-password
-	}
+	reverse_proxy crm:3000
 
-	reverse_proxy crm:80
+	# Large SharePoint uploads go through the API.
+	request_body {
+		max_size 100MB
+	}
 
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"

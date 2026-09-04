@@ -92,6 +92,6 @@ self.addEventListener('notificationclick', (e) => {
 self.addEventListener('pushsubscriptionchange', (e) => {
   // Browser rotated the subscription: re-subscribe and tell the server.
   e.waitUntil(self.registration.pushManager.subscribe(e.oldSubscription ? e.oldSubscription.options : { userVisibleOnly: true })
-    .then((sub) => fetch('./api/v1/push/subscribe', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ subscription: sub }) }))
+    .then((sub) => fetch('./api/v1/push/subscribe', { method: 'POST', headers: { 'content-type': 'application/json', 'x-requested-with': 'gbx' }, body: JSON.stringify({ subscription: sub }) }))
     .catch(() => {}));
 });

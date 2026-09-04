@@ -1,11 +1,13 @@
 # Paste this service into /root/familyoffice/docker-compose.yml on the VPS,
 # at the same level as `app:`, `caddy:` and `gamerelay:`. It joins the same
-# network automatically, so the front Caddy can reach it as `crm:80`.
+# network automatically, so the front Caddy reaches it as `crm:3000`.
 #
 #   crm:
 #     build: /root/crm
 #     restart: unless-stopped
+#     env_file: /root/crm/.env.production
+#     volumes:
+#       - /root/crm-data:/app/data
 #
-# No volumes are needed yet: the preview keeps its data in each browser.
-# When the real backend lands, this service gains a data volume and an
-# env_file exactly like `app:` has.
+# /root/crm-data holds crm.db (SQLite), vapid.json (push keys) and backups/.
+# Back it up like the family-office data directory.

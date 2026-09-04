@@ -1,2 +1,6 @@
 dist/
 node_modules/
+server/node_modules/
+data/
+.env
+.env.production
