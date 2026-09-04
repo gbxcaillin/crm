@@ -32,6 +32,12 @@ cat >> index.html <<'EOF'
 EOF
 echo "index.html built ($(wc -c < index.html) bytes)"
 
+# Deployable bundle: everything the static server needs, nothing else.
+rm -rf dist && mkdir -p dist/icons
+cp index.html manifest.webmanifest sw.js dist/
+cp icons/*.svg icons/*.png dist/icons/
+echo "dist/ ready ($(ls dist dist/icons | wc -l) files)"
+
 # PNG icons (needs playwright-core + a Chromium binary; skipped if unavailable)
 if [ -n "$CHROME_BIN" ] && [ -d node_modules/playwright-core ]; then
   node icons/render.mjs && echo "icons rendered"

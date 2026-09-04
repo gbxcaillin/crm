@@ -1,0 +1,26 @@
+# Runs INSIDE the crm container (port 80, no TLS). The front Caddy on the
+# VPS terminates HTTPS for crm.gbxps.com and reverse-proxies here.
+:80 {
+	root * /srv
+	encode gzip zstd
+	file_server
+
+	# Single-page app: unknown paths fall back to the shell (hash routing).
+	try_files {path} /index.html
+
+	# Never let the browser hold a stale shell or service worker.
+	@nocache path /index.html /sw.js /manifest.webmanifest
+	header @nocache Cache-Control "no-cache, must-revalidate"
+
+	# Icons and static assets can be cached for a day.
+	@static path /icons/*
+	header @static Cache-Control "public, max-age=86400"
+
+	# Service worker must be allowed to control the whole origin.
+	header /sw.js Service-Worker-Allowed "/"
+
+	log {
+		output stdout
+		format console
+	}
+}
