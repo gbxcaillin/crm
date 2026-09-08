@@ -1,0 +1,22 @@
+# Replace crm.CLIENTDOMAIN.com with the real hostname you pointed at this server.
+# Caddy gets the HTTPS certificate on first start and renews it on its own.
+crm.CLIENTDOMAIN.com {
+	reverse_proxy crm:3000
+
+	# Lead webhooks and SharePoint uploads pass through here.
+	request_body {
+		max_size 100MB
+	}
+
+	# The app also sends its own security headers; these are belt-and-braces
+	# and cost nothing.
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+
+	encode gzip zstd
+}

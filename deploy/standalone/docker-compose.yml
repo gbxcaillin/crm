@@ -1,0 +1,43 @@
+# Standalone GBX Pipeline stack for a single client on a fresh server.
+# One command brings up the app plus a Caddy reverse proxy that fetches and
+# renews a Let's Encrypt certificate automatically.
+#
+#   cd /opt/pipeline && docker compose up -d --build
+#
+# Everything the app keeps lives in ./crm-data (SQLite database, VAPID push
+# keys, nightly backups) — that is the only directory to back up.
+services:
+  crm:
+    build:
+      context: ../..            # repo root (where the Dockerfile is)
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: ./.env.production
+    environment:
+      NODE_ENV: production
+    volumes:
+      - ./crm-data:/app/data
+    expose:
+      - "3000"                  # reachable by Caddy on the internal network only
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/v1/health"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data        # certificates persist here across restarts
+      - caddy_config:/config
+    depends_on:
+      - crm
+
+volumes:
+  caddy_data:
+  caddy_config:
