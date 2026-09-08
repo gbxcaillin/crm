@@ -10,15 +10,34 @@ const market = require('../lib/market');
 const jobs = require('../lib/jobs');
 const leads = require('../lib/leads');
 const { notify } = require('../lib/notify');
+const totp = require('../lib/totp');
+const oidc = require('../lib/oidc');
+const QR = require('qrcode');
 const { err, send, readJson, readBody, makeRouter } = require('../lib/http');
 
 const r = makeRouter();
-const SECURE = process.env.NODE_ENV === 'production' || process.env.COOKIE_SECURE === '1';
+const SECURE = auth.SECURE;
 const BASE = mail.BASE;
 
 /* ---------- guards ---------- */
-function session(req) { const u = auth.sessionUser(req); if (!u) throw err(401, 'Sign in required'); if (req.method !== 'GET' && req.headers['x-requested-with'] !== 'gbx') throw err(403, 'Missing X-Requested-With header'); return u; }
+// Paths a "limited" session (signed in, but MFA enrolment still required by policy) may call.
+const LIMITED_OK = /^\/(bootstrap|auth\/(logout|mfa\/setup|mfa\/enable|password|sessions.*))$/;
+function session(req, { allowLimited = false } = {}) {
+  const u = auth.sessionUser(req); if (!u) throw err(401, 'Sign in required');
+  if (req.method !== 'GET' && req.headers['x-requested-with'] !== 'gbx') throw err(403, 'Missing X-Requested-With header');
+  if (!allowLimited && !LIMITED_OK.test(req.apiPath || '') && (req.session.limited || (state.mfaRequiredFor(u) && !u.totp_secret && req.session.via !== 'sso'))) throw err(403, 'Set up two-factor authentication to continue', { mfaSetup: true });
+  u.ip = auth.clientIp(req);
+  return u;
+}
 function admin(req) { const u = session(req); if (u.role !== 'Admin') throw err(403, 'Admin only'); return u; }
+const audit = (req, who, action, target, detail) => D.audit(who, auth.clientIp(req), action, target, detail);
+function finishLogin(req, res, u, { remember, via }) {
+  const limited = via !== 'sso' && state.mfaRequiredFor(u) && !u.totp_secret;
+  const s = auth.createSession(u.id, { remember: !!remember, ua: req.headers['user-agent'], ip: auth.clientIp(req), limited, via });
+  D.users.seen(u.id);
+  audit(req, u.id, 'login.ok', u.email, via + (limited ? ' (mfa setup pending)' : ''));
+  return { user: D.users.public(u), cookie: auth.cookieHeader(s.raw, s.ttl, SECURE), mfaSetup: limited };
+}
 // Session OR API key with the given scope.
 function actor(req, scope) {
   const k = auth.apiKeyFromReq(req);
@@ -38,21 +57,39 @@ r.post('/auth/setup', async (req, res) => {
   if (!b.email || !/^[^@\s]+@[^@\s]+$/.test(b.email)) throw err(400, 'Valid email required');
   const id = 'u1';
   D.users.insert({ id, email: String(b.email).toLowerCase(), name: String(b.name || 'Admin').slice(0, 80), role: 'Admin', status: 'Active', color: '#2E8B6E', pw_hash: auth.hashPassword(b.password) });
-  const s = auth.createSession(id, { remember: true, ua: req.headers['user-agent'], ip: auth.clientIp(req) });
-  send(res, 200, { ok: true }, { 'set-cookie': auth.cookieHeader(s.raw, s.ttl, SECURE) });
+  audit(req, id, 'workspace.setup', b.email, '');
+  const f = finishLogin(req, res, D.users.get(id), { remember: true, via: 'password' });
+  send(res, 200, { ok: true, mfaSetup: f.mfaSetup }, { 'set-cookie': f.cookie });
 });
 r.post('/auth/login', async (req, res) => {
   const ip = auth.clientIp(req);
-  if (auth.lockedOut(ip)) throw err(429, 'Too many attempts. Try again in 15 minutes.');
+  if (auth.lockedOut(ip)) { audit(req, '', 'login.locked', ip, ''); throw err(429, 'Too many attempts. Try again in 15 minutes.'); }
+  if (!state.securityPolicy().passwordLogin) throw err(403, 'Password sign-in is turned off. Use Sign in with Microsoft.');
   const b = await readJson(req);
   const u = D.users.byEmail(String(b.email || ''));
-  if (!u || u.status !== 'Active' || !auth.verifyPassword(String(b.password || ''), u.pw_hash)) { auth.recordFailure(ip); throw err(401, 'Email or password is incorrect'); }
+  if (!u || u.status !== 'Active' || !u.pw_hash || !auth.verifyPassword(String(b.password || ''), u.pw_hash)) { auth.recordFailure(ip); audit(req, u ? u.id : '', 'login.fail', String(b.email || '').slice(0, 80), ''); throw err(401, 'Email or password is incorrect'); }
   auth.recordSuccess(ip);
-  D.users.seen(u.id);
-  const s = auth.createSession(u.id, { remember: !!b.remember, ua: req.headers['user-agent'], ip });
-  send(res, 200, { ok: true, user: D.users.public(u) }, { 'set-cookie': auth.cookieHeader(s.raw, s.ttl, SECURE) });
+  if (u.totp_secret) { const ticket = auth.issueToken(u.id, 'mfa', 0, 5); return ok(res, { mfa: true, ticket, remember: !!b.remember }); }
+  const f = finishLogin(req, res, u, { remember: b.remember, via: 'password' });
+  send(res, 200, { ok: true, user: f.user, mfaSetup: f.mfaSetup }, { 'set-cookie': f.cookie });
 });
-r.post('/auth/logout', (req, res) => { auth.destroySession(req); send(res, 200, { ok: true }, { 'set-cookie': auth.clearCookieHeader(SECURE) }); });
+// Second factor after a correct password: a TOTP code or a one-time backup code.
+r.post('/auth/mfa', async (req, res) => {
+  const ip = auth.clientIp(req); if (auth.lockedOut(ip)) throw err(429, 'Too many attempts. Try again in 15 minutes.');
+  const b = await readJson(req);
+  const uid = auth.peekToken(b.ticket, 'mfa'); if (!uid) throw err(401, 'Sign in again');
+  const u = D.users.get(uid); const m = D.users.mfa(uid);
+  let via = 'mfa';
+  if (!totp.verify(m.secret, b.code)) {
+    const left = totp.useBackupCode(m.codes, b.code);
+    if (!left) { auth.recordFailure(ip); audit(req, uid, 'mfa.fail', u.email, ''); throw err(401, 'That code is not valid'); }
+    D.users.setMfa(uid, { secret: m.secret, pending: null, codes: left }); via = 'backup-code'; audit(req, uid, 'mfa.backupcode', u.email, `${left.length} left`);
+  }
+  auth.consumeToken(b.ticket, 'mfa'); auth.recordSuccess(ip);
+  const f = finishLogin(req, res, u, { remember: b.remember, via });
+  send(res, 200, { ok: true, user: f.user }, { 'set-cookie': f.cookie });
+});
+r.post('/auth/logout', (req, res) => { const u = auth.sessionUser(req); if (u) audit(req, u.id, 'logout', u.email, ''); auth.destroySession(req); send(res, 200, { ok: true }, { 'set-cookie': auth.clearCookieHeader(SECURE) }); });
 r.get('/auth/token/:token', (req, res) => {
   const kind = auth.peekToken(req.params.token, 'invite') ? 'invite' : auth.peekToken(req.params.token, 'reset') ? 'reset' : null;
   if (!kind) throw err(404, 'This link has expired or was already used');
@@ -66,35 +103,112 @@ r.post('/auth/accept', async (req, res) => {
   const uid = auth.consumeToken(b.token, kind); if (!uid) throw err(400, 'This link has expired or was already used');
   D.users.setPassword(uid, auth.hashPassword(b.password));
   auth.destroyUserSessions(uid);
-  const s = auth.createSession(uid, { remember: true, ua: req.headers['user-agent'], ip: auth.clientIp(req) });
-  send(res, 200, { ok: true }, { 'set-cookie': auth.cookieHeader(s.raw, s.ttl, SECURE) });
+  audit(req, uid, kind === 'invite' ? 'invite.accept' : 'password.reset', D.users.get(uid).email, '');
+  const f = finishLogin(req, res, D.users.get(uid), { remember: true, via: 'password' });
+  send(res, 200, { ok: true, mfaSetup: f.mfaSetup }, { 'set-cookie': f.cookie });
 });
 r.post('/auth/forgot', async (req, res) => {
+  const ip = auth.clientIp(req); if (auth.limited('forgot:' + ip, 5, 15 * 60e3)) throw err(429, 'Too many requests');
   const b = await readJson(req);
   const u = D.users.byEmail(String(b.email || ''));
   if (u && u.status === 'Active') {
     const t = auth.issueToken(u.id, 'reset', 1);
+    audit(req, u.id, 'password.forgot', u.email, '');
     await mail.send({ to: u.email, subject: 'Reset your GBX Pipeline password', title: 'Reset your password', html: `<p>Hi ${mail.esc(u.name.split(' ')[0])}, someone asked to reset the password for this account. The link works once and expires in 24 hours. If it wasn't you, ignore this email.</p>`, cta: { label: 'Choose a new password', url: `${BASE}/#/reset/${t}` }, kind: 'reset' });
   }
   ok(res, { ok: true, sent: !!(u && mail.enabled()) });
 });
 r.post('/auth/password', async (req, res) => {
-  const u = session(req); const b = await readJson(req);
-  if (!auth.verifyPassword(String(b.current || ''), u.pw_hash)) throw err(400, 'Current password is incorrect');
+  const u = session(req, { allowLimited: true }); const b = await readJson(req);
+  if (u.pw_hash && !auth.verifyPassword(String(b.current || ''), u.pw_hash)) throw err(400, 'Current password is incorrect');
   const p = auth.passwordProblem(b.password); if (p) throw err(400, p);
   D.users.setPassword(u.id, auth.hashPassword(b.password));
+  auth.revokeOtherSessions(u.id, req.sessionId);
+  audit(req, u.id, 'password.change', u.email, 'other sessions signed out');
   ok(res);
 });
+
+/* ---------- two-factor (TOTP) ---------- */
+r.post('/auth/mfa/setup', async (req, res) => {
+  const u = session(req, { allowLimited: true });
+  const secret = totp.newSecret(); const m = D.users.mfa(u.id);
+  D.users.setMfa(u.id, { secret: m.secret, pending: secret, codes: m.codes });
+  const url = totp.otpauthUrl(secret, u.email);
+  ok(res, { secret, url, qr: await QR.toDataURL(url, { margin: 1, width: 200, color: { dark: '#1A1A1A', light: '#FFFDF8' } }) });
+});
+r.post('/auth/mfa/enable', async (req, res) => {
+  const u = session(req, { allowLimited: true }); const b = await readJson(req);
+  const m = D.users.mfa(u.id); if (!m.pending) throw err(400, 'Start setup first');
+  if (!totp.verify(m.pending, b.code)) throw err(400, 'That code is not valid — check the time on your phone and try again');
+  const codes = totp.newBackupCodes();
+  D.users.setMfa(u.id, { secret: m.pending, pending: null, codes: codes.hashes });
+  auth.unlimitSession(req.sessionId, 'mfa'); auth.revokeOtherSessions(u.id, req.sessionId);
+  audit(req, u.id, 'mfa.enable', u.email, '');
+  ok(res, { ok: true, backupCodes: codes.codes });
+});
+r.post('/auth/mfa/codes', async (req, res) => {
+  const u = session(req); const b = await readJson(req);
+  const m = D.users.mfa(u.id); if (!m.secret) throw err(400, 'Two-factor is not enabled');
+  if (!totp.verify(m.secret, b.code)) throw err(400, 'Enter a current code from your authenticator');
+  const codes = totp.newBackupCodes(); D.users.setMfa(u.id, { secret: m.secret, pending: null, codes: codes.hashes });
+  audit(req, u.id, 'mfa.codes', u.email, 'regenerated'); ok(res, { backupCodes: codes.codes });
+});
+r.post('/auth/mfa/disable', async (req, res) => {
+  const u = session(req); const b = await readJson(req);
+  if (state.mfaRequiredFor(u)) throw err(403, 'Two-factor is required for your role');
+  if (u.pw_hash && !auth.verifyPassword(String(b.password || ''), u.pw_hash)) throw err(400, 'Password is incorrect');
+  D.users.setMfa(u.id, { secret: null, pending: null, codes: null }); audit(req, u.id, 'mfa.disable', u.email, ''); ok(res);
+});
+r.post('/users/:id/mfa-reset', (req, res) => {
+  const me = admin(req); const u = D.users.get(req.params.id); if (!u) throw err(404, 'No such user');
+  D.users.setMfa(u.id, { secret: null, pending: null, codes: null }); auth.destroyUserSessions(u.id);
+  audit(req, me.id, 'mfa.reset', u.email, 'by admin'); ok(res, { user: D.users.public(D.users.get(u.id)) });
+});
+
+/* ---------- Microsoft 365 sign-in (OIDC) ---------- */
+r.get('/auth/microsoft', (req, res) => {
+  if (!oidc.enabled()) throw err(404, 'Microsoft sign-in is not configured');
+  const a = oidc.authUrl(); auth.stashOidc(a.state, { nonce: a.nonce, verifier: a.verifier });
+  res.writeHead(302, { location: a.url, 'cache-control': 'no-store' }); res.end();
+});
+r.get('/auth/microsoft/callback', async (req, res) => {
+  const back = (msg) => { res.writeHead(302, { location: BASE + '/#/login?error=' + encodeURIComponent(msg) }); res.end(); };
+  try {
+    if (!oidc.enabled()) return back('Microsoft sign-in is not configured');
+    const q = req.query; if (q.get('error')) return back(q.get('error_description') || q.get('error'));
+    const st = auth.takeOidc(q.get('state')); if (!st) return back('Sign-in expired, try again');
+    const id = await oidc.exchange(q.get('code'), st.verifier, st.nonce);
+    let u = D.users.byEmail(id.email);
+    if (!u && process.env.SSO_AUTO_PROVISION === '1' && process.env.SSO_DOMAIN && id.email.endsWith('@' + process.env.SSO_DOMAIN.toLowerCase())) {
+      u = { id: D.users.newId(), email: id.email, name: id.name, role: 'Member', status: 'Active', color: '#3E6C9B', sso_oid: id.oid }; D.users.insert(u); u = D.users.get(u.id); audit(req, u.id, 'user.provisioned', id.email, 'via Microsoft sign-in');
+    }
+    if (!u) { audit(req, '', 'sso.denied', id.email, 'no matching user'); return back('No Pipeline account for ' + id.email + '. Ask an admin to invite you.'); }
+    if (u.status === 'Invited') { D.users.update({ ...u, status: 'Active' }); u = D.users.get(u.id); }
+    if (u.status !== 'Active') return back('This account is deactivated');
+    if (!u.sso_oid) D.users.linkSso(u.id, id.oid);
+    const f = finishLogin(req, res, u, { remember: true, via: 'sso' });
+    res.writeHead(302, { location: BASE + '/#/dashboard', 'set-cookie': f.cookie, 'cache-control': 'no-store' }); res.end();
+  } catch (e) { console.error('[sso]', e.message); back('Microsoft sign-in failed: ' + e.message); }
+});
+
+/* ---------- sessions ---------- */
+r.get('/auth/sessions', (req, res) => { const u = session(req, { allowLimited: true }); ok(res, { sessions: auth.listSessions(u.id, req.sessionId) }); });
+r.delete('/auth/sessions/:id', (req, res) => { const u = session(req, { allowLimited: true }); if (!auth.revokeSession(u.id, req.params.id)) throw err(404, 'No such session'); audit(req, u.id, 'session.revoke', req.params.id, ''); ok(res, { sessions: auth.listSessions(u.id, req.sessionId) }); });
+r.post('/auth/sessions/revoke-others', (req, res) => { const u = session(req, { allowLimited: true }); const n = auth.revokeOtherSessions(u.id, req.sessionId); audit(req, u.id, 'session.revoke', 'others', n + ' sessions'); ok(res, { revoked: n, sessions: auth.listSessions(u.id, req.sessionId) }); });
 
 /* ---------- bootstrap & sync ---------- */
 r.get('/bootstrap', (req, res) => {
   const u = auth.sessionUser(req);
-  if (!u) throw err(401, 'Sign in required', { setup: D.users.count() === 0 });
+  if (!u) { const pol = state.securityPolicy(); throw err(401, 'Sign in required', { setup: D.users.count() === 0, sso: pol.sso, passwordLogin: pol.passwordLogin }); }
   D.users.seen(u.id);
-  ok(res, state.bootstrap(u));
+  const b = state.bootstrap(u, req.session);
+  b.security.needsMfaSetup = req.session.limited || (state.mfaRequiredFor(u) && !u.totp_secret && req.session.via !== 'sso');
+  if (b.security.needsMfaSetup) { delete b.state; b.rev = 0; }
+  ok(res, b);
 });
 r.get('/sync', (req, res) => { const u = session(req); ok(res, state.pull(Number(req.query.get('since')) || 0, u)); });
 r.post('/sync', async (req, res) => { const u = session(req); const b = await readJson(req, 12 * 1024 * 1024); ok(res, state.applySync(u, b)); });
+// A Member's role changes are audited through the users op path; log role/status edits explicitly.
 
 /* ---------- users & invites ---------- */
 async function sendInvite(u, by) {
@@ -112,6 +226,7 @@ r.post('/users', async (req, res) => {
   const used = D.users.all().map((x) => x.color);
   const u = { id: D.users.newId(), email, name: String(b.name || email.split('@')[0]).slice(0, 80), role: ['Admin', 'Manager', 'Member'].includes(b.role) ? b.role : 'Member', status: 'Invited', color: colors.find((c) => !used.includes(c)) || colors[used.length % colors.length], focus: String(b.focus || '').slice(0, 120) };
   D.users.insert(u);
+  audit(req, me.id, 'invite.create', email, u.role);
   const inv = await sendInvite(D.users.get(u.id), me);
   ok(res, { user: D.users.public(D.users.get(u.id)), inviteUrl: inv.url, emailed: inv.sent });
 });
@@ -119,8 +234,8 @@ r.post('/users/:id/invite', async (req, res) => { const me = admin(req); const u
 r.post('/users/:id/reset', async (req, res) => { admin(req); const u = D.users.get(req.params.id); if (!u) throw err(404, 'No such user'); const t = auth.issueToken(u.id, 'reset', 1); const url = `${BASE}/#/reset/${t}`; const sent = await mail.send({ to: u.email, subject: 'Reset your GBX Pipeline password', title: 'Reset your password', html: '<p>An admin issued a password reset for your account. The link works once and expires in 24 hours.</p>', cta: { label: 'Choose a new password', url }, kind: 'reset' }); ok(res, { resetUrl: url, emailed: sent }); });
 
 /* ---------- API keys ---------- */
-r.post('/keys', async (req, res) => { const me = admin(req); const b = await readJson(req); if (!b.name) throw err(400, 'Name required'); const scopes = (Array.isArray(b.scopes) ? b.scopes : []).filter((s) => ['deals:read', 'deals:write', 'contacts:write', 'files:read', 'ai:write'].includes(s)); const k = auth.createApiKey(String(b.name).slice(0, 60), scopes.length ? scopes : ['deals:read'], me.id); ok(res, { id: k.id, key: k.key, keys: auth.listApiKeys() }); });
-r.delete('/keys/:id', (req, res) => { admin(req); auth.revokeApiKey(req.params.id); ok(res, { keys: auth.listApiKeys() }); });
+r.post('/keys', async (req, res) => { const me = admin(req); const b = await readJson(req); if (!b.name) throw err(400, 'Name required'); const scopes = (Array.isArray(b.scopes) ? b.scopes : []).filter((s) => ['deals:read', 'deals:write', 'contacts:write', 'files:read', 'ai:write'].includes(s)); const k = auth.createApiKey(String(b.name).slice(0, 60), scopes.length ? scopes : ['deals:read'], me.id); audit(req, me.id, 'key.create', b.name, scopes.join(' ')); ok(res, { id: k.id, key: k.key, keys: auth.listApiKeys() }); });
+r.delete('/keys/:id', (req, res) => { const me = admin(req); auth.revokeApiKey(req.params.id); audit(req, me.id, 'key.revoke', req.params.id, ''); ok(res, { keys: auth.listApiKeys() }); });
 
 /* ---------- push ---------- */
 r.get('/push/key', (req, res) => ok(res, { publicKey: push.publicKey }));
@@ -258,8 +373,10 @@ r.get('/market/search', async (req, res) => { session(req); ok(res, { results: a
 r.post('/market/refresh', async (req, res) => { session(req); ok(res, { updated: await market.refreshSecurities() }); });
 
 /* ---------- admin / ops ---------- */
-r.get('/admin/status', (req, res) => { admin(req); ok(res, { features: state.features(), mail: D.log.mailRecent.all(20), hooks: D.log.hookRecent.all(30), push: push.stats7d(), devices: push.devices(), jobs: ['chat', 'digest', 'backup', 'market', 'prune'].map((n) => ({ name: n, ...(D.jobs.get.get(n) || {}) })), db: D.DB_PATH, rev: D.rev() }); });
-r.post('/admin/backup', async (req, res) => { admin(req); ok(res, { file: await jobs.backup() }); });
+r.get('/admin/status', (req, res) => { admin(req); ok(res, { features: state.features(), security: state.securityPolicy(), keyVersions: D.vault.versions(), mail: D.log.mailRecent.all(20), hooks: D.log.hookRecent.all(30), push: push.stats7d(), devices: push.devices(), jobs: ['chat', 'digest', 'backup', 'market', 'prune'].map((n) => ({ name: n, ...(D.jobs.get.get(n) || {}) })), db: D.DB_PATH, rev: D.rev() }); });
+r.post('/admin/backup', async (req, res) => { const me = admin(req); const f = await jobs.backup(); audit(req, me.id, 'admin.backup', f, ''); ok(res, { file: f }); });
+r.get('/admin/audit', (req, res) => { admin(req); const since = req.query.get('since') || ''; ok(res, { rows: D.auditRecent(Math.min(2000, Number(req.query.get('limit')) || 200), since) }); });
+r.get('/admin/audit.csv', (req, res) => { const me = admin(req); audit(req, me.id, 'audit.export', '', ''); const rows = D.auditRecent(20000, req.query.get('since') || ''); const csv = ['at,who,ip,action,target,detail', ...rows.map((r) => [r.at, r.who, r.ip, r.action, r.target, r.detail].map((v) => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(','))].join('\n'); res.writeHead(200, { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': 'attachment; filename="pipeline-audit.csv"', 'cache-control': 'no-store' }); res.end(csv); });
 r.post('/admin/test-mail', async (req, res) => { const u = admin(req); const sent = await mail.send({ to: u.email, subject: 'GBX Pipeline test email', title: 'Email is working', text: 'This is a test from the Pipeline server.', cta: { label: 'Open Pipeline', url: BASE }, kind: 'test' }); ok(res, { sent, mode: mail.mode() }); });
 r.post('/admin/run-job', async (req, res) => { admin(req); const b = await readJson(req); const fn = { chat: jobs.chatDigest, digest: jobs.dailyDigest, backup: jobs.backup, market: market.refreshSecurities }[b.job]; if (!fn) throw err(400, 'Unknown job'); ok(res, { result: await fn() }); });
 

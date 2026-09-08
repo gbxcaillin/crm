@@ -63,7 +63,7 @@ async function tick() {
   try { const at = prefs().digest || '07:30'; if (hhmm >= at && !ran('digest', day)) { mark('digest', day); await dailyDigest(); } } catch (e) { console.error('[job digest]', e.message); }
   try { if (hhmm >= '02:30' && !ran('backup', day)) { mark('backup', day); mark('backup', day, await backup()); } } catch (e) { console.error('[job backup]', e.message); }
   try { const mins = Math.max(5, Number((settings.research || {}).refreshMins) || 20); const last = D.jobs.get.get('market'); if (!last || Date.now() - new Date(last.last_run).getTime() > mins * 60e3) { mark('market', new Date().toISOString()); const n = await market.refreshSecurities(); mark('market', new Date().toISOString(), n + ' updated'); } } catch (e) { console.error('[job market]', e.message); }
-  try { if (!ran('prune', day)) { mark('prune', day); auth.pruneSessions(); } } catch (e) { /* ignore */ }
+  try { if (!ran('prune', day)) { mark('prune', day); auth.pruneSessions(); const d = new Date(); d.setFullYear(d.getFullYear() - 2); D.auditPrune(D.localIso(d)); } } catch (e) { /* ignore */ }
 }
 function start() { setTimeout(() => { tick(); setInterval(tick, 60e3); }, 5000); }
 module.exports = { start, tick, backup, chatDigest, dailyDigest };

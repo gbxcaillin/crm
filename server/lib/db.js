@@ -6,6 +6,7 @@
 const { DatabaseSync } = require('node:sqlite');
 const fs = require('node:fs');
 const path = require('node:path');
+const vault = require('./vault');
 
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', '..', 'data');
 fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -37,7 +38,13 @@ CREATE TABLE IF NOT EXISTS mail_log(id INTEGER PRIMARY KEY AUTOINCREMENT, at TEX
 CREATE TABLE IF NOT EXISTS push_log(id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT, user_id TEXT, title TEXT, status TEXT);
 CREATE TABLE IF NOT EXISTS webhook_log(id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT, source TEXT, status TEXT, detail TEXT, ref TEXT);
 CREATE TABLE IF NOT EXISTS job_state(name TEXT PRIMARY KEY, last_run TEXT, detail TEXT);
+CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT, who TEXT, ip TEXT, action TEXT, target TEXT, detail TEXT);
+CREATE INDEX IF NOT EXISTS audit_at ON audit(at);
 `);
+// Column migrations for databases created before these fields existed.
+function addColumn(table, col, def) { const cols = db.prepare(`PRAGMA table_info(${table})`).all().map((c) => c.name); if (!cols.includes(col)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${def}`); }
+addColumn('users', 'totp_secret', 'TEXT'); addColumn('users', 'totp_pending', 'TEXT'); addColumn('users', 'backup_codes', 'TEXT'); addColumn('users', 'sso_oid', 'TEXT'); addColumn('users', 'pw_changed', 'TEXT');
+addColumn('sessions', 'limited', 'INTEGER DEFAULT 0'); addColumn('sessions', 'last_seen', 'INTEGER'); addColumn('sessions', 'via', 'TEXT');
 
 /* ---------- revision counter ---------- */
 const getMeta = db.prepare('SELECT value FROM meta WHERE key=?');
@@ -71,24 +78,26 @@ const qKvAll = db.prepare('SELECT key,value FROM kv');
 const qKvSince = db.prepare('SELECT key,value FROM kv WHERE rev>?');
 const qMaxId = db.prepare("SELECT MAX(CAST(id AS INTEGER)) AS m FROM records WHERE col=?");
 
-function getRecord(col, id) { const r = qGet.get(col, String(id)); return r && !r.deleted ? JSON.parse(r.data) : null; }
-function listCol(col) { return qCol.all(col).map((r) => JSON.parse(r.data)); }
-function putRecord(col, obj, by = '', r) { const n = r || bumpRev(); qUpsert.run(col, String(obj[COLS[col]]), JSON.stringify(obj), n, nowIso(), by); return n; }
+const openJson = (v) => JSON.parse(vault.open(v));
+function getRecord(col, id) { const r = qGet.get(col, String(id)); return r && !r.deleted ? openJson(r.data) : null; }
+function listCol(col) { return qCol.all(col).map((r) => openJson(r.data)); }
+function putRecord(col, obj, by = '', r) { const n = r || bumpRev(); qUpsert.run(col, String(obj[COLS[col]]), vault.seal(JSON.stringify(obj)), n, nowIso(), by); return n; }
 function delRecord(col, id, by = '', r) { const n = r || bumpRev(); qDelete.run(n, nowIso(), by, col, String(id)); return n; }
+function maxIds() { const out = {}; for (const c of Object.keys(COLS)) if (c !== 'securities') { const r = qMaxId.get(c); out[c] = r && r.m ? Number(r.m) : 0; } return out; }
 function nextId(col) { const r = qMaxId.get(col); return (r && r.m ? Number(r.m) : 0) + 1; }
-function kvGet(key, dflt = null) { const r = qKvGet.get(key); return r ? JSON.parse(r.value) : dflt; }
-function kvSet(key, value, r) { const n = r || bumpRev(); qKvSet.run(key, JSON.stringify(value), n); return n; }
+function kvGet(key, dflt = null) { const r = qKvGet.get(key); return r ? openJson(r.value) : dflt; }
+function kvSet(key, value, r) { const n = r || bumpRev(); qKvSet.run(key, vault.seal(JSON.stringify(value)), n); return n; }
 function snapshot() {
   const state = {};
   for (const c of Object.keys(COLS)) state[c] = [];
-  for (const row of qAll.all()) if (state[row.col]) state[row.col].push(JSON.parse(row.data));
-  for (const row of qKvAll.all()) state[row.key] = JSON.parse(row.value);
+  for (const row of qAll.all()) if (state[row.col]) state[row.col].push(openJson(row.data));
+  for (const row of qKvAll.all()) state[row.key] = openJson(row.value);
   return state;
 }
 function changesSince(since) {
   return {
-    records: qSince.all(since).map((r) => ({ col: r.col, id: r.id, data: r.deleted ? null : JSON.parse(r.data) })),
-    kv: Object.fromEntries(qKvSince.all(since).map((r) => [r.key, JSON.parse(r.value)])),
+    records: qSince.all(since).map((r) => ({ col: r.col, id: r.id, data: r.deleted ? null : openJson(r.data) })),
+    kv: Object.fromEntries(qKvSince.all(since).map((r) => [r.key, openJson(r.value)])),
   };
 }
 const transaction = (fn) => (...args) => { db.exec('BEGIN IMMEDIATE'); try { const out = fn(...args); db.exec('COMMIT'); return out; } catch (e) { db.exec('ROLLBACK'); throw e; } };
@@ -97,14 +106,16 @@ const transaction = (fn) => (...args) => { db.exec('BEGIN IMMEDIATE'); try { con
 const uAll = db.prepare('SELECT * FROM users ORDER BY created_at');
 const uGet = db.prepare('SELECT * FROM users WHERE id=?');
 const uByEmail = db.prepare('SELECT * FROM users WHERE lower(email)=lower(?)');
-const uIns = db.prepare('INSERT INTO users(id,email,name,role,status,color,focus,pw_hash,created_at,last_seen) VALUES(?,?,?,?,?,?,?,?,?,?)');
+const uIns = db.prepare('INSERT INTO users(id,email,name,role,status,color,focus,pw_hash,created_at,last_seen,sso_oid) VALUES(?,?,?,?,?,?,?,?,?,?,?)');
+const uMfa = db.prepare('UPDATE users SET totp_secret=?, totp_pending=?, backup_codes=? WHERE id=?');
+const uSso = db.prepare('UPDATE users SET sso_oid=? WHERE id=?');
 const uUpd = db.prepare('UPDATE users SET email=?, name=?, role=?, status=?, color=?, focus=? WHERE id=?');
-const uPw = db.prepare('UPDATE users SET pw_hash=?, status=CASE WHEN status=\'Invited\' THEN \'Active\' ELSE status END WHERE id=?');
+const uPw = db.prepare('UPDATE users SET pw_hash=?, pw_changed=?, status=CASE WHEN status=\'Invited\' THEN \'Active\' ELSE status END WHERE id=?');
 const uSeen = db.prepare('UPDATE users SET last_seen=? WHERE id=?');
 const uCount = db.prepare('SELECT COUNT(*) AS n FROM users');
 function publicUser(u) {
   if (!u) return null;
-  return { id: u.id, name: u.name, email: u.email, role: u.role, status: u.status, color: u.color || '#2E8B6E', focus: u.focus || '', last: relTime(u.last_seen) };
+  return { id: u.id, name: u.name, email: u.email, role: u.role, status: u.status, color: u.color || '#2E8B6E', focus: u.focus || '', last: relTime(u.last_seen), mfa: !!u.totp_secret, sso: !!u.sso_oid };
 }
 function relTime(iso) {
   if (!iso) return '—';
@@ -114,23 +125,36 @@ function relTime(iso) {
 }
 const users = {
   all: () => uAll.all(), get: (id) => uGet.get(id), byEmail: (e) => uByEmail.get(e), count: () => uCount.get().n,
-  insert: (u) => { uIns.run(u.id, u.email, u.name, u.role || 'Member', u.status || 'Invited', u.color || null, u.focus || '', u.pw_hash || null, nowIso(), null); bumpRev(); },
+  insert: (u) => { uIns.run(u.id, u.email, u.name, u.role || 'Member', u.status || 'Invited', u.color || null, u.focus || '', u.pw_hash || null, nowIso(), null, u.sso_oid || null); bumpRev(); },
+  // MFA secrets are sealed with the data key; read them back with users.mfa(id).
+  setMfa: (id, { secret, pending, codes }) => { uMfa.run(secret ? vault.seal(secret) : null, pending ? vault.seal(pending) : null, codes ? vault.seal(JSON.stringify(codes)) : null, id); bumpRev(); },
+  mfa: (id) => { const u = uGet.get(id); if (!u) return null; return { secret: u.totp_secret ? vault.open(u.totp_secret) : null, pending: u.totp_pending ? vault.open(u.totp_pending) : null, codes: u.backup_codes ? JSON.parse(vault.open(u.backup_codes)) : [] }; },
+  linkSso: (id, oid) => { uSso.run(oid, id); bumpRev(); },
   update: (u) => { uUpd.run(u.email, u.name, u.role, u.status, u.color, u.focus, u.id); bumpRev(); },
-  setPassword: (id, hash) => { uPw.run(hash, id); bumpRev(); },
+  setPassword: (id, hash) => { uPw.run(hash, nowIso(), id); bumpRev(); },
   seen: (id) => uSeen.run(nowIso(), id),
   public: publicUser, publicAll: () => uAll.all().map(publicUser),
   newId: () => 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
 };
 
 /* ---------- misc tables ---------- */
+const qMail = db.prepare('INSERT INTO mail_log(at,to_addr,subject,kind,status,detail) VALUES(?,?,?,?,?,?)');
+const qPush = db.prepare('INSERT INTO push_log(at,user_id,title,status) VALUES(?,?,?,?)');
+const qHook = db.prepare('INSERT INTO webhook_log(at,source,status,detail,ref) VALUES(?,?,?,?,?)');
+const qAudit = db.prepare('INSERT INTO audit(at,who,ip,action,target,detail) VALUES(?,?,?,?,?,?)');
+const openRow = (r, fields) => { const o = { ...r }; for (const f of fields) if (o[f] != null) o[f] = vault.open(o[f]); return o; };
 const log = {
-  mail: db.prepare('INSERT INTO mail_log(at,to_addr,subject,kind,status,detail) VALUES(?,?,?,?,?,?)'),
-  push: db.prepare('INSERT INTO push_log(at,user_id,title,status) VALUES(?,?,?,?)'),
-  hook: db.prepare('INSERT INTO webhook_log(at,source,status,detail,ref) VALUES(?,?,?,?,?)'),
-  mailRecent: db.prepare('SELECT * FROM mail_log ORDER BY id DESC LIMIT ?'),
+  mail: { run: (at, to, subject, kind, status, detail) => qMail.run(at, vault.seal(to), vault.seal(subject), kind, status, vault.seal(detail)) },
+  push: { run: (at, uid, title, status) => qPush.run(at, uid, vault.seal(title), status) },
+  hook: { run: (at, source, status, detail, ref) => qHook.run(at, source, status, vault.seal(detail), ref) },
+  mailRecent: { all: (n) => db.prepare('SELECT * FROM mail_log ORDER BY id DESC LIMIT ?').all(n).map((r) => openRow(r, ['to_addr', 'subject', 'detail'])) },
   pushStats: db.prepare("SELECT status, COUNT(*) n FROM push_log WHERE at>=? GROUP BY status"),
-  hookRecent: db.prepare('SELECT * FROM webhook_log ORDER BY id DESC LIMIT ?'),
+  hookRecent: { all: (n) => db.prepare('SELECT * FROM webhook_log ORDER BY id DESC LIMIT ?').all(n).map((r) => openRow(r, ['detail'])) },
 };
+// Append-only audit trail (who did what, from where). Detail is sealed; action/target are searchable.
+function audit(who, ip, action, target = '', detail = '') { qAudit.run(nowIso(), who || '', ip || '', action, String(target).slice(0, 120), vault.seal(String(detail).slice(0, 1000))); }
+const auditRecent = (n, since) => db.prepare('SELECT * FROM audit WHERE at>=? ORDER BY id DESC LIMIT ?').all(since || '', n).map((r) => openRow(r, ['detail']));
+const auditPrune = (before) => db.prepare('DELETE FROM audit WHERE at<?').run(before).changes;
 const jobs = {
   get: db.prepare('SELECT * FROM job_state WHERE name=?'),
   set: db.prepare('INSERT INTO job_state(name,last_run,detail) VALUES(?,?,?) ON CONFLICT(name) DO UPDATE SET last_run=excluded.last_run, detail=excluded.detail'),
@@ -140,6 +164,21 @@ const cache = {
   set: (key, value) => db.prepare('INSERT INTO market_cache(key,value,at) VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, at=excluded.at').run(key, JSON.stringify(value), Date.now()),
 };
 
+// Seal any plaintext rows (first boot after DATA_KEYS is set) or re-seal everything with the current key.
+function resealAll(force = false) {
+  if (!vault.enabled()) return 0;
+  let n = 0;
+  const need = (v) => v != null && (force ? vault.sealedWith(v) !== vault.current() : !vault.isSealed(v));
+  db.exec('BEGIN IMMEDIATE');
+  try {
+    for (const r of db.prepare('SELECT col,id,data FROM records WHERE data IS NOT NULL').all()) if (need(r.data)) { db.prepare('UPDATE records SET data=? WHERE col=? AND id=?').run(vault.seal(vault.open(r.data)), r.col, r.id); n++; }
+    for (const r of db.prepare('SELECT key,value FROM kv').all()) if (need(r.value)) { db.prepare('UPDATE kv SET value=? WHERE key=?').run(vault.seal(vault.open(r.value)), r.key); n++; }
+    for (const r of db.prepare('SELECT id,totp_secret,totp_pending,backup_codes FROM users').all()) for (const f of ['totp_secret', 'totp_pending', 'backup_codes']) if (need(r[f])) { db.prepare(`UPDATE users SET ${f}=? WHERE id=?`).run(vault.seal(vault.open(r[f])), r.id); n++; }
+    for (const [t, fs] of [['mail_log', ['to_addr', 'subject', 'detail']], ['webhook_log', ['detail']], ['push_log', ['title']], ['audit', ['detail']]]) for (const r of db.prepare(`SELECT * FROM ${t}`).all()) for (const f of fs) if (need(r[f])) { db.prepare(`UPDATE ${t} SET ${f}=? WHERE id=?`).run(vault.seal(vault.open(r[f])), r.id); n++; }
+    db.exec('COMMIT');
+  } catch (e) { db.exec('ROLLBACK'); throw e; }
+  return n;
+}
 function backup(destPath) { db.exec(`VACUUM INTO '${destPath.replace(/'/g, "''")}'`); }
 
-module.exports = { db, DATA_DIR, DB_PATH, COLS, KV, rev, bumpRev, nowIso, localIso, today, getRecord, listCol, putRecord, delRecord, nextId, kvGet, kvSet, snapshot, changesSince, transaction, users, log, jobs, cache, backup };
+module.exports = { db, DATA_DIR, DB_PATH, COLS, KV, rev, bumpRev, nowIso, localIso, today, getRecord, listCol, putRecord, delRecord, nextId, maxIds, kvGet, kvSet, snapshot, changesSince, transaction, users, log, audit, auditRecent, auditPrune, jobs, cache, backup, resealAll, vault };

@@ -21,13 +21,40 @@ const SERVER_SETTINGS = (s) => {
 };
 function features() { return { mail: mail.enabled(), mailMode: mail.mode(), sharepoint: graph.enabled(), market: true, push: true, demo: process.env.DEMO_DATA === '1' }; }
 
-function bootstrap(user) {
-  const state = D.snapshot();
+/* ---------- visibility: Admins and Managers see everything; Members see the deals and clients they own ---------- */
+function scopeFor(user) {
+  if (user.role !== 'Member') return null;
+  const deals = new Set(D.listCol('deals').filter((d) => d.owner === user.id).map((d) => d.id));
+  const clients = new Set(D.listCol('clients').filter((c) => c.owner === user.id || (c.deals || []).some((id) => deals.has(id))).map((c) => c.id));
+  return { uid: user.id, deals, clients };
+}
+function visible(scope, col, r) {
+  if (!scope || !r) return true;
+  switch (col) {
+    case 'deals': return r.owner === scope.uid || scope.deals.has(r.id);
+    case 'clients': return scope.clients.has(r.id) || r.owner === scope.uid;
+    case 'tasks': return !r.deal || scope.deals.has(r.deal) || (r.who || []).includes(scope.uid) || r.by === scope.uid || (r.notify || []).includes(scope.uid);
+    case 'activity': case 'threads': case 'files': return !r.deal || scope.deals.has(r.deal);
+    case 'invoices': return (r.deal && scope.deals.has(r.deal)) || (r.clientId && scope.clients.has(r.clientId));
+    case 'changes': return r.entity === 'deal' ? scope.deals.has(r.ref) : r.entity === 'client' ? scope.clients.has(r.ref) : true;
+    case 'notifs': return !r.to || r.to.includes(scope.uid);
+    case 'messages': return true; // room membership is enforced by the front end; DMs are between two members
+    default: return true;
+  }
+}
+function filterState(state, scope) { if (!scope) return state; for (const c of Object.keys(D.COLS)) if (state[c]) state[c] = state[c].filter((r) => visible(scope, c, r)); return state; }
+
+function bootstrap(user, session) {
+  const scope = scopeFor(user);
+  const state = filterState(D.snapshot(), scope);
   state.users = D.users.publicAll();
   const initialised = !!state.settings;
   if (initialised) state.settings = SERVER_SETTINGS(state.settings);
-  return { user: D.users.public(user), rev: D.rev(), state, initialised, features: features(), vapidPublic: push.publicKey, server: { time: D.nowIso(), version: require('../package.json').version } };
+  const sec = securityPolicy();
+  return { user: D.users.public(user), rev: D.rev(), state, initialised, maxIds: D.maxIds(), features: features(), vapidPublic: push.publicKey, security: { ...sec, mfaEnrolled: !!D.users.get(user.id).totp_secret, via: session ? session.via : 'password' }, server: { time: D.nowIso(), version: require('../package.json').version } };
 }
+function securityPolicy() { const s = D.kvGet('settings') || {}; const p = s.security || {}; return { mfaRequired: p.mfaRequired || 'admins', sessionHours: Number(p.sessionHours) || 12, sso: require('./oidc').enabled(), passwordLogin: p.passwordLogin !== false, encryption: D.vault.enabled() }; }
+function mfaRequiredFor(user) { const p = securityPolicy().mfaRequired; return p === 'all' || (p === 'admins' && user.role === 'Admin'); }
 
 // Strip fields the server owns before persisting client-sent settings.
 function cleanSettings(s) {
@@ -60,12 +87,15 @@ function applySync(actor, body) {
   const base = Number(body.base) || 0;
   const hooks = [];
   D.transaction(() => {
+    const scope = scopeFor(actor);
     for (const op of ops) {
       if (!op || typeof op.col !== 'string') continue;
       if (op.col === 'users') { if (op.data) applyUserOp(actor, String(op.id), op.data); continue; }
       if (!D.COLS[op.col]) continue;
       const id = String(op.id);
       const prev = D.getRecord(op.col, id);
+      if (scope && prev && !visible(scope, op.col, prev)) throw err(403, 'You do not have access to that ' + op.col.replace(/s$/, ''));
+      if (scope && op.data && !visible(scope, op.col, op.data) && op.col !== 'deals' && op.col !== 'clients') throw err(403, 'Members can only change their own deals');
       if (op.del) { if (prev) { D.delRecord(op.col, id, actor.id); hooks.push([op.col, prev, null]); } continue; }
       if (!op.data || typeof op.data !== 'object') continue;
       const data = { ...op.data, [D.COLS[op.col]]: op.col === 'securities' ? id : isNaN(+id) ? id : +id };
@@ -77,8 +107,10 @@ function applySync(actor, body) {
       if (!D.KV.includes(key)) continue;
       if (ADMIN_KV.includes(key) && !['Admin', 'Manager'].includes(actor.role)) throw err(403, 'Only admins and managers can change ' + key);
       const v = key === 'settings' ? cleanSettings(value) : value;
+      if (key === 'settings' && actor.role !== 'Admin') { const cur = D.kvGet('settings') || {}; v.security = cur.security; v.leadRouting = cur.leadRouting; }
       if (JSON.stringify(D.kvGet(key)) !== JSON.stringify(v)) D.kvSet(key, v);
     }
+    for (const op of ops) if (op && op.del && D.COLS[op.col]) D.audit(actor.id, actor.ip, 'record.delete', op.col + '/' + op.id, '');
   })();
   D.users.seen(actor.id);
   // Fire notification hooks after commit, without blocking the response.
@@ -87,8 +119,10 @@ function applySync(actor, body) {
 }
 function pull(since, actor) {
   const out = D.changesSince(since);
+  const scope = actor ? scopeFor(actor) : null;
+  if (scope) out.records = out.records.filter((r) => r.data === null || visible(scope, r.col, r.data));
   if (out.kv.settings) out.kv.settings = SERVER_SETTINGS(out.kv.settings);
   if (actor) D.users.seen(actor.id);
-  return { rev: D.rev(), ...out, users: D.users.publicAll() };
+  return { rev: D.rev(), ...out, users: D.users.publicAll(), maxIds: D.maxIds() };
 }
-module.exports = { bootstrap, applySync, pull, features, SERVER_SETTINGS };
+module.exports = { bootstrap, applySync, pull, features, SERVER_SETTINGS, scopeFor, visible, securityPolicy, mfaRequiredFor };

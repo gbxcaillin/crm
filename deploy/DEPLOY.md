@@ -14,9 +14,16 @@ database up nightly. It also serves the installable PWA (`dist/`).
 ```bash
 ssh root@YOUR_SERVER_IP
 cd /root/crm && git pull                       # already cloned during the preview
-cp .env.production.example .env.production     # fill in later; APP_URL is enough to start
-mkdir -p /root/crm-data
+cp .env.production.example .env.production
+node server/tools/keygen.js 2>/dev/null || docker run --rm -v /root/crm:/app -w /app node:22-alpine node server/tools/keygen.js
+# paste the printed key into .env.production as  DATA_KEYS=v1:<key>  and keep a copy off the server
+chmod 600 .env.production
+mkdir -p /root/crm-data && chmod 700 /root/crm-data
+sudo bash deploy/harden.sh                      # once per VPS: updates, firewall, fail2ban, SSH keys only
 ```
+
+The server will not start in production without `DATA_KEYS`; see
+`SECURITY.md` for what it protects and how to rotate it.
 
 Replace the `crm:` service in `/root/familyoffice/docker-compose.yml` with the
 one in `deploy/compose-service.yml` (it adds the env file and the data
@@ -64,6 +71,7 @@ Everything below is optional and turns on when its variables are set in
 | Push | none | VAPID keys are generated into `/root/crm-data/vapid.json` on first boot. Users turn push on per device under Settings → Notifications. |
 | Market data | none | Yahoo Finance via `yahoo-finance2`; quotes cached 15 min, history 12 h, stored securities refreshed every `refreshMins`. |
 | First admin from env | `ADMIN_NAME/EMAIL/PASSWORD` | Alternative to the setup form. Only read when the database is empty. |
+| Microsoft 365 sign-in | `SSO_CLIENT_ID`, `SSO_CLIENT_SECRET`, `SSO_TENANT` | Entra app registration (Web platform) with redirect URI `https://crm.gbxps.com/api/v1/auth/microsoft/callback` and the `openid profile email` scopes. Entra's MFA and conditional access then govern sign-in. `SSO_AUTO_PROVISION=1` + `SSO_DOMAIN` lets any tenant user in as a Member without an invite. |
 
 ## Claude agent / API
 
