@@ -406,19 +406,34 @@ function clientName(d) { return d.practice || d.contact || d.email || ('Deal ' +
 // the existing folder when the client's details change.
 function folderLeaf(d) { return graph.safe(d.spFolder || clientName(d)); }
 function dealFolder(dealId) { const d = D.getRecord('deals', dealId); if (!d) throw err(404, 'No such deal'); return { d, folder: [graph.SP_FOLDER, folderLeaf(d)].filter(Boolean).join('/') }; }
-// Bring the SharePoint folder name in line with the deal's current client name: rename an
-// existing folder when the name changed, and record the current leaf on the deal so future
-// uploads and listings use it. Returns { leaf, folder, renamed:{from,to}|null }.
+// Bring SharePoint in line with the deal's current client name: move this deal's files into a
+// folder named after the client, then delete any now-empty source folder (the previous name,
+// or the shared legacy "Unfiled"). Moving per file is what makes the shared "Unfiled" safe -
+// only this deal's files are touched. Records the current leaf on the deal so future uploads
+// and listings use it. Returns { leaf, folder, moved, cleaned:[names] }.
 async function reconcileDealFolder(d, actorId) {
+  const who = actorId || 'system';
   const desired = graph.safe(clientName(d));
-  const prev = d.spFolder ? graph.safe(d.spFolder) : '';
-  let renamed = null;
-  if (prev && prev !== desired) {
-    const item = await graph.renameFolder([graph.SP_FOLDER, prev].filter(Boolean).join('/'), desired);
-    if (item) renamed = { from: prev, to: desired };
+  const desiredRel = [graph.SP_FOLDER, desired].filter(Boolean).join('/');
+  const inPlace = new Set((await graph.listFolder(desiredRel)).map((x) => x.spId));
+  const movers = D.listCol('files').filter((f) => f.deal === d.id && f.spId && !inPlace.has(f.spId));
+  let moved = 0;
+  if (movers.length) {
+    const folderId = await graph.ensureFolder(desiredRel);
+    for (const f of movers) {
+      try { const it = await graph.moveItem(f.spId, folderId); f.url = it.webUrl || f.url; D.putRecord('files', f, who); moved++; }
+      catch (e) { /* item gone or a name clash in the target: leave it where it is */ }
+    }
   }
-  if (graph.safe(d.spFolder || '') !== desired) { d.spFolder = desired; D.putRecord('deals', d, actorId || 'system'); }
-  return { leaf: desired, folder: [graph.SP_FOLDER, desired].filter(Boolean).join('/'), renamed };
+  // Delete now-empty source folders: the previous tracked name and the shared "Unfiled".
+  const cleaned = [];
+  const cands = new Set(); if (d.spFolder) cands.add(graph.safe(d.spFolder)); cands.add('Unfiled'); cands.delete(desired);
+  for (const leaf of cands) {
+    const rel = [graph.SP_FOLDER, leaf].filter(Boolean).join('/');
+    try { if ((await graph.listFolder(rel)).length === 0 && await graph.deleteFolder(rel)) cleaned.push(leaf); } catch (_) { /* best effort */ }
+  }
+  if (graph.safe(d.spFolder || '') !== desired) { d.spFolder = desired; D.putRecord('deals', d, who); }
+  return { leaf: desired, folder: desiredRel, moved, cleaned };
 }
 r.get('/files', async (req, res) => {
   session(req); if (!graph.enabled()) return ok(res, { configured: false, files: [] });
@@ -452,7 +467,7 @@ r.post('/files/reconcile', async (req, res) => {
   const u = session(req); if (!graph.enabled()) throw err(503, 'SharePoint is not configured on the server');
   const d = D.getRecord('deals', req.query.get('deal')); if (!d) throw err(404, 'No such deal');
   const out = await reconcileDealFolder(d, u.id);
-  if (out.renamed) D.putRecord('activity', { id: Date.now(), deal: d.id, type: 'file', who: u.id, text: 'Renamed SharePoint folder', detail: `${out.renamed.from} → ${out.renamed.to}`, at: D.nowIso() }, u.id);
+  if (out.moved || out.cleaned.length) D.putRecord('activity', { id: Date.now(), deal: d.id, type: 'file', who: u.id, text: 'Tidied SharePoint folder', detail: [out.moved ? `Moved ${out.moved} file${out.moved > 1 ? 's' : ''} into ${out.leaf}` : '', out.cleaned.length ? `removed empty ${out.cleaned.join(', ')}` : ''].filter(Boolean).join('; '), at: D.nowIso() }, u.id);
   ok(res, out);
 });
 

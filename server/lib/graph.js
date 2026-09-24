@@ -46,17 +46,27 @@ async function listFolder(folder) {
     return j.value.map((it) => ({ spId: it.id, name: it.name, size: it.size, url: it.webUrl, at: (it.lastModifiedDateTime || '').slice(0, 10), byName: it.lastModifiedBy && it.lastModifiedBy.user ? it.lastModifiedBy.user.displayName : '', folder: !!it.folder }));
   } catch (e) { if (/404/.test(e.message)) return []; throw e; }
 }
-// Rename an existing folder (given its current path relative to the library root) to a new
-// leaf name, keeping it under the same parent. Returns the updated item, null if the folder
-// is not there, and throws a friendly error if a folder with the new name already exists.
-async function renameFolder(relPath, newName) {
+// Find or create a folder by its path relative to the library root; returns its item id.
+// Creates any missing parent folders on the way down.
+async function ensureFolder(relPath) {
   const d = await driveId();
-  try { return await g('PATCH', `/drives/${d}/root:/${enc(relPath)}`, { name: newName }); }
-  catch (e) {
-    if (/: 404 /.test(e.message)) return null;
-    if (/: 409 /.test(e.message) || /already exist/i.test(e.message)) throw new Error(`A folder named "${newName}" already exists in SharePoint`);
-    throw e;
-  }
+  try { return (await g('GET', `/drives/${d}/root:/${enc(relPath)}?$select=id`)).id; }
+  catch (e) { if (!/: 404 /.test(e.message)) throw e; }
+  const parts = relPath.split('/').filter(Boolean); const leaf = parts.pop();
+  const parentId = parts.length ? await ensureFolder(parts.join('/')) : (await g('GET', `/drives/${d}/root?$select=id`)).id;
+  return (await g('POST', `/drives/${d}/items/${parentId}/children`, { name: leaf, folder: {}, '@microsoft.graph.conflictBehavior': 'fail' })).id;
+}
+// Move an item (by SharePoint item id) into the folder with the given item id. Returns the
+// updated item (its webUrl changes after the move).
+async function moveItem(spId, folderId) {
+  const d = await driveId();
+  return g('PATCH', `/drives/${d}/items/${spId}`, { parentReference: { id: folderId } });
+}
+// Delete a folder by its path relative to the library root. Returns false if already gone.
+async function deleteFolder(relPath) {
+  const d = await driveId();
+  try { await g('DELETE', `/drives/${d}/root:/${enc(relPath)}`); return true; }
+  catch (e) { if (/: 404 /.test(e.message)) return false; throw e; }
 }
 async function upload(folder, name, buf) {
   const d = await driveId();
@@ -89,4 +99,4 @@ async function listAppointments(businessId, { backDays = 2, aheadDays = 60 } = {
   const j = await g('GET', url);
   return j.value || [];
 }
-module.exports = { enabled, listFolder, upload, renameFolder, download, sendMail, listBookingBusinesses, listAppointments, safe, SP_SITE, SP_LIBRARY, SP_FOLDER };
+module.exports = { enabled, listFolder, upload, ensureFolder, moveItem, deleteFolder, download, sendMail, listBookingBusinesses, listAppointments, safe, SP_SITE, SP_LIBRARY, SP_FOLDER };
