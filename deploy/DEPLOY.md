@@ -125,6 +125,15 @@ twice. The website's own setup is documented in that repo's
 - Include `/root/crm-data` in the same off-box backup as the family-office
   data directory.
 
+## Perimeter security (Cloudflare in front)
+
+The app has strong built-in auth (scrypt passwords, TOTP MFA, secure sessions,
+encryption at rest). To add TLS, DDoS protection and a Zero Trust login in front
+of it without moving off the VPS, proxy `crm.gbxps.com` through Cloudflare and
+put Cloudflare Access over the UI. The one rule is to let the machine endpoints
+(`/api/v1/hooks/*`, the Microsoft callback, `/api/v1/health`) bypass the login,
+or the website lead webhook breaks. Full step-by-step: `deploy/cloudflare-access.md`.
+
 ## Checks
 
 - `curl -s https://crm.gbxps.com/api/v1/health` → `{"ok":true,…}`.
