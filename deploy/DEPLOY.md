@@ -50,7 +50,7 @@ sample deals, tasks and chat loaded into the new workspace.
 ## Updating
 
 ```bash
-/root/crm/deploy/update.sh claude/crm-wireframe-integrations-cmbsqa   # or main once merged
+/root/crm/deploy/update.sh          # defaults to main
 ```
 
 Rebuilds only the `crm` container; the data volume is untouched. Browsers
@@ -93,6 +93,26 @@ curl -H "Authorization: Bearer gbx_live_…" -H 'content-type: application/json'
 
 Duplicates (same email, same email domain or same practice name) return
 `409` with the match. Full endpoint list: `server/README.md`.
+
+## Connect the gbxps.com website
+
+The marketing site (`gbxcaillin/Website`, on Cloudflare Pages) posts every tool
+and contact submission straight into the pipeline via `/api/v1/hooks/lead`, so
+leads captured on gbxps.com land in the CRM as scored deals.
+
+1. In the CRM: Integrations → API keys → create a key named `website` with the
+   `deals:write` scope. Copy it once.
+2. In Cloudflare Pages → the **Website** project → Settings → Variables and
+   secrets, add:
+   - `CRM_WEBHOOK_URL` = `https://crm.gbxps.com/api/v1/hooks/lead`
+   - `CRM_API_KEY` = the key (mark it encrypted)
+3. Redeploy the Website project.
+
+Newsletter signups are not sent (they are not pipeline leads). The site side is
+best effort: if the CRM is down, the site still records the lead in its own D1
+log and emails as normal. Duplicates return `409` and are logged, not created
+twice. The website's own setup is documented in that repo's
+`docs/lead-capture-setup.md`.
 
 ## Data, backups, recovery
 
