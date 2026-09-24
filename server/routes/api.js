@@ -11,6 +11,7 @@ const jobs = require('../lib/jobs');
 const leads = require('../lib/leads');
 const bookings = require('../lib/bookings');
 const cloudflare = require('../lib/cloudflare');
+const claude = require('../lib/claude');
 const { notify } = require('../lib/notify');
 const totp = require('../lib/totp');
 const oidc = require('../lib/oidc');
@@ -307,6 +308,47 @@ r.post('/leads/:id/activity', async (req, res) => {
   if (b.score != null) { D.putRecord('activity', { ...rec, id: rec.id + 1, type: 'ai', text: `Claude scored lead ${Number(b.score)} / 100`, detail: String(b.detail || '') }, 'api'); }
   if (b.notifyOwner && d.owner) await notify('lead', [d.owner], { title: `${a.name}: ${d.practice}`, body: rec.text, url: '#/deal/' + d.id, kind: 'lead', id: d.id });
   send(res, 201, { activity: rec });
+});
+// On-demand Claude for the per-lead buttons (score / draft follow-up / draft reply).
+// Runs via the host helper (no API key in the CRM); human session only.
+r.post('/leads/:id/ai', async (req, res) => {
+  const u = session(req); const b = await readJson(req);
+  if (!claude.enabled()) throw err(503, 'Claude assist is not set up on the server yet (start the Claude helper).');
+  const d = D.getRecord('deals', req.params.id); if (!d) throw err(404, 'No such lead');
+  const stages = D.kvGet('stages') || []; const stageName = (s) => (stages.find((x) => x.id === s) || {}).name || s;
+  const facts = [
+    `Company/practice: ${d.practice || ''}`, `Contact: ${d.contact || ''}`, `Email: ${d.email || ''}`,
+    `Source: ${d.source || ''}`, `Segment: ${d.segment || ''}`, `Team size: ${d.advisers || ''}`,
+    `Value: ${d.value || ''}`, `Stage: ${stageName(d.stage)}`,
+    d.notes ? `Notes: ${String(d.notes).slice(0, 700)}` : '',
+  ].filter(Boolean).join('\n');
+
+  if (b.task === 'score') {
+    const prompt = [
+      'You are scoring an inbound business lead for GBX Professional Services, which offers professional services and workplace financial education/wellbeing to businesses of any kind.',
+      'Rate how promising the lead is and how urgently to follow up (0 = weak, 100 = drop everything). Weigh fit, buying signals, source quality and how complete the details are.',
+      'Return ONLY compact JSON, no prose and no code fences: {"score":<integer 0-100>,"priority":"High"|"Medium"|"Low","rationale":"<one concise sentence>"}',
+      '', 'Lead:', facts,
+    ].join('\n');
+    const text = await claude.run(prompt);
+    const m = text.match(/\{[\s\S]*\}/); if (!m) throw err(502, 'Claude returned no score');
+    const j = JSON.parse(m[0]);
+    const score = Math.max(0, Math.min(100, Math.round(Number(j.score))));
+    const priority = ['High', 'Medium', 'Low'].includes(j.priority) ? j.priority : 'Medium';
+    const rationale = String(j.rationale || '').replace(/\s+/g, ' ').trim().slice(0, 200);
+    D.putRecord('activity', { id: Date.now(), deal: d.id, type: 'ai', who: u.id, text: `Claude scored lead ${score} / 100`, detail: `${priority}. ${rationale}`, at: D.nowIso() }, u.id);
+    return ok(res, { score, priority, rationale });
+  }
+
+  if (b.task === 'draft' || b.task === 'reply') {
+    const common = `Keep it professional, warm and specific, under 150 words. Return ONLY the email body - no subject line, no preamble, no markdown. Sign off as: ${u.name}, GBX Professional Services.`;
+    const prompt = b.task === 'reply'
+      ? ['Draft a reply email on behalf of GBX Professional Services to the message below.', common, '', 'Lead:', facts, '', 'Message to reply to:', String(b.context || '').slice(0, 1500)].join('\n')
+      : ['Draft a follow-up email on behalf of GBX Professional Services to this lead, appropriate to their pipeline stage.', common, '', 'Lead:', facts].join('\n');
+    const draft = (await claude.run(prompt)).trim();
+    return ok(res, { draft });
+  }
+  throw err(400, 'Unknown task');
 });
 r.get('/stages', (req, res) => { actor(req, 'deals:read'); ok(res, { stages: D.kvGet('stages') || [], sources: D.kvGet('sources') || {}, fields: D.kvGet('fields') || [] }); });
 r.get('/users', (req, res) => { actor(req, 'deals:read'); ok(res, { users: D.users.publicAll().map((u) => ({ id: u.id, name: u.name, role: u.role, status: u.status })) }); });
