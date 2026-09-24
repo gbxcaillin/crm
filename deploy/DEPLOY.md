@@ -123,11 +123,27 @@ leads captured on gbxps.com land in the CRM as scored deals.
    - `CRM_API_KEY` = the key (mark it encrypted)
 3. Redeploy the Website project.
 
-Newsletter signups are not sent (they are not pipeline leads). The site side is
-best effort: if the CRM is down, the site still records the lead in its own D1
-log and emails as normal. Duplicates return `409` and are logged, not created
-twice. The website's own setup is documented in that repo's
+The site side is best effort: if the CRM is down, the site still records the
+lead in its own D1 log and emails as normal. Duplicates return `409` and are
+logged, not created twice. The website's own setup is documented in that repo's
 `docs/lead-capture-setup.md`.
+
+### Mailing list signups
+
+Newsletter / mailing-list signups on gbxps.com post to a second webhook so they
+land in the CRM's **Mailing list** immediately (instead of only emailing you):
+
+- `POST /api/v1/hooks/subscribe` with `{ "email": "...", "name": "...",
+  "source": "website", "tags": ["newsletter"] }` and an API key with the
+  `subscribers:write` scope (the existing `deals:write` website key also works).
+- Idempotent on email: a repeat signup re-subscribes rather than duplicating.
+
+Manage the list under **Mailing list** in the CRM: add subscribers, unsubscribe,
+and **Compose email** to send a bulk email to everyone subscribed (optionally
+filtered by tag). Every bulk email personalises `{{name}}` and appends a working
+unsubscribe link (`/api/v1/unsubscribe/<token>`, public) as required by the Spam
+Act 2003. Sending uses the same email transport as the rest of the app (SMTP or
+`MAIL_MODE=graph`), one message per recipient, rate-limited to ~4/second.
 
 ## Data, backups, recovery
 
