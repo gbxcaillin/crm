@@ -305,7 +305,7 @@ r.post('/leads/:id/activity', async (req, res) => {
   if (!b.text) throw err(400, 'text required');
   const rec = { id: Date.now(), deal: d.id, type: ['ai', 'note', 'call', 'email', 'meeting'].includes(b.type) ? b.type : a.key ? 'ai' : 'note', who: a.key ? '' : a.id, text: String(b.text).slice(0, 200), detail: String(b.detail || '').slice(0, 2000), at: D.nowIso() };
   D.putRecord('activity', rec, a.key ? 'api' : a.id);
-  if (b.score != null) { D.putRecord('activity', { ...rec, id: rec.id + 1, type: 'ai', text: `Claude scored lead ${Number(b.score)} / 100`, detail: String(b.detail || '') }, 'api'); }
+  if (b.score != null) { const sc = Math.max(0, Math.min(100, Math.round(Number(b.score)))); D.putRecord('activity', { ...rec, id: rec.id + 1, type: 'ai', text: `Claude scored lead ${sc} / 100`, detail: String(b.detail || '') }, 'api'); D.putRecord('deals', { ...d, aiScore: sc, aiRationale: String(b.text || '').slice(0, 200), aiScoredAt: D.nowIso() }, a.key ? 'api' : a.id); }
   if (b.notifyOwner && d.owner) await notify('lead', [d.owner], { title: `${a.name}: ${d.practice}`, body: rec.text, url: '#/deal/' + d.id, kind: 'lead', id: d.id });
   send(res, 201, { activity: rec });
 });
@@ -337,6 +337,7 @@ r.post('/leads/:id/ai', async (req, res) => {
     const priority = ['High', 'Medium', 'Low'].includes(j.priority) ? j.priority : 'Medium';
     const rationale = String(j.rationale || '').replace(/\s+/g, ' ').trim().slice(0, 200);
     D.putRecord('activity', { id: Date.now(), deal: d.id, type: 'ai', who: u.id, text: `Claude scored lead ${score} / 100`, detail: `${priority}. ${rationale}`, at: D.nowIso() }, u.id);
+    D.putRecord('deals', { ...d, aiScore: score, aiPriority: priority, aiRationale: rationale, aiScoredAt: D.nowIso() }, u.id);
     return ok(res, { score, priority, rationale });
   }
 
