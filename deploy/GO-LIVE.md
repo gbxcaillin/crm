@@ -23,7 +23,7 @@ cd /root/crm && git fetch origin main && git checkout main && git pull --ff-only
 cp .env.production.example .env.production
 node server/tools/keygen.js        # paste output into .env.production as DATA_KEYS=v1:<key>, keep a copy off-server
 # set APP_URL=https://crm.gbxps.com ; chmod 600 .env.production
-mkdir -p /root/crm-data && chmod 700 /root/crm-data
+mkdir -p /root/crm-data && chown -R 1000:1000 /root/crm-data && chmod 700 /root/crm-data
 ```
 
 Add the `crm:` service to `/root/familyoffice/docker-compose.yml` (from
