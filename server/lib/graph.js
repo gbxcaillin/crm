@@ -5,6 +5,8 @@
 const T = process.env.MS_TENANT_ID, C = process.env.MS_CLIENT_ID, S = process.env.MS_CLIENT_SECRET;
 const SP_SITE = process.env.SP_SITE || 'gbxps.sharepoint.com:/sites/Clients';
 const SP_LIBRARY = process.env.SP_LIBRARY || 'Client Files';
+// Optional base folder within the library to nest per-client folders under (e.g. "Client Files").
+const SP_FOLDER = (process.env.SP_FOLDER || '').replace(/^\/+|\/+$/g, '');
 let tok = null;
 function enabled() { return !!(T && C && S); }
 async function token() {
@@ -71,4 +73,4 @@ async function listAppointments(businessId, { backDays = 2, aheadDays = 60 } = {
   const j = await g('GET', url);
   return j.value || [];
 }
-module.exports = { enabled, listFolder, upload, download, sendMail, listBookingBusinesses, listAppointments, safe, SP_SITE, SP_LIBRARY };
+module.exports = { enabled, listFolder, upload, download, sendMail, listBookingBusinesses, listAppointments, safe, SP_SITE, SP_LIBRARY, SP_FOLDER };

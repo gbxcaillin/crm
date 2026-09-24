@@ -52,7 +52,7 @@ async function backup() {
   D.backup(file);
   for (const f of fs.readdirSync(dir)) { const p = path.join(dir, f); if (Date.now() - fs.statSync(p).mtimeMs > 14 * 86400e3) fs.unlinkSync(p); }
   let sp = '';
-  if (graph.enabled()) { try { await graph.upload('_CRM Backups', path.basename(file), fs.readFileSync(file)); sp = ' + SharePoint'; } catch (e) { sp = ' (SharePoint copy failed: ' + e.message + ')'; } }
+  if (graph.enabled()) { try { await graph.upload([graph.SP_FOLDER, '_CRM Backups'].filter(Boolean).join('/'), path.basename(file), fs.readFileSync(file)); sp = ' + SharePoint'; } catch (e) { sp = ' (SharePoint copy failed: ' + e.message + ')'; } }
   console.log('[backup]', file + sp);
   return file + sp;
 }
