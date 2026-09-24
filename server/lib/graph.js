@@ -58,4 +58,17 @@ async function download(spId) { const d = await driveId(); const r = await fetch
 async function sendMail(from, to, subject, html) {
   return g('POST', `/users/${encodeURIComponent(from)}/sendMail`, { message: { subject, body: { contentType: 'HTML', content: html }, toRecipients: [{ emailAddress: { address: to } }] }, saveToSentItems: false });
 }
-module.exports = { enabled, listFolder, upload, download, sendMail, safe, SP_SITE, SP_LIBRARY };
+// Microsoft Bookings (needs application permission Bookings.Read.All on the app,
+// in the tenant that owns the booking mailbox).
+async function listBookingBusinesses() {
+  const j = await g('GET', '/solutions/bookingBusinesses');
+  return (j.value || []).map((b) => ({ id: b.id, name: b.displayName }));
+}
+async function listAppointments(businessId, { backDays = 2, aheadDays = 60 } = {}) {
+  const start = new Date(Date.now() - backDays * 86400e3).toISOString();
+  const end = new Date(Date.now() + aheadDays * 86400e3).toISOString();
+  const url = `/solutions/bookingBusinesses/${encodeURIComponent(businessId)}/calendarView?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&$top=200`;
+  const j = await g('GET', url);
+  return j.value || [];
+}
+module.exports = { enabled, listFolder, upload, download, sendMail, listBookingBusinesses, listAppointments, safe, SP_SITE, SP_LIBRARY };

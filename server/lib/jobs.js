@@ -8,6 +8,7 @@ const mail = require('./mail');
 const graph = require('./graph');
 const auth = require('./auth');
 const market = require('./market');
+const bookings = require('./bookings');
 const { notify, prefs } = require('./notify');
 
 const ran = (name, key) => { const j = D.jobs.get.get(name); return j && j.last_run === key; };
@@ -63,6 +64,7 @@ async function tick() {
   try { const at = prefs().digest || '07:30'; if (hhmm >= at && !ran('digest', day)) { mark('digest', day); await dailyDigest(); } } catch (e) { console.error('[job digest]', e.message); }
   try { if (hhmm >= '02:30' && !ran('backup', day)) { mark('backup', day); mark('backup', day, await backup()); } } catch (e) { console.error('[job backup]', e.message); }
   try { const mins = Math.max(5, Number((settings.research || {}).refreshMins) || 20); const last = D.jobs.get.get('market'); if (!last || Date.now() - new Date(last.last_run).getTime() > mins * 60e3) { mark('market', new Date().toISOString()); const n = await market.refreshSecurities(); mark('market', new Date().toISOString(), n + ' updated'); } } catch (e) { console.error('[job market]', e.message); }
+  try { if (bookings.enabled()) { const last = D.jobs.get.get('bookings'); if (!last || Date.now() - new Date(last.last_run).getTime() > 15 * 60e3) { mark('bookings', new Date().toISOString()); const r = await bookings.sync(); mark('bookings', new Date().toISOString(), (r.added || 0) + ' new'); } } } catch (e) { console.error('[job bookings]', e.message); }
   try { if (!ran('prune', day)) { mark('prune', day); auth.pruneSessions(); const d = new Date(); d.setFullYear(d.getFullYear() - 2); D.auditPrune(D.localIso(d)); } } catch (e) { /* ignore */ }
 }
 function start() { setTimeout(() => { tick(); setInterval(tick, 60e3); }, 5000); }

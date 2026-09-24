@@ -9,6 +9,7 @@ const graph = require('../lib/graph');
 const market = require('../lib/market');
 const jobs = require('../lib/jobs');
 const leads = require('../lib/leads');
+const bookings = require('../lib/bookings');
 const { notify } = require('../lib/notify');
 const totp = require('../lib/totp');
 const oidc = require('../lib/oidc');
@@ -236,6 +237,10 @@ r.post('/users/:id/reset', async (req, res) => { admin(req); const u = D.users.g
 /* ---------- API keys ---------- */
 r.post('/keys', async (req, res) => { const me = admin(req); const b = await readJson(req); if (!b.name) throw err(400, 'Name required'); const scopes = (Array.isArray(b.scopes) ? b.scopes : []).filter((s) => ['deals:read', 'deals:write', 'contacts:write', 'files:read', 'ai:write'].includes(s)); const k = auth.createApiKey(String(b.name).slice(0, 60), scopes.length ? scopes : ['deals:read'], me.id); audit(req, me.id, 'key.create', b.name, scopes.join(' ')); ok(res, { id: k.id, key: k.key, keys: auth.listApiKeys() }); });
 r.delete('/keys/:id', (req, res) => { const me = admin(req); auth.revokeApiKey(req.params.id); audit(req, me.id, 'key.revoke', req.params.id, ''); ok(res, { keys: auth.listApiKeys() }); });
+
+/* ---------- Microsoft Bookings ---------- */
+r.get('/integrations/bookings', (req, res) => { admin(req); const last = D.jobs.get.get('bookings'); ok(res, { enabled: bookings.enabled(), business: process.env.BOOKINGS_BUSINESS || '', lastRun: last ? last.last_run : null, lastResult: last ? last.detail : '' }); });
+r.post('/integrations/bookings/sync', async (req, res) => { const me = admin(req); if (!bookings.enabled()) throw err(400, 'Bookings is not configured. Set BOOKINGS_BUSINESS and the MS_* Graph app with Bookings.Read.All.'); const out = await bookings.sync(); audit(req, me.id, 'bookings.sync', String(out.added || 0) + ' new', ''); ok(res, out); });
 
 /* ---------- push ---------- */
 r.get('/push/key', (req, res) => ok(res, { publicKey: push.publicKey }));
