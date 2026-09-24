@@ -1,5 +1,11 @@
 # Putting Cloudflare in front of crm.gbxps.com
 
+> **Status: optional, not currently applied.** The live deployment relies on the
+> CRM's own auth (login + TOTP 2FA) and keeps `crm.gbxps.com` DNS-only with
+> Caddy's automatic Let's Encrypt certificate. This guide is for adding a
+> Cloudflare perimeter later if the extra DDoS/WAF/Zero-Trust layer is wanted;
+> it is not required to run the CRM.
+
 This adds a security perimeter (TLS, CDN, DDoS protection and a Zero Trust
 login) in front of the CRM without moving the app off the VPS. The container
 keeps running behind Caddy exactly as it does now; Cloudflare sits in front of

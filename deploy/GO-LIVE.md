@@ -62,7 +62,16 @@ and turn on TOTP MFA when prompted. Invite the team under Settings -> Team.
 3. Redeploy the Website project.
 4. Submit any tool on gbxps.com -> the lead appears in the CRM. Done.
 
-## 4. Put Cloudflare in front (security perimeter)
+## 4. Put Cloudflare in front (security perimeter) — OPTIONAL
+
+> **Current live choice: skipped.** The deployment relies on the CRM's own auth
+> (login + TOTP 2FA, scrypt passwords, rate limiting, secure cookies) and keeps
+> `crm.gbxps.com` **DNS only (grey cloud)** with Caddy's automatic Let's Encrypt
+> certificate. That is enough for a login-gated CRM. The steps below are only for
+> adding an extra Cloudflare perimeter (Zero Trust login, DDoS/WAF, hidden origin
+> IP) later; they are not required and were intentionally not applied. Note the
+> proxy/Let's-Encrypt trap: once `crm` is proxied, Caddy can no longer renew
+> Let's Encrypt, so you must switch to an Origin Certificate (or DNS-01) first.
 
 Full detail in `deploy/cloudflare-access.md`. In order:
 
