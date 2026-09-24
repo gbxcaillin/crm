@@ -42,6 +42,18 @@ async function listFolder(folder) {
     return j.value.map((it) => ({ spId: it.id, name: it.name, size: it.size, url: it.webUrl, at: (it.lastModifiedDateTime || '').slice(0, 10), byName: it.lastModifiedBy && it.lastModifiedBy.user ? it.lastModifiedBy.user.displayName : '', folder: !!it.folder }));
   } catch (e) { if (/404/.test(e.message)) return []; throw e; }
 }
+// Rename an existing folder (given its current path relative to the library root) to a new
+// leaf name, keeping it under the same parent. Returns the updated item, null if the folder
+// is not there, and throws a friendly error if a folder with the new name already exists.
+async function renameFolder(relPath, newName) {
+  const d = await driveId();
+  try { return await g('PATCH', `/drives/${d}/root:/${enc(relPath)}`, { name: newName }); }
+  catch (e) {
+    if (/: 404 /.test(e.message)) return null;
+    if (/: 409 /.test(e.message) || /already exist/i.test(e.message)) throw new Error(`A folder named "${newName}" already exists in SharePoint`);
+    throw e;
+  }
+}
 async function upload(folder, name, buf) {
   const d = await driveId();
   const p = `${enc(folder)}/${encodeURIComponent(name)}`;
@@ -73,4 +85,4 @@ async function listAppointments(businessId, { backDays = 2, aheadDays = 60 } = {
   const j = await g('GET', url);
   return j.value || [];
 }
-module.exports = { enabled, listFolder, upload, download, sendMail, listBookingBusinesses, listAppointments, safe, SP_SITE, SP_LIBRARY, SP_FOLDER };
+module.exports = { enabled, listFolder, upload, renameFolder, download, sendMail, listBookingBusinesses, listAppointments, safe, SP_SITE, SP_LIBRARY, SP_FOLDER };

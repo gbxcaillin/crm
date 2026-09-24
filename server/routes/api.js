@@ -401,7 +401,25 @@ r.post('/hooks/lead', async (req, res) => { const a = actor(req, 'deals:write');
 // contact person -> email -> "Deal N" so the folder is always a meaningful name, never
 // blank or "Unfiled". Keep in sync with dealFolderName() in wireframe.html.
 function clientName(d) { return d.practice || d.contact || d.email || ('Deal ' + d.id); }
-function dealFolder(dealId) { const d = D.getRecord('deals', dealId); if (!d) throw err(404, 'No such deal'); return { d, folder: [graph.SP_FOLDER, graph.safe(clientName(d))].filter(Boolean).join('/') }; }
+// The folder actually in use: the SharePoint leaf we last recorded on the deal, else the
+// current client name. Recording the leaf (deal.spFolder) is what lets us find and rename
+// the existing folder when the client's details change.
+function folderLeaf(d) { return graph.safe(d.spFolder || clientName(d)); }
+function dealFolder(dealId) { const d = D.getRecord('deals', dealId); if (!d) throw err(404, 'No such deal'); return { d, folder: [graph.SP_FOLDER, folderLeaf(d)].filter(Boolean).join('/') }; }
+// Bring the SharePoint folder name in line with the deal's current client name: rename an
+// existing folder when the name changed, and record the current leaf on the deal so future
+// uploads and listings use it. Returns { leaf, folder, renamed:{from,to}|null }.
+async function reconcileDealFolder(d, actorId) {
+  const desired = graph.safe(clientName(d));
+  const prev = d.spFolder ? graph.safe(d.spFolder) : '';
+  let renamed = null;
+  if (prev && prev !== desired) {
+    const item = await graph.renameFolder([graph.SP_FOLDER, prev].filter(Boolean).join('/'), desired);
+    if (item) renamed = { from: prev, to: desired };
+  }
+  if (graph.safe(d.spFolder || '') !== desired) { d.spFolder = desired; D.putRecord('deals', d, actorId || 'system'); }
+  return { leaf: desired, folder: [graph.SP_FOLDER, desired].filter(Boolean).join('/'), renamed };
+}
 r.get('/files', async (req, res) => {
   session(req); if (!graph.enabled()) return ok(res, { configured: false, files: [] });
   const { d, folder } = dealFolder(req.query.get('deal'));
@@ -414,7 +432,12 @@ r.get('/files', async (req, res) => {
 const fmtSize = (n) => (n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB');
 r.put('/files/upload', async (req, res) => {
   const u = session(req); if (!graph.enabled()) throw err(503, 'SharePoint is not configured on the server');
-  const { d, folder } = dealFolder(req.query.get('deal'));
+  const d = D.getRecord('deals', req.query.get('deal')); if (!d) throw err(404, 'No such deal');
+  // Rename the client folder to match the deal's current details before uploading, so the
+  // folder always reflects the latest client name. Best effort: a name clash or Graph hiccup
+  // must not block the upload, so fall back to the folder currently on record.
+  try { await reconcileDealFolder(d, u.id); } catch (e) { console.error('[files] folder reconcile skipped:', e.message); }
+  const folder = [graph.SP_FOLDER, folderLeaf(d)].filter(Boolean).join('/');
   const name = String(req.query.get('name') || 'upload.bin').replace(/[\\/:*?"<>|]/g, '_').slice(0, 150);
   const buf = await readBody(req, 100 * 1024 * 1024);
   const item = await graph.upload(folder, name, buf);
@@ -422,6 +445,15 @@ r.put('/files/upload', async (req, res) => {
   D.putRecord('files', rec, u.id);
   D.putRecord('activity', { id: Date.now(), deal: d.id, type: 'file', who: u.id, text: 'Uploaded to SharePoint', detail: rec.name, at: D.nowIso() }, u.id);
   ok(res, { file: rec });
+});
+// Rename the SharePoint client folder to match the deal's current details, on demand (used
+// after client name/company/contact fields are edited). Throws a friendly error on a clash.
+r.post('/files/reconcile', async (req, res) => {
+  const u = session(req); if (!graph.enabled()) throw err(503, 'SharePoint is not configured on the server');
+  const d = D.getRecord('deals', req.query.get('deal')); if (!d) throw err(404, 'No such deal');
+  const out = await reconcileDealFolder(d, u.id);
+  if (out.renamed) D.putRecord('activity', { id: Date.now(), deal: d.id, type: 'file', who: u.id, text: 'Renamed SharePoint folder', detail: `${out.renamed.from} → ${out.renamed.to}`, at: D.nowIso() }, u.id);
+  ok(res, out);
 });
 
 /* ---------- market data ---------- */
