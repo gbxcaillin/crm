@@ -82,3 +82,61 @@ and add:
   skipped, so re-runs are safe.
 - **Scope stays minimal:** the scorer only reads leads and writes AI activities.
   It does not move stages or change owners.
+
+---
+
+# On-demand AI buttons (Claude helper)
+
+The per-lead **Re-score** and **Draft follow-up** buttons, and **Draft with Claude**
+in email, call Claude live when clicked. Because the CRM runs in Docker and must
+not hold your credentials, a small **host helper** (`claude-helper.py`) owns
+`claude` + your subscription login and answers over a **Unix socket** the CRM
+container mounts. No API key, no TCP port, nothing public.
+
+## Set it up
+
+1. **Socket dir on the host** (the helper creates the socket here):
+   ```bash
+   mkdir -p /root/gbx-claude
+   ```
+2. **Config** - the helper reuses `/root/crm-agent.env`. Make sure it has (add if
+   missing):
+   ```bash
+   echo 'CLAUDE_HELPER_SOCKET=/root/gbx-claude/claude.sock' >> /root/crm-agent.env   # HOST path
+   echo 'CLAUDE_MODEL=sonnet' >> /root/crm-agent.env
+   ```
+3. **Run the helper as a service:**
+   ```bash
+   cp /root/crm/deploy/agent/gbx-claude-helper.service /etc/systemd/system/
+   systemctl daemon-reload
+   systemctl enable --now gbx-claude-helper
+   systemctl status gbx-claude-helper --no-pager     # active, "listening on …/claude.sock"
+   ```
+4. **Mount the socket into the CRM container** - in
+   `/root/familyoffice/docker-compose.yml`, under the **crm** service, add the
+   socket dir to `volumes:` and the container-side socket path to its env
+   (`.env.production`):
+   ```yaml
+       volumes:
+         - /root/gbx-claude:/run/gbx-claude          # add this line
+   ```
+   ```bash
+   echo 'CLAUDE_HELPER_SOCKET=/run/gbx-claude/claude.sock' >> /root/crm/.env.production   # CONTAINER path
+   echo 'CLAUDE_MODEL=sonnet' >> /root/crm/.env.production
+   cd /root/familyoffice && docker compose up -d --force-recreate crm
+   ```
+   Note the two different socket paths: `/root/gbx-claude/claude.sock` on the host
+   (helper), `/run/gbx-claude/claude.sock` inside the container (CRM).
+5. **Verify:** open a lead in the CRM and click **Re-score** - it should score the
+   lead live and log "Claude scored lead N / 100". If the buttons say
+   "not set up", the container can't see the socket (check the mount and
+   `CLAUDE_HELPER_SOCKET` in `.env.production`).
+
+Optional: set `CLAUDE_HELPER_TOKEN` to the same value in both `/root/crm-agent.env`
+(helper) and `/root/crm/.env.production` (CRM) for an extra shared-secret check.
+
+## Notes
+
+- The helper only runs `claude -p` when a button is clicked - no cron, no polling.
+- Same subscription usage/login notes as the scorer above apply.
+- Logs: `journalctl -u gbx-claude-helper -f`.

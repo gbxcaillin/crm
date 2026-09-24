@@ -1,0 +1,15 @@
+[Unit]
+Description=GBX Claude helper - on-demand claude -p over a Unix socket for the CRM
+After=network.target
+
+[Service]
+Type=simple
+User=root
+Environment=HOME=/root
+Environment=CRM_AGENT_ENV=/root/crm-agent.env
+ExecStart=/usr/bin/python3 /root/crm/deploy/agent/claude-helper.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

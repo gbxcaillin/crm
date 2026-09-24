@@ -7,6 +7,7 @@ const push = require('./push');
 const graph = require('./graph');
 const mail = require('./mail');
 const cloudflare = require('./cloudflare');
+const claude = require('./claude');
 const notify = require('./notify');
 const { err } = require('./http');
 
@@ -20,7 +21,7 @@ const SERVER_SETTINGS = (s) => {
   s.storage = s.storage || 'sharepoint';
   return s;
 };
-function features() { return { mail: mail.enabled(), mailMode: mail.mode(), sharepoint: graph.enabled(), market: true, push: true, webAnalytics: cloudflare.enabled(), demo: process.env.DEMO_DATA === '1' }; }
+function features() { return { mail: mail.enabled(), mailMode: mail.mode(), sharepoint: graph.enabled(), market: true, push: true, webAnalytics: cloudflare.enabled(), aiAssist: claude.enabled(), demo: process.env.DEMO_DATA === '1' }; }
 
 /* ---------- visibility: Admins and Managers see everything; Members see the deals and clients they own ---------- */
 function scopeFor(user) {
