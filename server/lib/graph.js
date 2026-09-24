@@ -17,9 +17,13 @@ async function token() {
   tok = { v: j.access_token, exp: Date.now() + (j.expires_in || 3600) * 1000 };
   return tok.v;
 }
-async function g(method, url, body, headers = {}) {
+async function g(method, url, body, headers = {}, retried = false) {
   const r = await fetch(url.startsWith('http') ? url : 'https://graph.microsoft.com/v1.0' + url, { method, headers: { authorization: 'Bearer ' + (await token()), ...(body && !(body instanceof Buffer) ? { 'content-type': 'application/json' } : {}), ...headers }, body: body instanceof Buffer ? body : body ? JSON.stringify(body) : undefined });
   if (r.status === 204 || r.status === 202) return {};
+  // A 401 usually means the cached token went stale (admin-consent change, secret rotation, or
+  // consent still propagating across Microsoft's token servers). Drop it and retry once with a
+  // fresh token so the call self-heals instead of failing for up to the token's lifetime.
+  if (r.status === 401 && !retried) { tok = null; return g(method, url, body, headers, true); }
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(`Graph ${method} ${url}: ${r.status} ${j.error ? j.error.message : ''}`);
   return j;
