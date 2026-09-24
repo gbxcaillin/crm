@@ -2,7 +2,7 @@
    from the home screen and still loads with a flaky connection. Data calls
    (the real API, Microsoft Graph, ad webhooks) are always network-first and
    never cached here. */
-const VERSION = 'gbx-shell-v1';
+const VERSION = 'gbx-shell-v2';
 const SHELL = [
   './',
   './index.html',
@@ -33,6 +33,22 @@ self.addEventListener('fetch', (e) => {
   // Only handle same-origin shell assets; fonts and APIs go straight to the network.
   if (url.origin !== self.location.origin) return;
   if (url.pathname.includes('/api/')) return;
+  // The app shell (the HTML document) is network-first so a new deploy shows on the
+  // next load when online; fall back to the cached shell offline. Other static
+  // assets (icons, manifest) stay stale-while-revalidate for instant, offline-safe loads.
+  const isDoc = req.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('/index.html');
+  if (isDoc) {
+    e.respondWith((async () => {
+      try {
+        const res = await fetch(req);
+        if (res && res.ok) { const c = await caches.open(VERSION); c.put('./index.html', res.clone()); }
+        return res;
+      } catch (_) {
+        return (await caches.match('./index.html', { ignoreSearch: true })) || (await caches.match(req, { ignoreSearch: true })) || Response.error();
+      }
+    })());
+    return;
+  }
   e.respondWith(
     caches.match(req, { ignoreSearch: true }).then((hit) => {
       const fetched = fetch(req).then((res) => {
