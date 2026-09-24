@@ -18,7 +18,7 @@ cp .env.production.example .env.production
 node server/tools/keygen.js 2>/dev/null || docker run --rm -v /root/crm:/app -w /app node:22-alpine node server/tools/keygen.js
 # paste the printed key into .env.production as  DATA_KEYS=v1:<key>  and keep a copy off the server
 chmod 600 .env.production
-mkdir -p /root/crm-data && chmod 700 /root/crm-data
+mkdir -p /root/crm-data && chown -R 1000:1000 /root/crm-data && chmod 700 /root/crm-data
 sudo bash deploy/harden.sh                      # once per VPS: updates, firewall, fail2ban, SSH keys only
 ```
 
