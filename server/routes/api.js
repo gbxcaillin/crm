@@ -397,7 +397,11 @@ r.post('/hooks/meta', async (req, res) => {
 r.post('/hooks/lead', async (req, res) => { const a = actor(req, 'deals:write'); const b = await readJson(req); const out = await leads.createLead(b, { source: b.source || 'website', campaign: b.campaign || '', via: 'hook:' + a.name }); if (out.error) throw err(400, out.error); if (out.duplicate) return send(res, 409, { duplicate: out.duplicate }); send(res, 201, { ok: true, id: out.deal.id }); });
 
 /* ---------- SharePoint files ---------- */
-function dealFolder(dealId) { const d = D.getRecord('deals', dealId); if (!d) throw err(404, 'No such deal'); return { d, folder: [graph.SP_FOLDER, graph.safe(d.practice)].filter(Boolean).join('/') }; }
+// The client folder is named after the deal's client/lead. Fall back through practice ->
+// contact person -> email -> "Deal N" so the folder is always a meaningful name, never
+// blank or "Unfiled". Keep in sync with dealFolderName() in wireframe.html.
+function clientName(d) { return d.practice || d.contact || d.email || ('Deal ' + d.id); }
+function dealFolder(dealId) { const d = D.getRecord('deals', dealId); if (!d) throw err(404, 'No such deal'); return { d, folder: [graph.SP_FOLDER, graph.safe(clientName(d))].filter(Boolean).join('/') }; }
 r.get('/files', async (req, res) => {
   session(req); if (!graph.enabled()) return ok(res, { configured: false, files: [] });
   const { d, folder } = dealFolder(req.query.get('deal'));
