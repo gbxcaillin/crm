@@ -86,8 +86,12 @@ Everything below is optional and turns on when its variables are set in
 
 ## Claude agent / API
 
-Create a key under Integrations → API keys (scopes `deals:read`,
-`deals:write`, `ai:write`). Then:
+A ready-made agent that scores new leads with headless Claude Code (your
+subscription, no API key) lives in `deploy/agent/` - see `deploy/agent/README.md`
+for setup and the cron entry.
+
+To drive the API yourself, create a key under Integrations → API keys (scopes
+`deals:read`, `deals:write`, `ai:write`). Then:
 
 ```bash
 curl -H "Authorization: Bearer gbx_live_…" https://crm.gbxps.com/api/v1/leads?stage=new
