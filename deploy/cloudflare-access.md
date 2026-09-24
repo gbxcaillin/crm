@@ -34,7 +34,10 @@ Cloudflare **Origin Certificate** instead, which never needs renewing:
        # ... existing headers / request_body ...
    }
    ```
-   (mount the certs dir into the Caddy container), then reload Caddy.
+   (mount the certs dir into the Caddy container), then apply the change with
+   `docker compose up -d --force-recreate caddy` (not `caddy reload` — the
+   Caddyfile is a single-file bind mount; see DEPLOY.md "Applying Caddyfile
+   changes").
 3. Cloudflare -> SSL/TLS -> Overview -> set the mode to **Full (strict)**.
 
 Alternative if you would rather keep Let's Encrypt: switch Caddy to the DNS-01

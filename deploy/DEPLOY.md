@@ -35,9 +35,18 @@ volume), and replace the `crm.gbxps.com` block in
 cd /root/familyoffice
 docker compose config >/dev/null && echo compose OK
 docker compose up -d --build crm
-docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile
+docker compose up -d --force-recreate caddy   # picks up the edited Caddyfile
 docker compose logs -f crm           # "[boot] GBX Pipeline on :3000 · db /app/data/crm.db · dist ok"
 ```
+
+**Applying Caddyfile changes:** the Caddyfile is a read-only single-file bind
+mount, so use `docker compose up -d --force-recreate caddy`, not
+`docker compose exec caddy caddy reload`. Editing the file on the host (with an
+editor or `sed -i`) replaces its inode; the running container keeps the old
+inode mounted, so a plain `reload` re-reads the *pre-edit* file and your change
+silently does nothing. Recreating the container re-establishes the mount against
+the current file. (This once caused a persistent `502` with Caddy dialing the
+wrong upstream port even though the host file looked correct.)
 
 Open https://crm.gbxps.com. The database is empty, so the app shows
 **Create the first admin**. Set your own account, then invite the team under

@@ -33,9 +33,14 @@ Add the `crm:` service to `/root/familyoffice/docker-compose.yml` (from
 ```bash
 cd /root/familyoffice
 docker compose up -d --build crm
-docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile
+docker compose up -d --force-recreate caddy   # picks up the edited Caddyfile
 docker compose logs -f crm      # look for: [boot] GBX Pipeline on :3000 · dist ok
 ```
+
+Use `--force-recreate caddy` (not `caddy reload`) after editing the Caddyfile: it
+is a read-only single-file bind mount, and editing it on the host replaces the
+file's inode, so a plain reload re-reads the stale pre-edit file. See DEPLOY.md
+("Applying Caddyfile changes") for why.
 
 ## 2. Verify the backend and create the first admin
 
