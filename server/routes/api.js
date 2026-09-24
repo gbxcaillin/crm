@@ -71,7 +71,7 @@ r.post('/auth/login', async (req, res) => {
   const u = D.users.byEmail(String(b.email || ''));
   if (!u || u.status !== 'Active' || !u.pw_hash || !auth.verifyPassword(String(b.password || ''), u.pw_hash)) { auth.recordFailure(ip); audit(req, u ? u.id : '', 'login.fail', String(b.email || '').slice(0, 80), ''); throw err(401, 'Email or password is incorrect'); }
   auth.recordSuccess(ip);
-  if (u.totp_secret) { const ticket = auth.issueToken(u.id, 'mfa', 0, 5); return ok(res, { mfa: true, ticket, remember: !!b.remember }); }
+  if (u.totp_secret) { const ticket = auth.issueToken(u.id, 'mfa', 0, 10); return ok(res, { mfa: true, ticket, remember: !!b.remember }); }
   const f = finishLogin(req, res, u, { remember: b.remember, via: 'password' });
   send(res, 200, { ok: true, user: f.user, mfaSetup: f.mfaSetup }, { 'set-cookie': f.cookie });
 });
