@@ -779,6 +779,7 @@ td.check-col,th.check-col{width:32px;padding-right:0;cursor:default}
       <a class="nav" href="#/calendar" data-r="calendar"><svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="11"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>Calendar<span class="count" id="nav-cal"></span></a>
       <a class="nav" href="#/email" data-r="email"><svg viewBox="0 0 16 16"><rect x="1.5" y="3" width="13" height="10"/><path d="M1.5 4l6.5 4.5L14.5 4"/></svg>Email<span class="count" id="nav-mail"></span></a>
       <a class="nav" href="#/chat" data-r="chat"><svg viewBox="0 0 16 16"><path d="M2 3h12v8H6l-3 3v-3H2z"/></svg>Chat<span class="count" id="nav-chat"></span></a>
+      <a class="nav" href="#/mailing" data-r="mailing"><svg viewBox="0 0 16 16"><rect x="1.5" y="3" width="13" height="10"/><path d="M1.5 4l6.5 4.5L14.5 4"/><path d="M11 10.5l3 3M14 10.5l-3 3"/></svg>Mailing list</a>
       <a class="nav" href="#/files" data-r="files"><svg viewBox="0 0 16 16"><path d="M1.5 3.5h5l1.5 1.5h6.5v8h-13z"/></svg>Files</a>
       <div class="group">Finance</div>
       <a class="nav" href="#/invoices" data-r="invoices"><svg viewBox="0 0 16 16"><path d="M3 1.5h8l2 2v11H3z"/><path d="M5.5 6h5M5.5 8.5h5M5.5 11h3"/></svg>Invoices<span class="count" id="nav-inv"></span></a>
@@ -892,6 +893,12 @@ const SEED = {
     {id:'priority',label:'Priority',type:'select',options:['High','Medium','Low'],card:true},
     {id:'close',label:'Expected close',type:'date'},
     {id:'notes',label:'Notes',type:'textarea'}
+  ],
+  subscribers:[
+    {id:1,email:'olivia.grant@riverbendfa.com.au',name:'Olivia Grant',source:'website',tags:['newsletter'],status:'subscribed',token:'demo1',at:'2026-08-02T09:12:00'},
+    {id:2,email:'marcus@northstarbroking.com.au',name:'Marcus Webb',source:'website',tags:['newsletter'],status:'subscribed',token:'demo2',at:'2026-08-14T15:40:00'},
+    {id:3,email:'hello@corepathbroking.com.au',name:'CorePath Broking',source:'event',tags:['newsletter','events'],status:'subscribed',token:'demo3',at:'2026-09-01T11:05:00'},
+    {id:4,email:'unsub@example.com',name:'Former Subscriber',source:'website',tags:['newsletter'],status:'unsubscribed',token:'demo4',at:'2026-07-10T08:00:00',unsubAt:'2026-09-10T08:00:00'}
   ],
   deals:[
     {id:1,practice:'Harbourline Financial Planning',contact:'Sarah Whitfield',email:'sarah@harbourline.com.au',phone:'+61 3 9021 4402',value:48000,service:'Sales Enablement & Lead Generation',segment:'Financial planning',advisers:6,fum:410,city:'Melbourne',licensee:'Count Financial',priority:'High',stage:'scope',source:'google',owner:'u3',created:'2026-08-21',close:'2026-10-15',notes:'Wants a compliant paid‑media funnel plus adviser call scripts. Health Check done 28 Aug.'},
@@ -1273,13 +1280,13 @@ function simulateLead(sourceKey){
 /* ================= RESPONSIVE ================= */
 const isMobile=()=>matchMedia('(max-width:760px)').matches;
 let _wasM=isMobile();addEventListener('resize',()=>{const m=isMobile();if(m!==_wasM){_wasM=m;if(S.loggedIn)route()}});
-function openMore(){const items=[['clients','Clients','<path d="M2 14V6l6-4 6 4v8"/><path d="M6 14v-4h4v4"/>',S.clients.filter(c=>c.status==='Active').length],['calendar','Calendar','<rect x="2" y="3" width="12" height="11"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/>',eventsOn(today()).filter(e=>e.who.includes(S.me)).length],['email','Email','<rect x="1.5" y="3" width="13" height="10"/><path d="M1.5 4l6.5 4.5L14.5 4"/>',S.threads.filter(t=>t.unread).length],['files','Files','<path d="M1.5 3.5h5l1.5 1.5h6.5v8h-13z"/>',''],['invoices','Invoices','<path d="M3 1.5h8l2 2v11H3z"/><path d="M5.5 6h5M5.5 8.5h5M5.5 11h3"/>',S.invoices.filter(i=>invStatus(i)==='Overdue').length],['reports','Reports','<path d="M2 13h12"/><path d="M4 11V7M8 11V4M12 11V9"/>',''],['research','Research','<path d="M2 12l4-5 3 3 5-7"/><path d="M11 3h3v3"/>',''],['integrations','Integrations','<path d="M5.5 2v4M10.5 10v4"/><path d="M5.5 6a2.5 2.5 0 002.5 2.5h0M10.5 10a2.5 2.5 0 00-2.5-2.5h0"/>',''],['settings/profile','Settings','<path d="M2 4.5h12M2 8h12M2 11.5h12"/>','']];
+function openMore(){const items=[['clients','Clients','<path d="M2 14V6l6-4 6 4v8"/><path d="M6 14v-4h4v4"/>',S.clients.filter(c=>c.status==='Active').length],['calendar','Calendar','<rect x="2" y="3" width="12" height="11"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/>',eventsOn(today()).filter(e=>e.who.includes(S.me)).length],['email','Email','<rect x="1.5" y="3" width="13" height="10"/><path d="M1.5 4l6.5 4.5L14.5 4"/>',S.threads.filter(t=>t.unread).length],['mailing','Mailing list','<rect x="1.5" y="3" width="13" height="10"/><path d="M1.5 4l6.5 4.5L14.5 4"/>',''],['files','Files','<path d="M1.5 3.5h5l1.5 1.5h6.5v8h-13z"/>',''],['invoices','Invoices','<path d="M3 1.5h8l2 2v11H3z"/><path d="M5.5 6h5M5.5 8.5h5M5.5 11h3"/>',S.invoices.filter(i=>invStatus(i)==='Overdue').length],['reports','Reports','<path d="M2 13h12"/><path d="M4 11V7M8 11V4M12 11V9"/>',''],['research','Research','<path d="M2 12l4-5 3 3 5-7"/><path d="M11 3h3v3"/>',''],['integrations','Integrations','<path d="M5.5 2v4M10.5 10v4"/><path d="M5.5 6a2.5 2.5 0 002.5 2.5h0M10.5 10a2.5 2.5 0 00-2.5-2.5h0"/>',''],['settings/profile','Settings','<path d="M2 4.5h12M2 8h12M2 11.5h12"/>','']];
   const me=user(S.me);$('#more-sheet').innerHTML=`<div class="sheet" id="more-ov"><div class="sh"><div class="row" style="padding:8px 12px 4px;gap:10px">${avatarHtml(S.me)}<div class="grow"><div style="font-weight:600;font-size:13px">${esc(me.name)}</div><div class="faint" style="font-size:11px">${esc(me.role)} · ${esc(me.email)}</div></div><button class="btn btn-sm btn-quiet" id="more-theme">Theme</button><button class="btn btn-sm btn-quiet" id="more-logout">Sign out</button></div><div class="label">More</div>${items.map(([r,l,ic,n])=>`<a href="#/${r}"><svg viewBox="0 0 16 16">${ic}</svg>${l}<span class="count">${n||''}</span></a>`).join('')}${PWA.standalone?'':`<a href="#install" id="more-install"><svg viewBox="0 0 16 16"><path d="M8 2v8M4.5 6.5L8 10l3.5-3.5"/><path d="M2.5 12.5h11"/></svg>Install on this phone<span class="count" style="color:var(--teal-ink)">${PWA.prompt?'Ready':''}</span></a>`}</div></div>`;$('#more-sheet').hidden=false;
   $('#more-ov').onclick=e=>{if(e.target.closest('#more-install')){e.preventDefault();closeMore();installApp();return}if(e.target.id==='more-ov'||e.target.closest('a'))closeMore();if(e.target.id==='more-logout'){closeMore();doLogout()}if(e.target.id==='more-theme'){$('#theme-btn').click()}}}
 function closeMore(){$('#more-sheet').hidden=true;$('#more-sheet').innerHTML=''}
 
 /* ================= ROUTER ================= */
-const ROUTES={dashboard:'Dashboard',pipeline:'Pipeline',clients:'Clients',client:'Clients',tasks:'Tasks',calendar:'Calendar',email:'Email',chat:'Chat',files:'Files',invoices:'Invoices',invoice:'Invoices',reports:'Reports',research:'Research',security:'Research',model:'Research',integrations:'Integrations',settings:'Settings',deal:'Pipeline'};
+const ROUTES={dashboard:'Dashboard',pipeline:'Pipeline',clients:'Clients',client:'Clients',tasks:'Tasks',calendar:'Calendar',email:'Email',chat:'Chat',mailing:'Mailing',files:'Files',invoices:'Invoices',invoice:'Invoices',reports:'Reports',research:'Research',security:'Research',model:'Research',integrations:'Integrations',settings:'Settings',deal:'Pipeline'};
 function doLogout(){if(isServer()){api('auth/logout',{method:'POST'}).catch(()=>{}).finally(()=>{location.hash='';location.reload()});return}S.loggedIn=false;save();route()}
 function route(){
   if(!S||!S.loggedIn){if(isServer())showLogin();else{$('#login').hidden=false;$('#shell').hidden=true}return}
@@ -1291,12 +1298,12 @@ function route(){
   $$('#nav .nav').forEach(n=>n.classList.toggle('active',n.dataset.r===rr));
   const c=$('#content');c.scrollTop=0;
   sweepChat();
-  const view={dashboard:vDashboard,pipeline:vPipeline,clients:vClients,client:()=>vClient(a),tasks:vTasks,calendar:vCalendar,email:vEmail,chat:vChat,files:vFiles,invoices:vInvoices,invoice:()=>vInvoice(a),reports:vReports,research:vResearch,security:()=>vSecurity(decodeURIComponent(a||'')),model:()=>vModel(a),integrations:vIntegrations,settings:()=>vSettings(a||'profile'),deal:()=>vDeal(a)}[rr];
+  const view={dashboard:vDashboard,pipeline:vPipeline,clients:vClients,client:()=>vClient(a),tasks:vTasks,calendar:vCalendar,email:vEmail,chat:vChat,mailing:vMailing,files:vFiles,invoices:vInvoices,invoice:()=>vInvoice(a),reports:vReports,research:vResearch,security:()=>vSecurity(decodeURIComponent(a||'')),model:()=>vModel(a),integrations:vIntegrations,settings:()=>vSettings(a||'profile'),deal:()=>vDeal(a)}[rr];
   for(const k in CHARTS)delete CHARTS[k];
   c.innerHTML=view();
   bindCharts();
   if(rr==='research')ensureHist([...S.securities.map(s=>s.t),...(S.watchlist||[])]);if(rr==='security')ensureHist([decodeURIComponent(a||'')]);if(rr==='model'){const m=modelOf(a);if(m)ensureHist(m.holdings.map(h=>h.t))}if(rr==='files')fetchFiles(S.ui.fileDeal);if(rr==='dashboard')ensureAnalytics();if(rr==='settings'&&a==='security'&&isServer())loadSecurityPanels();
-  const crumbs={dashboard:'Dashboard',pipeline:'Pipeline',clients:'Clients',client:`<a href="#/clients" style="color:var(--ink-3)">Clients</a><span class="sep">/</span>${esc(client(a)?.name||'Client')}`,reports:'Reports',research:'Research',security:`<a href="#/research" style="color:var(--ink-3)">Research</a><span class="sep">/</span>${esc(decodeURIComponent(a||''))}`,model:`<a href="#/research" style="color:var(--ink-3)">Research</a><span class="sep">/</span>${esc(modelOf(a)?.name||'Model')}`,tasks:'Tasks',calendar:'Calendar',email:'Email',chat:'Chat',files:'Files',invoices:'Invoices',invoice:`<a href="#/invoices" style="color:var(--ink-3)">Invoices</a><span class="sep">/</span>${esc(invoice(a)?.number||'Invoice')}`,integrations:'Integrations',settings:`Settings<span class="sep">/</span>${{profile:'Profile',fields:'Fields',stages:'Stages',team:'Team',notifications:'Notifications',invoicing:'Invoicing',research:'Research data',storage:'Storage',security:'Security'}[a]||'Profile'}`,deal:`<a href="#/pipeline" style="color:var(--ink-3)">Pipeline</a><span class="sep">/</span>${esc(deal(a)?.practice||'Deal')}`};
+  const crumbs={dashboard:'Dashboard',pipeline:'Pipeline',clients:'Clients',client:`<a href="#/clients" style="color:var(--ink-3)">Clients</a><span class="sep">/</span>${esc(client(a)?.name||'Client')}`,reports:'Reports',research:'Research',security:`<a href="#/research" style="color:var(--ink-3)">Research</a><span class="sep">/</span>${esc(decodeURIComponent(a||''))}`,model:`<a href="#/research" style="color:var(--ink-3)">Research</a><span class="sep">/</span>${esc(modelOf(a)?.name||'Model')}`,tasks:'Tasks',calendar:'Calendar',email:'Email',chat:'Chat',mailing:'Mailing list',files:'Files',invoices:'Invoices',invoice:`<a href="#/invoices" style="color:var(--ink-3)">Invoices</a><span class="sep">/</span>${esc(invoice(a)?.number||'Invoice')}`,integrations:'Integrations',settings:`Settings<span class="sep">/</span>${{profile:'Profile',fields:'Fields',stages:'Stages',team:'Team',notifications:'Notifications',invoicing:'Invoicing',research:'Research data',storage:'Storage',security:'Security'}[a]||'Profile'}`,deal:`<a href="#/pipeline" style="color:var(--ink-3)">Pipeline</a><span class="sep">/</span>${esc(deal(a)?.practice||'Deal')}`};
   $('#crumb').innerHTML=crumbs[rr];
   const me=user(S.me);$('#me-av').textContent=initials(me.name);$('#me-name').textContent=me.name;$('#me-role').textContent=me.role;
   $('#nav-deals').textContent=S.deals.filter(d=>!stage(d.stage)?.closed).length;
@@ -1320,7 +1327,7 @@ window.addEventListener('hashchange',route);
 // record-by-record. Without a server (artifact preview, plain static host) the app falls back
 // to the browser-local demo mode above.
 const NET={mode:'local',rev:0,last:{},lastKv:{},features:{},vapid:'',timer:null,busy:false,dirty:false,poll:null,user:null,online:true,setup:false,filesAt:{},sso:false,passwordLogin:true,security:{},maxIds:{}};
-const SYNC_COLS={users:'id',deals:'id',tasks:'id',clients:'id',invoices:'id',events:'id',messages:'id',rooms:'id',threads:'id',files:'id',notifs:'id',activity:'id',changes:'id',models:'id',securities:'t'};
+const SYNC_COLS={users:'id',deals:'id',tasks:'id',clients:'id',invoices:'id',events:'id',messages:'id',rooms:'id',threads:'id',files:'id',notifs:'id',activity:'id',changes:'id',models:'id',subscribers:'id',securities:'t'};
 const SYNC_KV=['stages','sources','fields','colors','campaigns','spend','watchlist','settings'];
 const isServer=()=>NET.mode==='server';
 async function api(path,opts={}){
@@ -1631,6 +1638,21 @@ function vEmail(){
 }
 
 /* ================= FILES ================= */
+function vMailing(){
+  const subs=S.subscribers||[];
+  const active=subs.filter(s=>s.status==='subscribed'),unsub=subs.filter(s=>s.status==='unsubscribed');
+  const tags=[...new Set(subs.flatMap(s=>s.tags||[]))].sort();
+  const filt=S.ui.subTag||'';
+  const rows=(filt?subs.filter(s=>(s.tags||[]).includes(filt)):subs).slice().sort((a,b)=>(b.at||'').localeCompare(a.at||''));
+  const mailOff=isServer()&&NET.features&&!NET.features.mail;
+  return`<div class="page">
+    <div class="page-head"><div><h1>Mailing list</h1><div class="sub">${active.length} subscribed · ${unsub.length} unsubscribed · signups from gbxps.com land here automatically</div></div>
+      <div class="toolbar">${tags.length?`<select class="select" id="sub-tag"><option value="">All tags</option>${tags.map(t=>`<option ${filt===t?'selected':''}>${esc(t)}</option>`).join('')}</select>`:''}<button class="btn btn-quiet" data-addsub>Add subscriber</button><button class="btn btn-primary" data-compose-bulk>Compose email</button></div></div>
+    <div class="stats"><div class="stat"><span class="label">Subscribed</span><span class="v">${active.length}</span></div><div class="stat"><span class="label">Unsubscribed</span><span class="v">${unsub.length}</span></div><div class="stat"><span class="label">Tags</span><span class="v">${tags.length}</span></div><div class="stat"><span class="label">Total</span><span class="v">${subs.length}</span></div></div>
+    <div class="card"><div class="card-head"><h3>Subscribers</h3>${mailOff?'<span class="faint" style="font-size:11px">Email not configured on the server — sending is disabled</span>':''}</div>
+    <div class="table-wrap" style="border:none"><table class="cards"><thead><tr><th>Email</th><th>Name</th><th>Source</th><th>Tags</th><th>Status</th><th>Added</th><th></th></tr></thead><tbody>${rows.length?rows.map(s=>`<tr><td class="full"><span class="name">${esc(s.email)}</span></td><td data-l="Name">${esc(s.name||'—')}</td><td data-l="Source"><span class="chip chip-line">${esc(s.source||'—')}</span></td><td data-l="Tags">${(s.tags||[]).map(t=>`<span class="chip chip-line">${esc(t)}</span>`).join(' ')||'—'}</td><td data-l="Status"><span class="chip ${s.status==='subscribed'?'chip-teal':'chip-line'}">${esc(s.status)}</span></td><td class="mono" style="font-size:11px" data-l="Added">${fmtDate((s.at||'').slice(0,10))}</td><td class="full" style="text-align:right">${s.status==='subscribed'?`<button class="btn btn-sm btn-quiet" data-unsub="${s.id}">Unsubscribe</button>`:`<button class="btn btn-sm btn-quiet" data-resub="${s.id}">Re-subscribe</button>`} <button class="btn btn-sm btn-quiet" data-subdel="${s.id}">Remove</button></td></tr>`).join(''):'<tr><td colspan="7"><div class="empty">No subscribers yet — they appear here when people sign up on the website.</div></td></tr>'}</tbody></table></div></div>
+  </div>`;
+}
 function vFiles(){
   const u=S.ui;const dealsWithFolders=S.deals.filter(d=>S.files.some(f=>f.deal===d.id)||['prop','neg','won'].includes(d.stage));
   const cur=u.fileDeal?deal(u.fileDeal):null;
@@ -2192,6 +2214,30 @@ function openUpload(dealId){
   modal('Upload to SharePoint',`<div class="field"><span class="label">Client folder</span><select class="select" name="deal">${S.deals.map(x=>`<option value="${x.id}" ${d&&d.id===x.id?'selected':''}>${esc(dealFolderName(x))}</option>`).join('')}</select></div><div class="field"><span class="label">File</span><input class="input" type="file" name="file" style="padding-top:6px"></div><p class="faint" style="font-size:11.5px">Goes straight to <span class="mono">${esc(S.settings.spLibrary)}/${S.settings.spFolder?esc(S.settings.spFolder)+'/':''}${esc(dealFolderName(d))}/</span> via Microsoft Graph. The CRM keeps the link only.</p>`,`<button class="btn btn-quiet" type="button" data-close-modal>Cancel</button><button class="btn btn-primary" type="submit">Upload</button>`);
   $('#mform').onsubmit=async e=>{e.preventDefault();const fd=new FormData(e.target);const file=fd.get('file');const did=+fd.get('deal');if(isServer()){if(!NET.features.sharepoint){toast('SharePoint is not connected on the server yet (set MS_TENANT_ID, MS_CLIENT_ID, MS_CLIENT_SECRET)');return}if(!file||!file.name){toast('Choose a file');return}const b=e.target.querySelector('[type=submit]');b.disabled=true;b.textContent='Uploading…';try{const r=await fetch(`api/v1/files/upload?deal=${did}&name=${encodeURIComponent(file.name)}`,{method:'PUT',headers:{'x-requested-with':'gbx'},body:file,credentials:'same-origin'});const j=await r.json();if(!r.ok)throw new Error(j.error||'Upload failed');S.files.unshift(j.file);markSynced('files',j.file);closeModal();toast('Uploaded to SharePoint');pullSync();route()}catch(err){toast(err.message);b.disabled=false;b.textContent='Upload'}return}const name=file&&file.name?file.name:'Meeting_Notes_'+Date.now().toString().slice(-4)+'.docx';const ext=name.split('.').pop().toUpperCase().slice(0,3);S.files.unshift({id:nextId(S.files),deal:did,name,size:file&&file.size?Math.max(1,Math.round(file.size/1024))+' KB':'48 KB',by:S.me,at:today(),kind:ext});logAct(did,'file','Uploaded to SharePoint',name);closeModal();toast('Uploaded to SharePoint');route()}
 }
+function openAddSub(){
+  modal('Add subscriber',`<div class="form-grid"><div class="field span2"><span class="label">Email *</span><input class="input" name="email" type="email" required></div><div class="field"><span class="label">Name</span><input class="input" name="name"></div><div class="field"><span class="label">Tags (comma-separated)</span><input class="input" name="tags" placeholder="newsletter"></div></div>`,`<button class="btn btn-quiet" type="button" data-close-modal>Cancel</button><button class="btn btn-primary" type="submit">Add</button>`);
+  $('#mform').onsubmit=e=>{e.preventDefault();const fd=new FormData(e.target);const email=String(fd.get('email')||'').trim().toLowerCase();
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){toast('Enter a valid email');return}
+    if((S.subscribers||[]).some(s=>s.email===email)){toast('That email is already on the list');return}
+    const tags=String(fd.get('tags')||'').split(',').map(t=>t.trim()).filter(Boolean);
+    const rec={id:nextId(S.subscribers||[]),email,name:String(fd.get('name')||'').trim(),source:'manual',tags,status:'subscribed',token:'',at:new Date().toISOString().slice(0,19)};
+    S.subscribers=S.subscribers||[];S.subscribers.unshift(rec);markSynced('subscribers',rec);closeModal();toast('Subscriber added');save();route()};
+}
+function openBulkCompose(){
+  const active=(S.subscribers||[]).filter(s=>s.status==='subscribed');
+  const tags=[...new Set((S.subscribers||[]).flatMap(s=>s.tags||[]))].sort();
+  modal('Compose email to list',`<div class="form-grid"><div class="field"><span class="label">Audience</span><select class="select" name="tag"><option value="">All subscribed (${active.length})</option>${tags.map(t=>{const n=active.filter(s=>(s.tags||[]).includes(t)).length;return`<option value="${esc(t)}">${esc(t)} (${n})</option>`}).join('')}</select></div><div class="field"><span class="label">&nbsp;</span><span class="faint" style="font-size:11px">Use {{name}} to personalise. A working unsubscribe link is added to every email automatically.</span></div><div class="field span2"><span class="label">Subject</span><input class="input" name="subject" required></div><div class="field span2"><span class="label">Message (HTML allowed)</span><textarea class="textarea" name="html" style="min-height:180px" required placeholder="Hi {{name}},&#10;&#10;We wanted to share…"></textarea></div></div>`,`<button class="btn btn-quiet" type="button" data-close-modal>Cancel</button><button class="btn btn-primary" type="submit">Send to list</button>`,{wide:true});
+  $('#mform').onsubmit=async e=>{e.preventDefault();const fd=new FormData(e.target);const subject=String(fd.get('subject')||'').trim(),html=String(fd.get('html')||'').trim(),tag=String(fd.get('tag')||'');
+    if(!subject||!html){toast('Subject and message are required');return}
+    const n=(S.subscribers||[]).filter(s=>s.status==='subscribed'&&(!tag||(s.tags||[]).includes(tag))).length;
+    if(!isServer()){toast('Sending runs on the live server — this is a local preview');closeModal();return}
+    if(!NET.features.mail){toast('Email is not configured on the server yet');return}
+    if(!n){toast('No subscribers match that audience');return}
+    if(!confirm(`Send "${subject}" to ${n} subscriber${n===1?'':'s'}?`))return;
+    const b=e.target.querySelector('[type=submit]');b.disabled=true;b.textContent='Sending…';
+    try{const r=await api('subscribers/bulk',{method:'POST',body:{subject,html,tag:tag||undefined}});closeModal();toast(`Sent to ${r.sent} of ${r.total}${r.failed?` · ${r.failed} failed`:''}`);pullSync()}
+    catch(err){toast(err.message);b.disabled=false;b.textContent='Send to list'}};
+}
 async function reconcileFolder(dealId){
   if(!isServer()){toast('SharePoint runs on the server — reconcile is available in the live app');return}
   if(!NET.features.sharepoint){toast('SharePoint is not connected on the server yet');return}
@@ -2286,6 +2332,11 @@ function bindView(r){
     if(x=el('[data-open]')){const k=x.dataset.open;if(k==='add')openAdd();if(k==='task')openTask(x.dataset.deal);if(k==='event')openEvent(null,x.dataset.day);if(k==='compose')openCompose(x.dataset.deal);if(k==='field')openField();if(k==='invite')openInvite();if(k==='key')openKey();return}
     if(x=el('[data-upload]')){openUpload(x.dataset.upload);return}
     if(x=el('[data-reconcile]')){reconcileFolder(+x.dataset.reconcile);return}
+    if(x=el('[data-addsub]')){openAddSub();return}
+    if(x=el('[data-compose-bulk]')){openBulkCompose();return}
+    if(x=el('[data-unsub]')){const s=(S.subscribers||[]).find(v=>v.id===+x.dataset.unsub);if(s){s.status='unsubscribed';s.unsubAt=new Date().toISOString().slice(0,19);markSynced('subscribers',s);toast('Unsubscribed');save();route()}return}
+    if(x=el('[data-resub]')){const s=(S.subscribers||[]).find(v=>v.id===+x.dataset.resub);if(s){s.status='subscribed';delete s.unsubAt;markSynced('subscribers',s);toast('Re-subscribed');save();route()}return}
+    if(x=el('[data-subdel]')){if(confirm('Remove this subscriber from the list?')){S.subscribers=(S.subscribers||[]).filter(v=>v.id!==+x.dataset.subdel);toast('Removed');save();route()}return}
     if(x=el('[data-view]')){S.ui.view=x.dataset.view;route();return}
     if(x=el('.dcard')){location.hash='#/deal/'+x.dataset.id;return}
     if(x=el('tr.link')){if(t.closest('.check-col')||t.tagName==='A')return;location.hash='#/deal/'+x.dataset.id;return}
@@ -2335,6 +2386,7 @@ function bindView(r){
     if(t.id==='cal-tasks'){S.ui.calTasks=t.checked;route();return}
     if(t.id==='stage-select'){moveStage(+t.dataset.id,t.value);return}
     if(t.id==='files-pick'){S.ui.fileDeal=+t.value;route();return}
+    if(t.id==='sub-tag'){S.ui.subTag=t.value;route();return}
     if(t.dataset.hide){const h=S.ui.calHide||(S.ui.calHide=[]);const i=h.indexOf(t.dataset.hide);i>=0?h.splice(i,1):h.push(t.dataset.hide);route();return}
     if(t.id==='chat-hours'){S.settings.notifyPrefs.chatHours=+t.value;save();toast('Unread chat is emailed after '+t.value+' hours');return}
     if(t.dataset.invsel==='deal'){const inv=curInv();const v=t.value;if(v.startsWith('c:')){const c=client(v.slice(2));inv.clientId=c.id;inv.deal=c.deals[0]||0;inv.client={name:c.name,contact:c.contact,email:c.email,address:c.address||'',abn:c.abn||''};if(inv.items.length===1&&!inv.items[0].desc)inv.items[0].desc=c.services[0]||''}else{const d=deal(v.slice(2));inv.clientId=0;inv.deal=d?d.id:0;if(d){inv.client={name:d.practice,contact:d.contact,email:d.email,address:d.city||'',abn:inv.client.abn||''};if(inv.items.length===1&&!inv.items[0].desc)inv.items[0].desc=d.service}}route();return}

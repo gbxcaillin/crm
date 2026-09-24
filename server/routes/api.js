@@ -9,6 +9,7 @@ const graph = require('../lib/graph');
 const market = require('../lib/market');
 const jobs = require('../lib/jobs');
 const leads = require('../lib/leads');
+const mailing = require('../lib/mailing');
 const bookings = require('../lib/bookings');
 const cloudflare = require('../lib/cloudflare');
 const claude = require('../lib/claude');
@@ -237,7 +238,7 @@ r.post('/users/:id/invite', async (req, res) => { const me = admin(req); const u
 r.post('/users/:id/reset', async (req, res) => { admin(req); const u = D.users.get(req.params.id); if (!u) throw err(404, 'No such user'); const t = auth.issueToken(u.id, 'reset', 1); const url = `${BASE}/#/reset/${t}`; const sent = await mail.send({ to: u.email, subject: 'Reset your GBX Pipeline password', title: 'Reset your password', html: '<p>An admin issued a password reset for your account. The link works once and expires in 24 hours.</p>', cta: { label: 'Choose a new password', url }, kind: 'reset' }); ok(res, { resetUrl: url, emailed: sent }); });
 
 /* ---------- API keys ---------- */
-r.post('/keys', async (req, res) => { const me = admin(req); const b = await readJson(req); if (!b.name) throw err(400, 'Name required'); const scopes = (Array.isArray(b.scopes) ? b.scopes : []).filter((s) => ['deals:read', 'deals:write', 'contacts:write', 'files:read', 'ai:write'].includes(s)); const k = auth.createApiKey(String(b.name).slice(0, 60), scopes.length ? scopes : ['deals:read'], me.id); audit(req, me.id, 'key.create', b.name, scopes.join(' ')); ok(res, { id: k.id, key: k.key, keys: auth.listApiKeys() }); });
+r.post('/keys', async (req, res) => { const me = admin(req); const b = await readJson(req); if (!b.name) throw err(400, 'Name required'); const scopes = (Array.isArray(b.scopes) ? b.scopes : []).filter((s) => ['deals:read', 'deals:write', 'contacts:write', 'files:read', 'ai:write', 'subscribers:write'].includes(s)); const k = auth.createApiKey(String(b.name).slice(0, 60), scopes.length ? scopes : ['deals:read'], me.id); audit(req, me.id, 'key.create', b.name, scopes.join(' ')); ok(res, { id: k.id, key: k.key, keys: auth.listApiKeys() }); });
 r.delete('/keys/:id', (req, res) => { const me = admin(req); auth.revokeApiKey(req.params.id); audit(req, me.id, 'key.revoke', req.params.id, ''); ok(res, { keys: auth.listApiKeys() }); });
 
 /* ---------- Microsoft Bookings ---------- */
@@ -395,6 +396,8 @@ r.post('/hooks/meta', async (req, res) => {
   ok(res, { ok: true, received: ids.length, created: results.filter((x) => x.deal).length });
 });
 r.post('/hooks/lead', async (req, res) => { const a = actor(req, 'deals:write'); const b = await readJson(req); const out = await leads.createLead(b, { source: b.source || 'website', campaign: b.campaign || '', via: 'hook:' + a.name }); if (out.error) throw err(400, out.error); if (out.duplicate) return send(res, 409, { duplicate: out.duplicate }); send(res, 201, { ok: true, id: out.deal.id }); });
+// Mailing-list signup from the website. Adds/re-subscribes immediately; idempotent on email.
+r.post('/hooks/subscribe', async (req, res) => { const a = actor(req, 'subscribers:write'); const b = await readJson(req); const out = mailing.add({ email: b.email, name: b.name || '', source: b.source || 'website', tags: b.tags }, 'hook:' + a.name); if (out.error) throw err(400, out.error); send(res, out.created ? 201 : 200, { ok: true, id: out.subscriber.id, created: out.created, resubscribed: !!out.resubscribed }); });
 
 /* ---------- SharePoint files ---------- */
 // The client folder is named after the deal's client/lead. Fall back through practice ->
@@ -469,6 +472,26 @@ r.post('/files/reconcile', async (req, res) => {
   const out = await reconcileDealFolder(d, u.id);
   if (out.moved || out.cleaned.length) D.putRecord('activity', { id: Date.now(), deal: d.id, type: 'file', who: u.id, text: 'Tidied SharePoint folder', detail: [out.moved ? `Moved ${out.moved} file${out.moved > 1 ? 's' : ''} into ${out.leaf}` : '', out.cleaned.length ? `removed empty ${out.cleaned.join(', ')}` : ''].filter(Boolean).join('; '), at: D.nowIso() }, u.id);
   ok(res, out);
+});
+
+/* ---------- mailing list ---------- */
+// Subscribers are managed through the synced collection (add/unsubscribe in the UI). These two
+// endpoints are the actions that must run on the server: sending, and the public unsubscribe.
+r.post('/subscribers/bulk', async (req, res) => {
+  const me = admin(req); const b = await readJson(req);
+  const out = await mailing.sendBulk({ subject: b.subject, html: b.html, tag: b.tag }, me.id);
+  if (out.error) throw err(400, out.error);
+  audit(req, me.id, 'mailing.bulk', `${out.sent}/${out.total} sent`, String(b.subject || '').slice(0, 80));
+  ok(res, out);
+});
+// Public one-click unsubscribe from an email link (no auth, no CSRF - it is a GET).
+r.get('/unsubscribe/:token', (req, res) => {
+  const s = mailing.unsubscribe(req.params.token);
+  const heading = s ? 'Unsubscribed' : 'Link not valid';
+  const msg = s ? `${mail.esc(s.email)} has been removed and will no longer receive our emails.` : 'This unsubscribe link is not valid or has already been used.';
+  const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Unsubscribe · GBX</title></head><body style="margin:0;background:#F6F3EC;font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#1A1A1A"><div style="max-width:460px;margin:14vh auto;background:#FFFDF8;border:1px solid #E4DFD3;padding:34px 28px;text-align:center"><span style="display:inline-block;border:1.5px solid #1A1A1A;padding:3px 7px;font-weight:700;letter-spacing:.08em;font-size:12px">GBX</span><h1 style="font-weight:400;font-size:23px;margin:18px 0 10px;font-family:Georgia,serif">${heading}</h1><p style="font-size:14px;line-height:1.6;color:#5A5852;margin:0">${msg}</p></div></body></html>`;
+  res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
+  res.end(html);
 });
 
 /* ---------- market data ---------- */

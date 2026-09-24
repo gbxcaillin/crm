@@ -61,7 +61,7 @@ function today() { return nowIso().slice(0, 10); }
 
 /* ---------- record store ---------- */
 // Collections and the field that identifies a record in each.
-const COLS = { deals: 'id', tasks: 'id', clients: 'id', invoices: 'id', events: 'id', messages: 'id', rooms: 'id', threads: 'id', files: 'id', notifs: 'id', activity: 'id', changes: 'id', models: 'id', securities: 't' };
+const COLS = { deals: 'id', tasks: 'id', clients: 'id', invoices: 'id', events: 'id', messages: 'id', rooms: 'id', threads: 'id', files: 'id', notifs: 'id', activity: 'id', changes: 'id', models: 'id', subscribers: 'id', securities: 't' };
 // Singleton documents (configuration).
 const KV = ['stages', 'sources', 'fields', 'colors', 'campaigns', 'spend', 'watchlist', 'settings'];
 
