@@ -10,6 +10,7 @@ const market = require('../lib/market');
 const jobs = require('../lib/jobs');
 const leads = require('../lib/leads');
 const bookings = require('../lib/bookings');
+const cloudflare = require('../lib/cloudflare');
 const { notify } = require('../lib/notify');
 const totp = require('../lib/totp');
 const oidc = require('../lib/oidc');
@@ -241,6 +242,11 @@ r.delete('/keys/:id', (req, res) => { const me = admin(req); auth.revokeApiKey(r
 /* ---------- Microsoft Bookings ---------- */
 r.get('/integrations/bookings', (req, res) => { admin(req); const last = D.jobs.get.get('bookings'); ok(res, { enabled: bookings.enabled(), business: process.env.BOOKINGS_BUSINESS || '', lastRun: last ? last.last_run : null, lastResult: last ? last.detail : '' }); });
 r.post('/integrations/bookings/sync', async (req, res) => { const me = admin(req); if (!bookings.enabled()) throw err(400, 'Bookings is not configured. Set BOOKINGS_BUSINESS and the MS_* Graph app with Bookings.Read.All.'); const out = await bookings.sync(); audit(req, me.id, 'bookings.sync', String(out.added || 0) + ' new', ''); ok(res, out); });
+r.get('/integrations/cloudflare', (req, res) => { admin(req); ok(res, { enabled: cloudflare.enabled(), account: process.env.CLOUDFLARE_ACCOUNT_ID || '', site: process.env.CLOUDFLARE_SITE_TAG || '' }); });
+r.post('/integrations/cloudflare/sync', async (req, res) => { const me = admin(req); if (!cloudflare.enabled()) throw err(400, 'Cloudflare Web Analytics is not configured. Set CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_SITE_TAG.'); const out = await cloudflare.refresh(); audit(req, me.id, 'cloudflare.sync', String(out.visits || 0) + ' visits', ''); ok(res, out); });
+
+/* ---------- analytics (website traffic tile) ---------- */
+r.get('/analytics/summary', async (req, res) => { session(req); ok(res, await cloudflare.summary({ days: Math.min(90, Math.max(1, Number(req.query.get('days')) || 7)) })); });
 
 /* ---------- push ---------- */
 r.get('/push/key', (req, res) => ok(res, { publicKey: push.publicKey }));
