@@ -79,7 +79,14 @@ these win over the site-wide app above.
 |---|---|
 | `crm.gbxps.com/api/v1/hooks/*` | Lead webhooks: the gbxps.com website, Google Ads and Meta. Authenticated by API key / signature, not a human login. |
 | `crm.gbxps.com/api/v1/auth/microsoft/callback` | The Microsoft sign-in redirect, which arrives before any Access session exists. |
+| `crm.gbxps.com/api/v1/mail/connect/callback` | The per-user mailbox OAuth redirect (Settings -> Email accounts -> Connect). |
 | `crm.gbxps.com/api/v1/health` | The uptime / health check. |
+| `crm.gbxps.com/api/v1/unsubscribe/*` | The unsubscribe link and one-click button in every newsletter. Subscribers are not staff. |
+| `crm.gbxps.com/api/v1/subscribe/confirm/*` | The double opt-in confirmation link (when `MAILING_DOUBLE_OPTIN=1`). |
+| `crm.gbxps.com/api/v1/nurture/stop/*` | The "Stop these emails" link in every nurture email. |
+
+`hooks/*` also covers `hooks/subscribe` (website newsletter signups) and
+`hooks/mail-events/*` (the Resend / Postmark bounce and complaint webhook).
 
 These endpoints are not "open": they enforce their own auth (the webhook API
 key, the OIDC state, etc.). Bypass only means "do not show the Access login
@@ -110,3 +117,8 @@ the API from Claude or Zapier.
   login redirect.
 - Submit a tool on gbxps.com (with `CRM_WEBHOOK_URL` / `CRM_API_KEY` set) ->
   the lead lands in the CRM, proving the webhook bypass works.
+- Send yourself a newsletter and click Unsubscribe in the footer -> the
+  "Unsubscribed" page, not a Cloudflare login. Same for the "Stop these
+  emails" link in a nurture email.
+- In Resend -> Webhooks, send a test event -> the CRM answers 200 (a 302 to
+  a login page means the `hooks/*` bypass is missing).
