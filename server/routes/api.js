@@ -537,6 +537,23 @@ r.post('/invoices/:id/send', async (req, res) => {
   ok(res, { sent: true, url: inv.spUrl || '' });
 });
 
+/* ---------- outbound email (compose / reply) ---------- */
+// Actually sends an email through the configured transport. The client keeps the thread and
+// activity log (synced), so this endpoint only sends and audits.
+r.post('/email/send', async (req, res) => {
+  const u = session(req); const b = await readJson(req);
+  const to = String(b.to || '').trim();
+  if (!to || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) throw err(400, 'A valid recipient email is required');
+  if (!mail.enabled()) throw err(503, 'Email is not configured on the server');
+  const subject = String(b.subject || '(no subject)').slice(0, 200);
+  const html = `<div style="white-space:pre-wrap;font-size:14px;line-height:1.55">${mail.esc(String(b.body || ''))}</div>`;
+  const me = D.users.get(u.id) || {};
+  const sent = await mail.send({ to, subject, title: '', html, footer: mail.esc((me.name ? me.name + ' · ' : '') + 'GBX Professional Services'), kind: 'outbound' });
+  if (!sent) throw err(502, 'The email could not be sent (check server mail settings)');
+  audit(req, u.id, 'email.send', to, subject);
+  ok(res, { sent: true });
+});
+
 /* ---------- market data ---------- */
 r.get('/market/quotes', async (req, res) => { session(req); const syms = String(req.query.get('symbols') || '').split(',').map((s) => s.trim().toUpperCase()).filter(Boolean).slice(0, 40); ok(res, { quotes: await market.quotes(syms), fx: await market.fx() }); });
 r.get('/market/history', async (req, res) => { session(req); const sym = String(req.query.get('symbol') || '').toUpperCase(); if (!sym) throw err(400, 'symbol required'); const h = await market.history(sym, Math.min(10, Number(req.query.get('years')) || 5)); if (!h) throw err(404, 'No history for ' + sym); ok(res, h); });
