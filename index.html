@@ -492,6 +492,8 @@ td.check-col,th.check-col{width:32px;padding-right:0;cursor:default}
 .mconv>summary::-webkit-details-marker{display:none}
 .mconv[open]>summary{background:var(--surface-2)}
 .mconv[open]>summary .faint.ellip{visibility:hidden}
+.mail-search{position:sticky;top:0;z-index:2;padding:8px;background:var(--surface);border-bottom:1px solid var(--line)}
+.mail-search .input{width:100%;height:32px}
 .matts{display:flex;flex-direction:column;gap:6px;padding:2px 14px 14px}
 .matt{display:flex;align-items:center;gap:8px;border:1px solid var(--line-2);background:var(--surface);padding:6px 8px;border-radius:6px}
 .matt .mi{flex-shrink:0;width:26px;height:30px;border:1px solid var(--line-2);display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:7.5px;color:var(--ink-3)}
@@ -1077,8 +1079,10 @@ const dealFolderName=d=>d?(d.practice||d.contact||d.email||('Deal '+d.id)):'{Cli
 const spFolderUrl=fs=>{const f=(fs||[]).find(x=>x&&x.url);if(!f)return'';try{const u=new URL(f.url);u.pathname=u.pathname.replace(/\/[^/]*$/,'');u.search='';u.hash='';return u.toString()}catch(_){return''}};
 // Render an untrusted HTML email safely: a sandboxed iframe (no scripts, no app access) with a
 // strict CSP. Links open in a new tab; remote images load but nothing can run code.
-function mailFrame(html){
-  const doc=`<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https: http: data: cid:; style-src 'unsafe-inline' https: http: data:; font-src https: data:; media-src https: data:"><base target="_blank"><style>html,body{margin:0}body{font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;color:#1a1a1a;background:#fff;padding:6px 8px;word-wrap:break-word;overflow-wrap:break-word}img{max-width:100%;height:auto}table{max-width:100%!important}</style>`+String(html||'');
+function mailFrame(html,blockRemote){
+  // blockRemote: only data:/cid: images load (inline logos stay, remote tracking pixels are blocked).
+  const imgSrc=blockRemote?'data: cid:':'https: http: data: cid:';
+  const doc=`<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${imgSrc}; style-src 'unsafe-inline' https: http: data:; font-src https: data:; media-src https: data:"><base target="_blank"><style>html,body{margin:0}body{font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;color:#1a1a1a;background:#fff;padding:6px 8px;word-wrap:break-word;overflow-wrap:break-word}img{max-width:100%;height:auto}table{max-width:100%!important}</style>`+String(html||'');
   return`<iframe class="mail-frame" sandbox="allow-popups allow-popups-to-escape-sandbox" srcdoc="${doc.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"></iframe>`;
 }
 const aud=n=>'A$'+Number(n||0).toLocaleString('en-AU');
@@ -1681,6 +1685,18 @@ async function openAttachment(acct,id,att,name,download){
     setTimeout(()=>URL.revokeObjectURL(url),60000);
   }catch(e){toast(e.message)}
 }
+// Inbox housekeeping on the open conversation: mark read, archive, or delete.
+function mailAct(action,acct){
+  const [oAcct,oConv]=(S.ui.mailConv||'').split('|');if(!oAcct||!oConv)return;
+  const convo=MAIL.convo[oAcct+'|'+oConv]||[];
+  const ids=action==='read'?(convo.filter(m=>!m.out).map(m=>m.id)):convo.map(m=>m.id);
+  if(!ids.length){toast('Nothing to do');return}
+  if(action==='delete'&&!confirm('Delete this conversation? It moves to Deleted Items in your mailbox.'))return;
+  api('mail/act',{body:{account:oAcct,ids,action}}).then(()=>{
+    if(action==='read'){const set=new Set(ids);MAIL.messages.forEach(m=>{if(set.has(m.id))m.read=true});convo.forEach(m=>{if(set.has(m.id))m.read=true});toast('Marked read');softRoute()}
+    else{const set=new Set(ids);MAIL.messages=MAIL.messages.filter(m=>!set.has(m.id));delete MAIL.convo[oAcct+'|'+oConv];S.ui.mailOpen=false;S.ui.mailConv='';toast(action==='archive'?'Archived':'Deleted');route();fetchMail(true)}
+  }).catch(e=>toast(e.message));
+}
 function vEmailReal(){
   const [oAcct,oConv]=(S.ui.mailConv||'').split('|');
   const convo=(oAcct&&oConv)?MAIL.convo[oAcct+'|'+oConv]:null;
@@ -1688,21 +1704,23 @@ function vEmailReal(){
   const acctChips=MAIL.accounts.map(a=>`<span class="chip chip-line">${esc(a.email)}</span>`).join(' ');
   const groups={};MAIL.messages.forEach(m=>{const c=m.conv||m.id;(groups[c]=groups[c]||[]).push(m)});
   const convs=Object.entries(groups).map(([c,msgs])=>{msgs.sort((a,b)=>(a.at||'').localeCompare(b.at||''));const l=msgs[msgs.length-1];return{conv:c,account:l.account,latest:l,count:msgs.length,unread:msgs.some(m=>!m.read)}}).sort((a,b)=>(b.latest.at||'').localeCompare(a.latest.at||''));
-  const list=convs.length?convs.map(cv=>{const m=cv.latest;const d=dealByEmail(m.from);return`<div class="thr ${cv.unread?'unread':''} ${oConv===cv.conv?'active':''}" data-mailconv="${esc(cv.account)}|${esc(cv.conv)}"><div class="l1"><span class="from ellip">${esc(m.fromName||m.from)}${cv.count>1?` <span class="faint">(${cv.count})</span>`:''}</span><span class="when">${fmtDT(m.at)}</span></div><div class="subj ellip">${esc(m.subject)}</div><div class="prev ellip">${esc((m.preview||'').replace(/\s+/g,' '))}</div><div class="deal"><span class="faint">${esc(m.account)}</span>${d?` · ${esc(d.practice)}`:''}</div></div>`}).join(''):`<div class="empty">${MAIL.loaded?'Inbox is empty':'Loading…'}</div>`;
+  const q=(S.ui.mailQ||'').toLowerCase().trim();
+  const shown=q?convs.filter(cv=>{const m=cv.latest;return (m.subject+' '+(m.fromName||'')+' '+m.from+' '+(m.preview||'')).toLowerCase().includes(q)}):convs;
+  const list=shown.length?shown.map(cv=>{const m=cv.latest;const d=dealByEmail(m.from);return`<div class="thr ${cv.unread?'unread':''} ${oConv===cv.conv?'active':''}" data-mailconv="${esc(cv.account)}|${esc(cv.conv)}"><div class="l1"><span class="from ellip">${esc(m.fromName||m.from)}${cv.count>1?` <span class="faint">(${cv.count})</span>`:''}</span><span class="when">${fmtDT(m.at)}</span></div><div class="subj ellip">${esc(m.subject)}</div><div class="prev ellip">${esc((m.preview||'').replace(/\s+/g,' '))}</div><div class="deal"><span class="faint">${esc(m.account)}</span>${d?` · ${esc(d.practice)}`:''}</div></div>`}).join(''):`<div class="empty">${!MAIL.loaded?'Loading…':q?'No matches':'Inbox is empty'}</div>`;
   let read='<div class="empty">Select a conversation</div>';
   if(openState){
     const latest=convo&&convo.length?convo[convo.length-1]:null;
     const subject=latest?latest.subject:'';
     const inbound=convo?([...convo].reverse().find(m=>!m.out)||latest):null;
     const d=dealByEmail(inbound?inbound.from:'');
-    const msgsHtml=convo?(convo.length?convo.map((m,i)=>`<details class="mconv"${i===convo.length-1?' open':''}><summary><span class="row" style="gap:8px;align-items:center;width:100%">${avatarHtml(m.out?S.me:'','sm')}<b style="font-weight:600">${esc(m.out?'You':(m.fromName||m.from))}</b>${m.out?'':`<span class="faint ellip" style="font-size:11px;max-width:180px">${esc(m.from)}</span>`}<span class="faint ellip" style="font-size:11px;flex:1">${esc((m.text||'').replace(/\s+/g,' ').slice(0,60))}</span><span class="when" style="font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3);flex-shrink:0">${fmtDT(m.at)}</span></span></summary>${m.html?mailFrame(m.html):`<div class="mb" style="padding:6px 14px 12px">${esc(m.text).replace(/\n/g,'<br>')}</div>`}${(m.attachments&&m.attachments.length)?`<div class="matts">${m.attachments.map(at=>`<span class="matt"><span class="mi">${esc((at.name.split('.').pop()||'').toUpperCase().slice(0,4))}</span><span class="mn ellip">${esc(at.name)}</span><span class="ms faint">${fmtBytes(at.size)}</span><span class="grow"></span><button class="btn btn-sm btn-quiet" data-mailatt="open" data-acct="${esc(oAcct)}" data-mid="${esc(m.id)}" data-att="${esc(at.attId)}" data-name="${esc(at.name)}">Open</button><button class="btn btn-sm btn-quiet" data-mailatt="download" data-acct="${esc(oAcct)}" data-mid="${esc(m.id)}" data-att="${esc(at.attId)}" data-name="${esc(at.name)}">Download</button>${d?`<button class="btn btn-sm btn-quiet" data-mailsave data-acct="${esc(oAcct)}" data-mid="${esc(m.id)}" data-att="${esc(at.attId)}" data-deal="${d.id}">Save to ${esc(d.practice)}</button>`:''}</span>`).join('')}</div>`:''}</details>`).join(''):'<div class="mb" style="padding:12px 14px"><span class="faint">No messages</span></div>'):'<div class="mb" style="padding:12px 14px"><span class="faint">Loading conversation…</span></div>';
-    read=`<div class="mr-head"><button class="btn btn-sm btn-quiet mail-back" id="mail-back" style="align-self:flex-start">‹ Back</button><h2>${esc(subject)}</h2><div class="row wrap" style="gap:8px"><span class="muted" style="font-size:12px">${convo?convo.length+' message'+(convo.length===1?'':'s'):''}</span>${d?`<a class="chip chip-teal" href="#/deal/${d.id}">${esc(d.practice)}</a>`:''}<span class="grow"></span>${latest&&latest.url?`<a class="btn btn-sm btn-quiet" href="${esc(latest.url)}" target="_blank" rel="noopener">Open in Outlook</a>`:''}</div><div class="faint" style="font-size:11px">${esc(oAcct)}</div></div>
+    const msgsHtml=convo?(convo.length?convo.map((m,i)=>`<details class="mconv"${i===convo.length-1?' open':''}><summary><span class="row" style="gap:8px;align-items:center;width:100%">${avatarHtml(m.out?S.me:'','sm')}<b style="font-weight:600">${esc(m.out?'You':(m.fromName||m.from))}</b>${m.out?'':`<span class="faint ellip" style="font-size:11px;max-width:180px">${esc(m.from)}</span>`}<span class="faint ellip" style="font-size:11px;flex:1">${esc((m.text||'').replace(/\s+/g,' ').slice(0,60))}</span><span class="when" style="font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3);flex-shrink:0">${fmtDT(m.at)}</span></span></summary>${m.html?mailFrame(m.html,S.ui.mailBlockRemote):`<div class="mb" style="padding:6px 14px 12px">${esc(m.text).replace(/\n/g,'<br>')}</div>`}${(m.attachments&&m.attachments.length)?`<div class="matts">${m.attachments.map(at=>`<span class="matt"><span class="mi">${esc((at.name.split('.').pop()||'').toUpperCase().slice(0,4))}</span><span class="mn ellip">${esc(at.name)}</span><span class="ms faint">${fmtBytes(at.size)}</span><span class="grow"></span><button class="btn btn-sm btn-quiet" data-mailatt="open" data-acct="${esc(oAcct)}" data-mid="${esc(m.id)}" data-att="${esc(at.attId)}" data-name="${esc(at.name)}">Open</button><button class="btn btn-sm btn-quiet" data-mailatt="download" data-acct="${esc(oAcct)}" data-mid="${esc(m.id)}" data-att="${esc(at.attId)}" data-name="${esc(at.name)}">Download</button>${d?`<button class="btn btn-sm btn-quiet" data-mailsave data-acct="${esc(oAcct)}" data-mid="${esc(m.id)}" data-att="${esc(at.attId)}" data-deal="${d.id}">Save to ${esc(d.practice)}</button>`:''}</span>`).join('')}</div>`:''}</details>`).join(''):'<div class="mb" style="padding:12px 14px"><span class="faint">No messages</span></div>'):'<div class="mb" style="padding:12px 14px"><span class="faint">Loading conversation…</span></div>';
+    read=`<div class="mr-head"><button class="btn btn-sm btn-quiet mail-back" id="mail-back" style="align-self:flex-start">‹ Back</button><h2>${esc(subject)}</h2><div class="row wrap" style="gap:8px"><span class="muted" style="font-size:12px">${convo?convo.length+' message'+(convo.length===1?'':'s'):''}</span>${d?`<a class="chip chip-teal" href="#/deal/${d.id}">${esc(d.practice)}</a>`:''}<span class="grow"></span><button class="btn btn-sm btn-quiet" data-mailact="read" data-acct="${esc(oAcct)}">Mark read</button><button class="btn btn-sm btn-quiet" data-mailimg>${S.ui.mailBlockRemote?'Show images':'Block images'}</button><button class="btn btn-sm btn-quiet" data-mailact="archive" data-acct="${esc(oAcct)}">Archive</button><button class="btn btn-sm btn-quiet" data-mailact="delete" data-acct="${esc(oAcct)}">Delete</button>${latest&&latest.url?`<a class="btn btn-sm btn-quiet" href="${esc(latest.url)}" target="_blank" rel="noopener">Open in Outlook</a>`:''}</div><div class="faint" style="font-size:11px">${esc(oAcct)}</div></div>
     ${msgsHtml}
     ${inbound?`<form class="reply" id="mail-reply" data-acct="${esc(oAcct)}" data-id="${esc(inbound.id)}" data-to="${esc(inbound.from)}" data-subject="${esc(subject)}"><textarea class="textarea" name="body" placeholder="Reply to ${esc(inbound.fromName||inbound.from)}…" style="min-height:80px"></textarea><div class="row"><button class="btn btn-primary btn-sm" type="submit">Send reply</button><button class="btn btn-sm btn-quiet" type="button" id="mail-ai" data-acct="${esc(oAcct)}" data-id="${esc(inbound.id)}">Draft with Claude</button><span class="faint grow" style="font-size:11px;text-align:right">Sends from ${esc(oAcct)}${d?' · logged to '+esc(d.practice):''}</span></div></form>`:''}`;
   }
   return`<div class="page" style="gap:12px"><div class="page-head"><div><h1>Email</h1><div class="sub">Your connected ${MAIL.accounts.length>1?'mailboxes':'mailbox'}: ${acctChips} · <a href="#/settings/email">manage</a></div></div><button class="btn btn-primary" data-mailcompose>Compose</button></div>
   <div class="mail ${openState?'open':''}">
-    <div class="mail-list">${list}</div>
+    <div class="mail-list"><div class="mail-search"><input class="input" id="mail-q" placeholder="Search inbox…" value="${esc(S.ui.mailQ||'')}" autocomplete="off"></div>${list}</div>
     <div class="mail-read">${read}</div>
   </div>${MAIL.errors&&MAIL.errors.length?`<div class="err" style="font-size:11px">${esc(MAIL.errors.join('; '))}</div>`:''}</div>`;
 }
@@ -2498,6 +2516,8 @@ function bindView(r){
     if(x=el('#mail-ai')){const bb=x;bb.disabled=true;bb.textContent='Drafting…';api('mail/draft',{body:{account:bb.dataset.acct,id:bb.dataset.id}}).then(r=>{const ta=$('#mail-reply [name=body]');if(ta)ta.value=r.draft||''}).catch(err=>toast(err.message)).finally(()=>{bb.disabled=false;bb.textContent='Draft with Claude'});return}
     if(x=el('[data-mailatt]')){openAttachment(x.dataset.acct,x.dataset.mid,x.dataset.att,x.dataset.name,x.dataset.mailatt==='download');return}
     if(x=el('[data-mailsave]')){const b=x,o=b.textContent;b.disabled=true;b.textContent='Saving…';api('mail/attachment/save',{body:{account:b.dataset.acct,id:b.dataset.mid,att:b.dataset.att,deal:+b.dataset.deal}}).then(r=>{toast('Saved to '+r.folder);pullSync()}).catch(err=>toast(err.message)).finally(()=>{b.disabled=false;b.textContent=o});return}
+    if(x=el('[data-mailact]')){mailAct(x.dataset.mailact,x.dataset.acct);return}
+    if(x=el('[data-mailimg]')){S.ui.mailBlockRemote=!S.ui.mailBlockRemote;route();return}
     if(x=el('[data-mailcompose]')){openMailCompose();return}
     if(x=el('[data-archive]')){const th=S.threads.find(q=>q.id===+x.dataset.archive);th.folder='archive';toast('Archived');route();return}
     if(x=el('[data-filedeal]')){S.ui.fileDeal=+x.dataset.filedeal;route();return}
@@ -2560,6 +2580,7 @@ function bindView(r){
   c.oninput=e=>{const t=e.target;
     if(t.id==='sec-q'){S.ui.secQ=t.value;clearTimeout(c._t2);c._t2=setTimeout(()=>{route();const i=$('#sec-q');if(i){i.focus();i.setSelectionRange(99,99)}},250);return}
     if(t.dataset.invf!==undefined||t.dataset.invc!==undefined||t.dataset.li!==undefined){const inv=curInv();if(!inv)return;if(t.dataset.invf!==undefined)inv[t.dataset.invf]=t.value;if(t.dataset.invc!==undefined)inv.client[t.dataset.invc]=t.value;if(t.dataset.li!==undefined){const li=inv.items[+t.dataset.li];if(li)li[t.dataset.k]=t.dataset.k==='desc'?t.value:+t.value||0}refreshInv(inv);return}
+    if(t.id==='mail-q'){S.ui.mailQ=t.value;clearTimeout(c._tm);c._tm=setTimeout(()=>{route();const i=$('#mail-q');if(i){i.focus();i.setSelectionRange(99,99)}},220);return}
     if(e.target.id==='f-q'){S.ui.q=e.target.value;clearTimeout(c._t);c._t=setTimeout(()=>{route();const i=$('#f-q');if(i){i.focus();i.setSelectionRange(99,99)}},250)}};
   c.onsubmit=e=>{if(e.target.id==='chat-form'){e.preventDefault();sendChat(e.target);return}
     if(e.target.id==='pw-form'){e.preventDefault();const f=e.target;api('auth/password',{body:{current:f.current.value,password:f.password.value}}).then(()=>{toast('Password updated');f.reset();loadSecurityPanels()}).catch(err=>toast(err.message));return}
