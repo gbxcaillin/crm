@@ -43,20 +43,29 @@ function unsubscribe(token) {
   return s;
 }
 
-// Send a bulk email to everyone currently subscribed (optionally filtered to one tag).
-// {{name}} in the body is personalised; a per-recipient unsubscribe link is appended.
-async function sendBulk({ subject, html, tag }, by = 'system') {
+// Send a bulk email to subscribed recipients. Audience is one of: an explicit `emails` batch
+// (per-person selection), a `tag`, or everyone subscribed. {{name}} is personalised and a
+// per-recipient unsubscribe link is added. `prepared` = the html is a complete newsletter and
+// is sent as-is (unsubscribe appended); otherwise it is wrapped in the branded app layout.
+async function sendBulk({ subject, html, tag, emails, prepared }, by = 'system') {
   if (!mail.enabled()) return { error: 'Email is not configured on the server (set SMTP_* or MAIL_MODE=graph)' };
   if (!String(subject || '').trim() || !String(html || '').trim()) return { error: 'Subject and body are required' };
   let list = D.listCol('subscribers').filter((s) => s.status === 'subscribed');
-  if (tag) list = list.filter((s) => (s.tags || []).includes(tag));
+  if (Array.isArray(emails) && emails.length) { const set = new Set(emails.map(normEmail)); list = list.filter((s) => set.has(s.email)); }
+  else if (tag) list = list.filter((s) => (s.tags || []).includes(tag));
   let sent = 0, failed = 0;
   for (const s of list) {
     if (!s.token) { s.token = newToken(); D.putRecord('subscribers', s, by); }
     const unsub = `${mail.BASE}/api/v1/unsubscribe/${s.token}`;
-    const body = String(html).replace(/\{\{\s*name\s*\}\}/g, mail.esc((s.name || '').split(' ')[0] || 'there'));
-    const footer = `GBX Professional Services &middot; You are receiving this because you subscribed at gbxps.com. <a href="${unsub}" style="color:#8E8B83">Unsubscribe</a>.`;
-    const okSent = await mail.send({ to: s.email, subject, title: '', html: body, footer, kind: 'campaign' });
+    const personalised = String(html).replace(/\{\{\s*name\s*\}\}/g, mail.esc((s.name || '').split(' ')[0] || 'there'));
+    let okSent;
+    if (prepared) {
+      const withFooter = personalised + `<p style="margin-top:22px;font-size:11px;color:#8E8B83;font-family:Helvetica,Arial,sans-serif">You are receiving this because you subscribed at gbxps.com. <a href="${unsub}" style="color:#8E8B83">Unsubscribe</a>.</p>`;
+      okSent = await mail.send({ to: s.email, subject, html: withFooter, raw: true, kind: 'campaign' });
+    } else {
+      const footer = `GBX Professional Services &middot; You are receiving this because you subscribed at gbxps.com. <a href="${unsub}" style="color:#8E8B83">Unsubscribe</a>.`;
+      okSent = await mail.send({ to: s.email, subject, title: '', html: personalised, footer, kind: 'campaign' });
+    }
     if (okSent) sent++; else failed++;
     await new Promise((r) => setTimeout(r, 250)); // ~4/sec, comfortably under M365 limits
   }
