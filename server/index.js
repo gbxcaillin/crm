@@ -24,7 +24,7 @@ if (vault.enabled()) { const n = D.resealAll(false); if (n) console.log(`[vault]
 else if (process.env.NODE_ENV === 'production' && process.env.ALLOW_UNENCRYPTED !== '1') { console.error('[vault] DATA_KEYS is not set. Generate one with: node server/tools/keygen.js  (or set ALLOW_UNENCRYPTED=1 to run without encryption at rest)'); process.exit(1); }
 else console.warn('[vault] WARNING: running without encryption at rest');
 
-const CSP = ["default-src 'self'", "script-src 'self' 'unsafe-inline'", "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", "font-src 'self' https://fonts.gstatic.com data:", "img-src 'self' data: https://*.sharepoint.com", "connect-src 'self'", "frame-ancestors 'none'", "object-src 'none'", "base-uri 'self'", "form-action 'self' https://login.microsoftonline.com", "upgrade-insecure-requests"].join('; ');
+const CSP = ["default-src 'self'", "script-src 'self' 'unsafe-inline'", "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", "font-src 'self' https://fonts.gstatic.com data:", "img-src 'self' data: https:", "connect-src 'self'", "frame-ancestors 'none'", "object-src 'none'", "base-uri 'self'", "form-action 'self' https://login.microsoftonline.com", "upgrade-insecure-requests"].join('; ');
 const SEC_HEADERS = { 'content-security-policy': CSP, 'x-content-type-options': 'nosniff', 'x-frame-options': 'DENY', 'referrer-policy': 'no-referrer', 'permissions-policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=()', 'cross-origin-opener-policy': 'same-origin', 'cross-origin-resource-policy': 'same-origin' };
 if (process.env.NODE_ENV === 'production') SEC_HEADERS['strict-transport-security'] = 'max-age=31536000; includeSubDomains';
 
