@@ -1692,7 +1692,7 @@ function vSettings(sec){
       <div class="field"><span class="label">Payment terms (days)</span><input class="input mono" type="number" data-ivs="terms" value="${iv.terms}"></div><div class="field"><span class="label">GST rate (%)</span><input class="input mono" type="number" data-ivs="gst" value="${iv.gst}"></div>
       <div class="field span2"><span class="label">Bank details</span><input class="input" data-ivs="bank" value="${esc(iv.bank)}"></div>
       <div class="field span2"><span class="label">Footer note</span><input class="input" data-ivs="footer" value="${esc(iv.footer)}"></div>
-      <div class="field span2"><span class="label">PDF copies</span><label class="check"><input type="checkbox" checked disabled> Save every sent invoice to the client's SharePoint folder under <span class="mono">/Invoices</span></label></div>
+      <div class="field span2"><span class="label">PDF copies</span><label class="check"><input type="checkbox" checked disabled> Drafts and sent invoices save as a PDF into the SharePoint <span class="mono">Invoices</span> folder for review, then send from the invoice or download and email manually</label></div>
       <div class="span2 row"><button class="btn btn-sm" id="invs-save">Save</button><span class="faint" style="font-size:11px">Accounting export (Xero / MYOB CSV) can be added later without changing the invoice format.</span></div>
     </div></div>`,
     profile:`<div class="stack" style="gap:14px"><div class="card"><div class="card-head"><h3>My profile</h3><span class="chip chip-line">${esc(me.role)}</span></div><div class="card-body form-grid"><div class="field"><span class="label">Name</span><input class="input" id="pf-name" value="${esc(me.name)}"></div><div class="field"><span class="label">Work email</span><input class="input" value="${esc(me.email)}" readonly></div><div class="field span2"><span class="label">Focus</span><input class="input" id="pf-focus" value="${esc(me.focus)}"></div><div class="span2"><button class="btn btn-sm" id="pf-save">Save</button></div></div></div>
@@ -1864,7 +1864,7 @@ function vInvoice(id){
   const st=S.settings.invoice;const c=calcInvoice(inv);const locked=inv.status==='Paid';
   const dis=locked?'disabled':'';
   return`<div class="page"><div class="page-head"><div><h1>${esc(inv.number)}</h1><div class="sub" id="inv-sub">${invChip(inv)} <span style="margin-left:6px">${esc(inv.client.name||'No client yet')}</span> · <span class="mono">${money(c.total)}</span> inc GST</div></div>
-    <div class="toolbar"><button class="btn btn-quiet" id="inv-print">Print / PDF</button><button class="btn btn-quiet" id="inv-pdf">Save to SharePoint</button>${inv.status==='Draft'?`<button class="btn btn-primary" id="inv-send">Email to client</button>`:inv.status==='Paid'?`<span class="chip chip-teal" style="height:32px;padding:0 12px">Paid ${fmtDate(inv.paidAt)}</span>`:`<button class="btn btn-quiet" id="inv-send">Resend</button><button class="btn btn-primary" id="inv-paid">Record payment</button>`}<button class="btn btn-icon" id="inv-del" title="Delete invoice">✕</button></div></div>
+    <div class="toolbar"><button class="btn btn-quiet" id="inv-print">Print / PDF</button><button class="btn btn-quiet" id="inv-pdf">Save draft to SharePoint</button>${inv.spUrl?`<a class="btn btn-quiet" href="${esc(inv.spUrl)}" target="_blank" rel="noopener">Open in SharePoint</a>`:''}${inv.status==='Draft'?`<button class="btn btn-primary" id="inv-send">Email to client</button>`:inv.status==='Paid'?`<span class="chip chip-teal" style="height:32px;padding:0 12px">Paid ${fmtDate(inv.paidAt)}</span>`:`<button class="btn btn-quiet" id="inv-send">Resend</button><button class="btn btn-primary" id="inv-paid">Record payment</button>`}<button class="btn btn-icon" id="inv-del" title="Delete invoice">✕</button></div></div>
   <div class="inv-grid">
     <div class="card inv-form"><div class="card-body" style="display:flex;flex-direction:column;gap:16px">
       <div class="form-grid">
@@ -2219,6 +2219,32 @@ function openBulkCompose(){
     try{const r=await api('subscribers/bulk',{method:'POST',body:{subject,html,tag:tag||undefined}});closeModal();toast(`Sent to ${r.sent} of ${r.total}${r.failed?` · ${r.failed} failed`:''}`);pullSync()}
     catch(err){toast(err.message);b.disabled=false;b.textContent='Send to list'}};
 }
+// Wait until all local changes have been pushed to the server, so a record the server is
+// about to act on (e.g. a freshly drafted invoice) actually exists there. Returns false if
+// it could not settle in time.
+async function ensureSynced(){
+  if(!isServer())return true;
+  for(let i=0;i<25;i++){const{ops,kv}=diffOps();if(!ops.length&&!Object.keys(kv).length)return true;if(!NET.busy)await flushSync();else await new Promise(r=>setTimeout(r,100))}
+  const{ops,kv}=diffOps();return !ops.length&&!Object.keys(kv).length;
+}
+async function saveInvoiceToSp(){
+  const inv=curInv();if(!inv)return;
+  if(!isServer()){S.files.unshift({id:nextId(S.files),deal:inv.deal,name:inv.number+'.pdf',size:'96 KB',by:S.me,at:today(),kind:'PDF'});toast(`(Preview) ${inv.number}.pdf → Invoices`);return}
+  if(!NET.features.sharepoint){toast('SharePoint is not connected on the server yet');return}
+  toast('Saving draft to SharePoint…');
+  try{if(!await ensureSynced()){toast('Still syncing — try again in a moment');return}const r=await api(`invoices/${inv.id}/pdf`,{method:'POST'});await pullSync();toast('Draft saved to '+r.folder);route()}
+  catch(err){toast(err.message)}
+}
+async function sendInvoice(){
+  const inv=curInv();if(!inv)return;
+  if(!inv.client.name||!inv.client.email){toast('Add a client name and email first');return}
+  if(!isServer()){const c=calcInvoice(inv);inv.status='Sent';toast(`(Preview) emailed ${inv.number} to ${inv.client.email}`);save();route();return}
+  if(!NET.features.mail){toast('Email is not configured on the server yet');return}
+  if(!confirm(`Email invoice ${inv.number} to ${inv.client.email}?`))return;
+  toast('Sending invoice…');
+  try{if(!await ensureSynced()){toast('Still syncing — try again in a moment');return}const r=await api(`invoices/${inv.id}/send`,{method:'POST'});await pullSync();toast(`Emailed ${inv.number} to ${inv.client.email}`);route()}
+  catch(err){toast(err.message)}
+}
 async function reconcileFolder(dealId){
   if(!isServer()){toast('SharePoint runs on the server — reconcile is available in the live app');return}
   if(!NET.features.sharepoint){toast('SharePoint is not connected on the server yet');return}
@@ -2285,8 +2311,8 @@ function bindView(r){
     if(x=el('#li-add')){curInv().items.push({desc:'',qty:1,unit:0});route();return}
     if(x=el('[data-li-del]')){const inv=curInv();inv.items.splice(+x.dataset.liDel,1);if(!inv.items.length)inv.items.push({desc:'',qty:1,unit:0});route();return}
     if(x=el('#inv-print')){window.print();return}
-    if(x=el('#inv-pdf')){const inv=curInv();S.files.unshift({id:nextId(S.files),deal:inv.deal,name:inv.number+'.pdf',size:'96 KB',by:S.me,at:today(),kind:'PDF'});if(inv.deal)logAct(inv.deal,'file','Invoice saved to SharePoint',inv.number+'.pdf');save();toast(`Saved ${inv.number}.pdf to ${inv.client.name||'client'}/Invoices`);return}
-    if(x=el('#inv-send')){const inv=curInv();if(!inv.client.name||!inv.client.email){toast('Add a client name and email first');return}const c=calcInvoice(inv);inv.status='Sent';S.files.unshift({id:nextId(S.files),deal:inv.deal,name:inv.number+'.pdf',size:'96 KB',by:S.me,at:today(),kind:'PDF'});S.threads.unshift({id:nextId(S.threads),deal:inv.deal,folder:'sent',from:inv.client.contact||inv.client.name,addr:inv.client.email,subject:`${inv.number} — Tax invoice from GBX Professional Services (${money(c.total)})`,unread:false,at:now(),msgs:[{from:user(S.me).name,out:true,at:now(),body:`Hi ${(inv.client.contact||'there').split(' ')[0]},\n\nPlease find attached tax invoice ${inv.number} for ${money(c.total)} inc GST, due ${fmtDate(inv.due)}.\n\nPayment details are on the invoice. Let us know if you need anything changed.\n\n${user(S.me).name}\nGBX Professional Services\n\n📎 ${inv.number}.pdf`}]});if(inv.deal)logAct(inv.deal,'email',`Invoice ${inv.number} sent`,money(c.total)+' inc GST · due '+fmtDate(inv.due));save();toast(`Emailed ${inv.number} to ${inv.client.email}`);route();return}
+    if(x=el('#inv-pdf')){saveInvoiceToSp();return}
+    if(x=el('#inv-send')){sendInvoice();return}
     if(x=el('#inv-paid')){const inv=curInv();inv.status='Paid';inv.paidAt=today();if(inv.deal)logAct(inv.deal,'note',`Invoice ${inv.number} paid`,money(calcInvoice(inv).total));save();toast('Payment recorded');route();return}
     if(x=el('#inv-del')){const inv=curInv();if(confirm(`Delete ${inv.number}?`)){S.invoices=S.invoices.filter(q=>q.id!==inv.id);location.hash='#/invoices'}return}
     if(x=el('#invs-save')){$$('[data-ivs]').forEach(i=>{const k=i.dataset.ivs;S.settings.invoice[k]=['next','terms','gst'].includes(k)?+i.value:i.value});save();toast('Invoicing settings saved');return}

@@ -10,6 +10,7 @@ const market = require('../lib/market');
 const jobs = require('../lib/jobs');
 const leads = require('../lib/leads');
 const mailing = require('../lib/mailing');
+const pdf = require('../lib/pdf');
 const bookings = require('../lib/bookings');
 const cloudflare = require('../lib/cloudflare');
 const claude = require('../lib/claude');
@@ -492,6 +493,48 @@ r.get('/unsubscribe/:token', (req, res) => {
   const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Unsubscribe · GBX</title></head><body style="margin:0;background:#F6F3EC;font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#1A1A1A"><div style="max-width:460px;margin:14vh auto;background:#FFFDF8;border:1px solid #E4DFD3;padding:34px 28px;text-align:center"><span style="display:inline-block;border:1.5px solid #1A1A1A;padding:3px 7px;font-weight:700;letter-spacing:.08em;font-size:12px">GBX</span><h1 style="font-weight:400;font-size:23px;margin:18px 0 10px;font-family:Georgia,serif">${heading}</h1><p style="font-size:14px;line-height:1.6;color:#5A5852;margin:0">${msg}</p></div></body></html>`;
   res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
   res.end(html);
+});
+
+/* ---------- invoices: PDF to SharePoint + send ---------- */
+// Mirrors calcInvoice() in wireframe.html so the server computes the same totals.
+function calcInvoice(inv, s = {}) {
+  const rate = (s.gst || 10) / 100;
+  const lines = (inv.items || []).map((li) => ({ ...li, total: (+li.qty || 0) * (+li.unit || 0) }));
+  const sumv = lines.reduce((a, l) => a + l.total, 0);
+  let sub, gst, total;
+  if (inv.mode === 'gross') { total = sumv; sub = sumv / (1 + rate); gst = total - sub; } else { sub = sumv; gst = sumv * rate; total = sumv + gst; }
+  return { lines, sub, gst, total, rate };
+}
+const invMoney = (n) => 'A$' + (Math.round((+n || 0) * 100) / 100).toLocaleString('en-AU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function invPdfName(inv) { return `${graph.safe(inv.number)} - ${graph.safe((inv.client && inv.client.name) || 'Client')}.pdf`; }
+
+// Save the invoice as a PDF draft into the SharePoint Invoices folder for review.
+r.post('/invoices/:id/pdf', async (req, res) => {
+  const u = session(req); if (!graph.enabled()) throw err(503, 'SharePoint is not configured on the server');
+  const inv = D.getRecord('invoices', req.params.id); if (!inv) throw err(404, 'No such invoice');
+  const s = (D.kvGet('settings') || {}).invoice || {};
+  const buf = pdf.invoicePdf(inv, calcInvoice(inv, s), s);
+  const item = await graph.upload(graph.SP_INVOICE_FOLDER, invPdfName(inv), buf);
+  inv.spId = item.id; inv.spUrl = item.webUrl; inv.pdfAt = D.nowIso();
+  D.putRecord('invoices', inv, u.id);
+  ok(res, { url: item.webUrl, name: item.name, folder: `${graph.SP_LIBRARY}/${graph.SP_INVOICE_FOLDER}` });
+});
+// Email the invoice PDF to the client and mark it sent. Refreshes the SharePoint copy too.
+r.post('/invoices/:id/send', async (req, res) => {
+  const u = session(req); const inv = D.getRecord('invoices', req.params.id); if (!inv) throw err(404, 'No such invoice');
+  if (!inv.client || !inv.client.email) throw err(400, 'Add a client email to the invoice first');
+  if (!mail.enabled()) throw err(503, 'Email is not configured on the server');
+  const s = (D.kvGet('settings') || {}).invoice || {};
+  const calc = calcInvoice(inv, s);
+  const buf = pdf.invoicePdf({ ...inv, status: 'Sent' }, calc, s);
+  if (graph.enabled()) { try { const item = await graph.upload(graph.SP_INVOICE_FOLDER, invPdfName(inv), buf); inv.spId = item.id; inv.spUrl = item.webUrl; } catch (e) { console.error('[invoice] SharePoint save failed:', e.message); } }
+  const first = mail.esc(String(inv.client.contact || 'there').split(' ')[0]);
+  const html = `<p>Hi ${first},</p><p>Please find attached tax invoice <b>${mail.esc(inv.number)}</b> for <b>${invMoney(calc.total)}</b> inc GST, due <b>${mail.esc(String(inv.due))}</b>.</p>${s.bank ? `<p>Payment details: ${mail.esc(s.bank)}</p>` : ''}<p>Please reply if you need anything changed.</p><p>${mail.esc((D.users.get(u.id) || {}).name || 'GBX Professional Services')}<br>GBX Professional Services</p>`;
+  const sent = await mail.send({ to: inv.client.email, subject: `${inv.number} — Tax invoice from GBX Professional Services`, title: 'Tax invoice ' + inv.number, html, attachments: [{ filename: `${graph.safe(inv.number)}.pdf`, content: buf, contentType: 'application/pdf' }], footer: s.footer ? mail.esc(s.footer) : undefined, kind: 'invoice' });
+  if (!sent) throw err(502, 'The email could not be sent (check server mail settings)');
+  inv.status = 'Sent'; inv.sentAt = D.nowIso(); D.putRecord('invoices', inv, u.id);
+  audit(req, u.id, 'invoice.send', inv.number, inv.client.email);
+  ok(res, { sent: true, url: inv.spUrl || '' });
 });
 
 /* ---------- market data ---------- */
