@@ -75,12 +75,25 @@ function htmlToText(h) {
     .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
     .replace(/\n[ \t]+/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
 }
-// One message with its full (plain-text) body.
+// One message with its full body. Inline (cid:) images that arrive as attachments are
+// embedded as data: URIs so they render like Outlook; remote https images load as-is.
+async function inlineCidImages(tok, id, html) {
+  if (!/src\s*=\s*["']cid:/i.test(html)) return html;
+  let at; try { at = await gget(tok, `/me/messages/${encodeURIComponent(id)}/attachments?$select=name,contentType,contentId,isInline,contentBytes,size`); } catch (_) { return html; }
+  for (const a of (at.value || [])) {
+    if (!a.contentBytes || !/^image\//i.test(a.contentType || '') || (a.size && a.size > 6 * 1024 * 1024)) continue;
+    const cid = String(a.contentId || '').replace(/^<|>$/g, ''); if (!cid) continue;
+    const uri = `data:${a.contentType};base64,${a.contentBytes}`;
+    html = html.replace(new RegExp('cid:' + cid.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), uri);
+  }
+  return html;
+}
 async function message(uid, email, id) {
   const tok = await accessToken(uid, email);
-  const m = await gget(tok, `/me/messages/${encodeURIComponent(id)}?$select=id,conversationId,subject,from,toRecipients,receivedDateTime,body,webLink`);
+  const m = await gget(tok, `/me/messages/${encodeURIComponent(id)}?$select=id,conversationId,subject,from,toRecipients,receivedDateTime,body,webLink,hasAttachments`);
   const html = m.body && m.body.contentType === 'html';
-  const raw = m.body ? m.body.content : '';
+  let raw = m.body ? m.body.content : '';
+  if (html && m.hasAttachments) raw = await inlineCidImages(tok, id, raw);
   return { id: m.id, conv: m.conversationId, subject: m.subject || '(no subject)', from: (m.from && m.from.emailAddress && m.from.emailAddress.address) || '', fromName: (m.from && m.from.emailAddress && m.from.emailAddress.name) || '', at: m.receivedDateTime, text: html ? htmlToText(raw) : raw, html: html ? raw : '', url: m.webLink, account: email };
 }
 // Send from a connected mailbox (new message, or a reply when replyTo message id is given).
