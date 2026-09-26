@@ -399,7 +399,7 @@ r.post('/hooks/meta', async (req, res) => {
 });
 r.post('/hooks/lead', async (req, res) => { const a = actor(req, 'deals:write'); const b = await readJson(req); const out = await leads.createLead(b, { source: b.source || 'website', campaign: b.campaign || '', via: 'hook:' + a.name }); if (out.error) throw err(400, out.error); if (out.duplicate) return send(res, 409, { duplicate: out.duplicate }); send(res, 201, { ok: true, id: out.deal.id }); });
 // Mailing-list signup from the website. Adds/re-subscribes immediately; idempotent on email.
-r.post('/hooks/subscribe', async (req, res) => { const a = actor(req, 'subscribers:write'); const b = await readJson(req); const out = mailing.add({ email: b.email, name: b.name || '', source: b.source || 'website', tags: b.tags }, 'hook:' + a.name); if (out.error) throw err(400, out.error); send(res, out.created ? 201 : 200, { ok: true, id: out.subscriber.id, created: out.created, resubscribed: !!out.resubscribed }); });
+r.post('/hooks/subscribe', async (req, res) => { const a = actor(req, 'subscribers:write'); const b = await readJson(req); const out = await mailing.add({ email: b.email, name: b.name || '', source: b.source || 'website', tags: b.tags }, 'hook:' + a.name, { confirm: true }); if (out.error) throw err(400, out.error); send(res, out.created ? 201 : 200, { ok: true, id: out.subscriber.id, created: out.created, resubscribed: !!out.resubscribed, pending: !!out.pending }); });
 
 /* ---------- SharePoint files ---------- */
 // The client folder is named after the deal's client/lead. Fall back through practice ->
@@ -486,14 +486,52 @@ r.post('/subscribers/bulk', async (req, res) => {
   audit(req, me.id, 'mailing.bulk', `${out.sent}/${out.total} sent`, String(b.subject || '').slice(0, 80));
   ok(res, out);
 });
-// Public one-click unsubscribe from an email link (no auth, no CSRF - it is a GET).
-r.get('/unsubscribe/:token', (req, res) => {
-  const s = mailing.unsubscribe(req.params.token);
-  const heading = s ? 'Unsubscribed' : 'Link not valid';
-  const msg = s ? `${mail.esc(s.email)} has been removed and will no longer receive our emails.` : 'This unsubscribe link is not valid or has already been used.';
-  const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Unsubscribe · GBX</title></head><body style="margin:0;background:#F6F3EC;font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#1A1A1A"><div style="max-width:460px;margin:14vh auto;background:#FFFDF8;border:1px solid #E4DFD3;padding:34px 28px;text-align:center"><span style="display:inline-block;border:1.5px solid #1A1A1A;padding:3px 7px;font-weight:700;letter-spacing:.08em;font-size:12px">GBX</span><h1 style="font-weight:400;font-size:23px;margin:18px 0 10px;font-family:Georgia,serif">${heading}</h1><p style="font-size:14px;line-height:1.6;color:#5A5852;margin:0">${msg}</p></div></body></html>`;
+// Small public page for the confirm / unsubscribe links (no app chrome, no auth).
+function publicPage(res, heading, msg) {
+  const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${mail.esc(heading)} · GBX</title></head><body style="margin:0;background:#F6F3EC;font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#1A1A1A"><div style="max-width:460px;margin:14vh auto;background:#FFFDF8;border:1px solid #E4DFD3;padding:34px 28px;text-align:center"><span style="display:inline-block;border:1.5px solid #1A1A1A;padding:3px 7px;font-weight:700;letter-spacing:.08em;font-size:12px">GBX</span><h1 style="font-weight:400;font-size:23px;margin:18px 0 10px;font-family:Georgia,serif">${mail.esc(heading)}</h1><p style="font-size:14px;line-height:1.6;color:#5A5852;margin:0">${msg}</p></div></body></html>`;
   res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
   res.end(html);
+}
+// Double opt-in confirmation from the emailed link (public GET).
+r.get('/subscribe/confirm/:token', (req, res) => {
+  const s = mailing.confirm(req.params.token);
+  if (s) D.audit('system', auth.clientIp(req), 'mailing.confirm', s.email, '');
+  publicPage(res, s ? 'You are subscribed' : 'Link not valid', s ? `${mail.esc(s.email)} is confirmed. You will hear from us occasionally, and you can unsubscribe from any email.` : 'This confirmation link is not valid. Please sign up again at gbxps.com.');
+});
+// Public unsubscribe from an email link (GET), plus RFC 8058 one-click (POST from Gmail/Yahoo/
+// Outlook's unsubscribe button, body "List-Unsubscribe=One-Click"). Neither needs auth or CSRF.
+function doUnsub(req) { const s = mailing.unsubscribe(req.params.token); if (s) D.audit('system', auth.clientIp(req), 'mailing.unsubscribe', s.email, req.method); return s; }
+r.get('/unsubscribe/:token', (req, res) => {
+  const s = doUnsub(req);
+  publicPage(res, s ? 'Unsubscribed' : 'Link not valid', s ? `${mail.esc(s.email)} has been removed and will no longer receive our emails.` : 'This unsubscribe link is not valid or has already been used.');
+});
+r.post('/unsubscribe/:token', async (req, res) => { await readBody(req, 4096).catch(() => null); doUnsub(req); ok(res); });
+// Provider webhook for bounces and spam complaints (Resend or Postmark payloads). The URL
+// carries a shared secret (MAIL_WEBHOOK_SECRET); hard bounces and complaints suppress the
+// address so it is never mailed again.
+r.post('/hooks/mail-events/:secret', async (req, res) => {
+  const want = process.env.MAIL_WEBHOOK_SECRET || '';
+  const got = String(req.params.secret || '');
+  const crypto = require('node:crypto');
+  if (!want || want.length !== got.length || !crypto.timingSafeEqual(Buffer.from(want), Buffer.from(got))) throw err(401, 'Bad webhook secret');
+  const b = await readJson(req);
+  const events = Array.isArray(b) ? b : [b];
+  let suppressed = 0;
+  for (const e of events) {
+    let email = '', reason = '', detail = '';
+    if (e.RecordType) { // Postmark
+      if (e.RecordType === 'SpamComplaint') { reason = 'complaint'; email = e.Email; detail = 'spam complaint'; }
+      else if (e.RecordType === 'Bounce' && (e.Type === 'HardBounce' || e.Inactive)) { reason = 'bounce'; email = e.Email; detail = e.Type || 'hard bounce'; }
+    } else if (e.type && e.data) { // Resend
+      const to = Array.isArray(e.data.to) ? e.data.to[0] : e.data.to;
+      if (e.type === 'email.complained') { reason = 'complaint'; email = to; detail = 'spam complaint'; }
+      else if (e.type === 'email.bounced' && /permanent|hard/i.test((e.data.bounce && (e.data.bounce.type || e.data.bounce.subType)) || 'permanent')) { reason = 'bounce'; email = to; detail = (e.data.bounce && e.data.bounce.message) || 'hard bounce'; }
+    }
+    if (!reason || !email) continue;
+    const s = mailing.suppress(email, reason, detail);
+    if (s) { suppressed++; D.audit('system', auth.clientIp(req), 'mailing.' + reason, s.email, detail.slice(0, 120)); }
+  }
+  ok(res, { received: events.length, suppressed });
 });
 
 /* ---------- invoices: PDF to SharePoint + send ---------- */
