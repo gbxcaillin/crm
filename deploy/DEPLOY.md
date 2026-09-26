@@ -147,12 +147,12 @@ unsubscribe link (`/api/v1/unsubscribe/<token>`, public) plus one-click
 and Outlook. Sending goes through the campaign identity (`MAIL_CAMPAIGN_FROM`),
 one message per recipient, rate-limited to ~4/second.
 
-Website signups are **double opt-in** by default: the address lands as
-*pending*, gets a confirmation email, and only becomes *subscribed* once the
-link (`/api/v1/subscribe/confirm/<token>`) is clicked. Set
-`MAILING_DOUBLE_OPTIN=0` to subscribe immediately instead. People you add by
-hand in the CRM (existing clients who have consented) are subscribed straight
-away.
+Website signups are **single-click** by default: the address is subscribed
+immediately and the site sends its welcome email. Set `MAILING_DOUBLE_OPTIN=1`
+to require confirmation instead: the address then lands as *pending*, gets a
+confirmation email, and only becomes *subscribed* once the link
+(`/api/v1/subscribe/confirm/<token>`) is clicked. People you add by hand in
+the CRM are always subscribed straight away.
 
 ## Email deliverability (newsletters and nurture without landing in junk)
 
