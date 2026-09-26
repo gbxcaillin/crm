@@ -128,6 +128,27 @@ async function conversation(uid, email, convId, top = 25) {
   }
   return out;
 }
+// Graph call with an optional JSON body, for message housekeeping (returns {} on 204).
+async function gsend(tok, method, path, body) {
+  const r = await fetch('https://graph.microsoft.com/v1.0' + path, { method, headers: { authorization: 'Bearer ' + tok, ...(body ? { 'content-type': 'application/json' } : {}) }, body: body ? JSON.stringify(body) : undefined });
+  if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error('Graph ' + path + ': ' + r.status + ' ' + (j.error ? j.error.message : '')); }
+  return r.status === 204 ? {} : r.json().catch(() => ({}));
+}
+// Housekeeping on one or more messages: mark read/unread, archive, or delete (to Deleted Items).
+async function actOnMessages(uid, email, ids, action) {
+  const tok = await accessToken(uid, email);
+  let done = 0;
+  for (const id of ids) {
+    const p = `/me/messages/${encodeURIComponent(id)}`;
+    if (action === 'read') await gsend(tok, 'PATCH', p, { isRead: true });
+    else if (action === 'unread') await gsend(tok, 'PATCH', p, { isRead: false });
+    else if (action === 'archive') await gsend(tok, 'POST', p + '/move', { destinationId: 'archive' });
+    else if (action === 'delete') await gsend(tok, 'DELETE', p);
+    else throw new Error('Unknown action');
+    done++;
+  }
+  return { done };
+}
 // Send from a connected mailbox (new message, or a reply when replyTo message id is given).
 async function send(uid, email, { to, subject, body, replyTo }) {
   const tok = await accessToken(uid, email);
@@ -138,4 +159,4 @@ async function send(uid, email, { to, subject, body, replyTo }) {
   if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error('Send failed: ' + r.status + ' ' + (j.error ? j.error.message : '')); }
   return { sent: true };
 }
-module.exports = { enabled, authUrl, connect, remove, accessToken, listFor, recent, message, conversation, attachment, send, REDIRECT };
+module.exports = { enabled, authUrl, connect, remove, accessToken, listFor, recent, message, conversation, attachment, actOnMessages, send, REDIRECT };

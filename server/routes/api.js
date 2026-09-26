@@ -654,6 +654,18 @@ r.post('/mail/attachment/save', async (req, res) => {
   D.putRecord('activity', { id: Date.now(), deal: d.id, type: 'file', who: u.id, text: 'Saved email attachment to SharePoint', detail: rec.name, at: D.nowIso() }, u.id);
   ok(res, { file: rec, folder: `${graph.SP_LIBRARY}/${folder}` });
 });
+// Inbox housekeeping: mark read/unread, archive, or delete one or more messages.
+r.post('/mail/act', async (req, res) => {
+  const u = session(req); const b = await readJson(req); const acct = String(b.account || '').toLowerCase();
+  if (!mailbox.listFor(u.id).some((a) => a.email === acct)) throw err(400, 'That mailbox is not connected to your account');
+  const ids = Array.isArray(b.ids) ? b.ids.filter(Boolean).slice(0, 100) : [];
+  const action = String(b.action || '');
+  if (!ids.length) throw err(400, 'No messages specified');
+  if (!['read', 'unread', 'archive', 'delete'].includes(action)) throw err(400, 'Unknown action');
+  const out = await mailbox.actOnMessages(u.id, acct, ids, action);
+  audit(req, u.id, 'mail.' + action, acct, ids.length + ' message(s)');
+  ok(res, out);
+});
 r.post('/mail/draft', async (req, res) => {
   const u = session(req); const b = await readJson(req); const acct = String(b.account || '').toLowerCase();
   if (!mailbox.listFor(u.id).some((a) => a.email === acct)) throw err(400, 'That mailbox is not connected to your account');
