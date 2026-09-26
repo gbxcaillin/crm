@@ -7,6 +7,8 @@ const SP_SITE = process.env.SP_SITE || 'gbxps.sharepoint.com:/sites/Clients';
 const SP_LIBRARY = process.env.SP_LIBRARY || 'Client Files';
 // Optional base folder within the library to nest per-client folders under (e.g. "Client Files").
 const SP_FOLDER = (process.env.SP_FOLDER || '').replace(/^\/+|\/+$/g, '');
+// Folder (relative to the library root) that invoice PDFs are saved into for review/sending.
+const SP_INVOICE_FOLDER = (process.env.SP_INVOICE_FOLDER || 'Invoices').replace(/^\/+|\/+$/g, '');
 let tok = null;
 function enabled() { return !!(T && C && S); }
 async function token() {
@@ -83,8 +85,10 @@ async function upload(folder, name, buf) {
   return last;
 }
 async function download(spId) { const d = await driveId(); const r = await fetch(`https://graph.microsoft.com/v1.0/drives/${d}/items/${spId}/content`, { headers: { authorization: 'Bearer ' + (await token()) }, redirect: 'follow' }); if (!r.ok) throw new Error('Download failed ' + r.status); return Buffer.from(await r.arrayBuffer()); }
-async function sendMail(from, to, subject, html) {
-  return g('POST', `/users/${encodeURIComponent(from)}/sendMail`, { message: { subject, body: { contentType: 'HTML', content: html }, toRecipients: [{ emailAddress: { address: to } }] }, saveToSentItems: false });
+async function sendMail(from, to, subject, html, attachments) {
+  const message = { subject, body: { contentType: 'HTML', content: html }, toRecipients: [{ emailAddress: { address: to } }] };
+  if (attachments && attachments.length) message.attachments = attachments.map((a) => ({ '@odata.type': '#microsoft.graph.fileAttachment', name: a.filename, contentType: a.contentType || 'application/octet-stream', contentBytes: Buffer.from(a.content).toString('base64') }));
+  return g('POST', `/users/${encodeURIComponent(from)}/sendMail`, { message, saveToSentItems: !!(attachments && attachments.length) });
 }
 // Microsoft Bookings (needs application permission Bookings.Read.All on the app,
 // in the tenant that owns the booking mailbox).
@@ -99,4 +103,4 @@ async function listAppointments(businessId, { backDays = 2, aheadDays = 60 } = {
   const j = await g('GET', url);
   return j.value || [];
 }
-module.exports = { enabled, listFolder, upload, ensureFolder, moveItem, deleteFolder, download, sendMail, listBookingBusinesses, listAppointments, safe, SP_SITE, SP_LIBRARY, SP_FOLDER };
+module.exports = { enabled, listFolder, upload, ensureFolder, moveItem, deleteFolder, download, sendMail, listBookingBusinesses, listAppointments, safe, SP_SITE, SP_LIBRARY, SP_FOLDER, SP_INVOICE_FOLDER };

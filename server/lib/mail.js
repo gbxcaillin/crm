@@ -31,12 +31,12 @@ ${cta ? `<tr><td style="padding:8px 28px 26px"><a href="${cta.url}" style="displ
 }
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-async function send({ to, subject, title, html, text, cta, footer, kind = 'notify' }) {
+async function send({ to, subject, title, html, text, cta, footer, attachments, kind = 'notify' }) {
   const body = layout(title || subject, html || `<p>${esc(text)}</p>`, cta, footer);
   if (!enabled()) { log.mail.run(nowIso(), to, subject, kind, 'skipped', 'mail not configured'); console.log(`[mail:off] to=${to} "${subject}"`); return false; }
   try {
-    if (cfg.mode === 'graph') await graph.sendMail(process.env.MAIL_FROM, to, subject, body);
-    else await (await smtp()).sendMail({ from: cfg.from, to, subject, html: body, text: text || subject });
+    if (cfg.mode === 'graph') await graph.sendMail(process.env.MAIL_FROM, to, subject, body, attachments);
+    else await (await smtp()).sendMail({ from: cfg.from, to, subject, html: body, text: text || subject, attachments: attachments && attachments.map((a) => ({ filename: a.filename, content: a.content, contentType: a.contentType })) });
     log.mail.run(nowIso(), to, subject, kind, 'sent', '');
     return true;
   } catch (e) {
