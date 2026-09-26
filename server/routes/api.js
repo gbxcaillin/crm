@@ -629,6 +629,31 @@ r.get('/mail/message', async (req, res) => {
   if (!mailbox.listFor(u.id).some((a) => a.email === acct)) throw err(400, 'That mailbox is not connected to your account');
   ok(res, { message: await mailbox.message(u.id, acct, req.query.get('id')) });
 });
+// Stream one email attachment to the browser (inline preview, or download=1 to save).
+r.get('/mail/attachment', async (req, res) => {
+  const u = session(req); const acct = String(req.query.get('account') || '').toLowerCase();
+  if (!mailbox.listFor(u.id).some((a) => a.email === acct)) throw err(400, 'That mailbox is not connected to your account');
+  const a = await mailbox.attachment(u.id, acct, req.query.get('id'), req.query.get('att'));
+  const dispo = req.query.get('download') === '1' ? 'attachment' : 'inline';
+  res.writeHead(200, { 'content-type': a.contentType, 'content-length': a.buffer.length, 'content-disposition': `${dispo}; filename="${a.name.replace(/[\\/"\r\n]/g, '_')}"`, 'cache-control': 'no-store' });
+  res.end(a.buffer);
+});
+// Save an email attachment into the linked deal's SharePoint client folder.
+r.post('/mail/attachment/save', async (req, res) => {
+  const u = session(req); if (!graph.enabled()) throw err(503, 'SharePoint is not configured on the server');
+  const b = await readJson(req); const acct = String(b.account || '').toLowerCase();
+  if (!mailbox.listFor(u.id).some((a) => a.email === acct)) throw err(400, 'That mailbox is not connected to your account');
+  const d = D.getRecord('deals', b.deal); if (!d) throw err(404, 'No such deal');
+  const a = await mailbox.attachment(u.id, acct, b.id, b.att);
+  try { await reconcileDealFolder(d, u.id); } catch (e) { console.error('[mail] folder reconcile skipped:', e.message); }
+  const folder = [graph.SP_FOLDER, folderLeaf(d)].filter(Boolean).join('/');
+  const name = String(a.name || 'attachment').replace(/[\\/:*?"<>|]/g, '_').slice(0, 150);
+  const item = await graph.upload(folder, name, a.buffer);
+  const rec = { id: D.nextId('files'), deal: d.id, name: item.name || name, size: fmtSize(a.buffer.length), by: u.id, at: D.today(), kind: name.split('.').pop().toUpperCase().slice(0, 3), url: item.webUrl, spId: item.id };
+  D.putRecord('files', rec, u.id);
+  D.putRecord('activity', { id: Date.now(), deal: d.id, type: 'file', who: u.id, text: 'Saved email attachment to SharePoint', detail: rec.name, at: D.nowIso() }, u.id);
+  ok(res, { file: rec, folder: `${graph.SP_LIBRARY}/${folder}` });
+});
 r.post('/mail/draft', async (req, res) => {
   const u = session(req); const b = await readJson(req); const acct = String(b.account || '').toLowerCase();
   if (!mailbox.listFor(u.id).some((a) => a.email === acct)) throw err(400, 'That mailbox is not connected to your account');
