@@ -88,26 +88,43 @@ async function inlineCidImages(tok, id, html) {
   }
   return html;
 }
+// The file (non-inline) attachments on a message: metadata only. Bytes are fetched on demand by
+// attachment(). Inline images (rendered in the body) and non-file attachments are excluded.
+async function fileAttachments(tok, id) {
+  let at; try { at = await gget(tok, `/me/messages/${encodeURIComponent(id)}/attachments?$select=id,name,contentType,size,isInline`); } catch (_) { return []; }
+  return (at.value || [])
+    .filter((a) => a['@odata.type'] === '#microsoft.graph.fileAttachment' && !a.isInline)
+    .map((a) => ({ attId: a.id, name: a.name || 'attachment', size: a.size || 0, contentType: a.contentType || 'application/octet-stream' }));
+}
+// One attachment's bytes, for download or saving to SharePoint.
+async function attachment(uid, email, id, attId) {
+  const tok = await accessToken(uid, email);
+  const a = await gget(tok, `/me/messages/${encodeURIComponent(id)}/attachments/${encodeURIComponent(attId)}?$select=name,contentType,contentBytes,size`);
+  if (!a.contentBytes) throw new Error('That attachment has no downloadable content (it may be a linked file — open it in Outlook)');
+  return { name: a.name || 'attachment', contentType: a.contentType || 'application/octet-stream', buffer: Buffer.from(a.contentBytes, 'base64') };
+}
 async function message(uid, email, id) {
   const tok = await accessToken(uid, email);
   const m = await gget(tok, `/me/messages/${encodeURIComponent(id)}?$select=id,conversationId,subject,from,toRecipients,receivedDateTime,body,webLink,hasAttachments`);
   const html = m.body && m.body.contentType === 'html';
   let raw = m.body ? m.body.content : '';
   if (html && m.hasAttachments) raw = await inlineCidImages(tok, id, raw);
-  return { id: m.id, conv: m.conversationId, subject: m.subject || '(no subject)', from: (m.from && m.from.emailAddress && m.from.emailAddress.address) || '', fromName: (m.from && m.from.emailAddress && m.from.emailAddress.name) || '', at: m.receivedDateTime, text: html ? htmlToText(raw) : raw, html: html ? raw : '', url: m.webLink, account: email };
+  const attachments = m.hasAttachments ? await fileAttachments(tok, id) : [];
+  return { id: m.id, conv: m.conversationId, subject: m.subject || '(no subject)', from: (m.from && m.from.emailAddress && m.from.emailAddress.address) || '', fromName: (m.from && m.from.emailAddress && m.from.emailAddress.name) || '', at: m.receivedDateTime, text: html ? htmlToText(raw) : raw, html: html ? raw : '', url: m.webLink, account: email, attachments };
 }
 // All messages in one conversation (inbound + your sent replies), oldest first, for a thread view.
 async function conversation(uid, email, convId, top = 25) {
   const tok = await accessToken(uid, email);
   const filter = encodeURIComponent(`conversationId eq '${String(convId).replace(/'/g, "''")}'`);
-  const j = await gget(tok, `/me/messages?$filter=${filter}&$top=${top}&$select=id,subject,from,toRecipients,receivedDateTime,sentDateTime,body,webLink,isRead&$orderby=receivedDateTime asc`);
+  const j = await gget(tok, `/me/messages?$filter=${filter}&$top=${top}&$select=id,subject,from,toRecipients,receivedDateTime,sentDateTime,body,webLink,isRead,hasAttachments&$orderby=receivedDateTime asc`);
   const out = [];
   for (const m of (j.value || [])) {
     const isHtml = m.body && m.body.contentType === 'html';
     let raw = m.body ? m.body.content : '';
     if (isHtml && /src\s*=\s*["']cid:/i.test(raw)) raw = await inlineCidImages(tok, m.id, raw);
     const fromAddr = (m.from && m.from.emailAddress && m.from.emailAddress.address) || '';
-    out.push({ id: m.id, subject: m.subject || '', from: fromAddr, fromName: (m.from && m.from.emailAddress && m.from.emailAddress.name) || '', to: (m.toRecipients || []).map((r) => r.emailAddress && r.emailAddress.address).filter(Boolean), at: m.receivedDateTime || m.sentDateTime, html: isHtml ? raw : '', text: isHtml ? htmlToText(raw) : raw, url: m.webLink, out: fromAddr.toLowerCase() === String(email).toLowerCase() });
+    const attachments = m.hasAttachments ? await fileAttachments(tok, m.id) : [];
+    out.push({ id: m.id, subject: m.subject || '', from: fromAddr, fromName: (m.from && m.from.emailAddress && m.from.emailAddress.name) || '', to: (m.toRecipients || []).map((r) => r.emailAddress && r.emailAddress.address).filter(Boolean), at: m.receivedDateTime || m.sentDateTime, html: isHtml ? raw : '', text: isHtml ? htmlToText(raw) : raw, url: m.webLink, out: fromAddr.toLowerCase() === String(email).toLowerCase(), attachments });
   }
   return out;
 }
@@ -121,4 +138,4 @@ async function send(uid, email, { to, subject, body, replyTo }) {
   if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error('Send failed: ' + r.status + ' ' + (j.error ? j.error.message : '')); }
   return { sent: true };
 }
-module.exports = { enabled, authUrl, connect, remove, accessToken, listFor, recent, message, conversation, send, REDIRECT };
+module.exports = { enabled, authUrl, connect, remove, accessToken, listFor, recent, message, conversation, attachment, send, REDIRECT };
