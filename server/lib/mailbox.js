@@ -67,6 +67,21 @@ async function recent(uid, email, top = 20) {
   const j = await gget(tok, `/me/mailFolders/inbox/messages?$top=${top}&$select=id,conversationId,subject,from,toRecipients,receivedDateTime,bodyPreview,isRead,webLink`);
   return (j.value || []).map((m) => ({ id: m.id, conv: m.conversationId, subject: m.subject || '(no subject)', from: (m.from && m.from.emailAddress && m.from.emailAddress.address) || '', fromName: (m.from && m.from.emailAddress && m.from.emailAddress.name) || '', at: m.receivedDateTime, preview: m.bodyPreview || '', read: !!m.isRead, url: m.webLink, account: email }));
 }
+// Plain text from an HTML email body, so the reading pane never renders untrusted HTML.
+function htmlToText(h) {
+  return String(h || '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<\/(p|div|tr|li|h[1-6])>/gi, '\n').replace(/<br\s*\/?>(?!\n)/gi, '\n').replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+    .replace(/\n[ \t]+/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+// One message with its full (plain-text) body.
+async function message(uid, email, id) {
+  const tok = await accessToken(uid, email);
+  const m = await gget(tok, `/me/messages/${encodeURIComponent(id)}?$select=id,conversationId,subject,from,toRecipients,receivedDateTime,body,webLink`);
+  const html = m.body && m.body.contentType === 'html';
+  return { id: m.id, conv: m.conversationId, subject: m.subject || '(no subject)', from: (m.from && m.from.emailAddress && m.from.emailAddress.address) || '', fromName: (m.from && m.from.emailAddress && m.from.emailAddress.name) || '', at: m.receivedDateTime, text: html ? htmlToText(m.body.content) : (m.body ? m.body.content : ''), url: m.webLink, account: email };
+}
 // Send from a connected mailbox (new message, or a reply when replyTo message id is given).
 async function send(uid, email, { to, subject, body, replyTo }) {
   const tok = await accessToken(uid, email);
@@ -77,4 +92,4 @@ async function send(uid, email, { to, subject, body, replyTo }) {
   if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error('Send failed: ' + r.status + ' ' + (j.error ? j.error.message : '')); }
   return { sent: true };
 }
-module.exports = { enabled, authUrl, connect, remove, accessToken, listFor, recent, send, REDIRECT };
+module.exports = { enabled, authUrl, connect, remove, accessToken, listFor, recent, message, send, REDIRECT };
