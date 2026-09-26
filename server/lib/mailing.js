@@ -101,6 +101,8 @@ async function sendBulk({ subject, html, tag, emails, prepared }, by = 'system')
   let list = D.listCol('subscribers').filter((s) => s.status === 'subscribed');
   if (Array.isArray(emails) && emails.length) { const set = new Set(emails.map(normEmail)); list = list.filter((s) => set.has(s.email)); }
   else if (tag) list = list.filter((s) => (s.tags || []).includes(tag));
+  const sender = by && by !== 'system' ? (D.users.get(by) || {}) : {};
+  const replyTo = sender.email || undefined; // else MAIL_REPLY_TO
   let sent = 0, failed = 0;
   for (const s of list) {
     if (!s.token) { s.token = newToken(); D.putRecord('subscribers', s, by); }
@@ -109,10 +111,10 @@ async function sendBulk({ subject, html, tag, emails, prepared }, by = 'system')
     let okSent;
     if (prepared) {
       const withFooter = personalised + `<p style="margin-top:22px;font-size:11px;color:#8E8B83;font-family:Helvetica,Arial,sans-serif">${brand} · You are receiving this because you subscribed at gbxps.com. <a href="${unsub}" style="color:#8E8B83">Unsubscribe</a>.</p>`;
-      okSent = await mail.send({ to: s.email, subject, html: withFooter, raw: true, kind: 'campaign', unsubscribe: unsub });
+      okSent = await mail.send({ to: s.email, subject, html: withFooter, raw: true, kind: 'campaign', unsubscribe: unsub, replyTo });
     } else {
       const footer = `${brand} &middot; You are receiving this because you subscribed at gbxps.com. <a href="${unsub}" style="color:#8E8B83">Unsubscribe</a>.`;
-      okSent = await mail.send({ to: s.email, subject, title: '', html: personalised, footer, kind: 'campaign', unsubscribe: unsub });
+      okSent = await mail.send({ to: s.email, subject, title: '', html: personalised, footer, kind: 'campaign', unsubscribe: unsub, replyTo });
     }
     if (okSent) sent++; else failed++;
     await new Promise((r) => setTimeout(r, 250)); // ~4/sec, comfortably under provider limits

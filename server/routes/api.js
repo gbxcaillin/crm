@@ -13,6 +13,7 @@ const mailing = require('../lib/mailing');
 const mailbox = require('../lib/mailbox');
 const pdf = require('../lib/pdf');
 const bookings = require('../lib/bookings');
+const scoring = require('../lib/scoring');
 const cloudflare = require('../lib/cloudflare');
 const claude = require('../lib/claude');
 const { notify } = require('../lib/notify');
@@ -327,23 +328,7 @@ r.post('/leads/:id/ai', async (req, res) => {
     d.notes ? `Notes: ${String(d.notes).slice(0, 700)}` : '',
   ].filter(Boolean).join('\n');
 
-  if (b.task === 'score') {
-    const prompt = [
-      'You are scoring an inbound business lead for GBX Professional Services, which offers professional services and workplace financial education/wellbeing to businesses of any kind.',
-      'Rate how promising the lead is and how urgently to follow up (0 = weak, 100 = drop everything). Weigh fit, buying signals, source quality and how complete the details are.',
-      'Return ONLY compact JSON, no prose and no code fences: {"score":<integer 0-100>,"priority":"High"|"Medium"|"Low","rationale":"<one concise sentence>"}',
-      '', 'Lead:', facts,
-    ].join('\n');
-    const text = await claude.run(prompt);
-    const m = text.match(/\{[\s\S]*\}/); if (!m) throw err(502, 'Claude returned no score');
-    const j = JSON.parse(m[0]);
-    const score = Math.max(0, Math.min(100, Math.round(Number(j.score))));
-    const priority = ['High', 'Medium', 'Low'].includes(j.priority) ? j.priority : 'Medium';
-    const rationale = String(j.rationale || '').replace(/\s+/g, ' ').trim().slice(0, 200);
-    D.putRecord('activity', { id: Date.now(), deal: d.id, type: 'ai', who: u.id, text: `Claude scored lead ${score} / 100`, detail: `${priority}. ${rationale}`, at: D.nowIso() }, u.id);
-    D.putRecord('deals', { ...d, aiScore: score, aiPriority: priority, aiRationale: rationale, aiScoredAt: D.nowIso() }, u.id);
-    return ok(res, { score, priority, rationale });
-  }
+  if (b.task === 'score') return ok(res, await scoring.scoreLead(d, u.id));
 
   if (b.task === 'draft' || b.task === 'reply') {
     const common = `Keep it professional, warm and specific, under 150 words. Return ONLY the email body - no subject line, no preamble, no markdown. Sign off as: ${u.name}, GBX Professional Services.`;
@@ -782,8 +767,33 @@ r.get('/market/history', async (req, res) => { session(req); const sym = String(
 r.get('/market/search', async (req, res) => { session(req); ok(res, { results: await market.search(String(req.query.get('q') || '')) }); });
 r.post('/market/refresh', async (req, res) => { session(req); ok(res, { updated: await market.refreshSecurities() }); });
 
+/* ---------- research: Claude notes and peer comparison ---------- */
+const pct = (v) => (v == null || isNaN(v) ? '—' : (v >= 0 ? '+' : '') + Number(v).toFixed(1) + '%');
+function secFacts(x) { return `${x.t} · ${x.name} · ${x.kind} · ${x.cls} · price ${x.price}${x.ccy === 'AUD' ? ' AUD' : ''} · 1y ${pct(x.ret && x.ret.y1)} · 3y ${pct(x.ret && x.ret.y3)} p.a. · 5y ${pct(x.ret && x.ret.y5)} p.a. · vol ${x.vol}% · max drawdown ${x.mdd}% · yield ${x.yld}%${x.frank ? ' (' + x.frank + '% franked)' : ''} · fee ${x.mer != null ? x.mer + '%' : 'n/a'}${x.pe ? ' · P/E ' + x.pe : ''}${x.mcap ? ' · size ' + x.mcap : ''}`; }
+function peersOf(sec) { return D.listCol('securities').filter((x) => x.t !== sec.t && x.cls === sec.cls).sort((a, b) => ((b.ret && b.ret.y5) || -99) - ((a.ret && a.ret.y5) || -99)).slice(0, 6); }
+function templateNote(x) {
+  const role = x.vol > 18 ? 'satellite (growth sleeves only, single-name weight under 5%)' : (x.ret && x.ret.y1 < 0) ? 'hold, re-check the thesis before adding to income models' : 'core holding across the GBX models';
+  return `${x.name} (${x.t})\n\nWhat it is: ${x.desc || x.kind + ' in the ' + x.cls + ' sleeve'}.\n\nNumbers: ${pct(x.ret && x.ret.y5)} p.a. over five years, ${x.vol}% volatility, worst drawdown ${x.mdd}%, yield ${x.yld}%${x.frank ? ' with ' + x.frank + '% franking' : ''}, fee ${x.mer != null ? x.mer + '% p.a.' : 'n/a'}.\n\nRole: ${role}.\n\nRisks: concentration in ${x.cls.toLowerCase()}, drawdowns of the order seen (${x.mdd}%), and fee drag if a cheaper equivalent exists.\n\nVerdict: ${x.vol > 18 ? 'Satellite' : 'Core'}. Review annually or on a change to mandate or fee.`;
+}
+r.post('/research/:t/ai', async (req, res) => {
+  const u = session(req); const b = await readJson(req); const t = String(req.params.t || '').toUpperCase();
+  const sec = D.listCol('securities').find((x) => x.t === t); if (!sec) throw err(404, 'Not in the research library');
+  const peers = peersOf(sec);
+  if (b.task === 'peers') {
+    if (!claude.enabled() || !peers.length) return ok(res, { peers, commentary: '', via: 'table' });
+    const prompt = ['You are an investment research analyst at GBX Professional Services (Australia). Compare the security below against its sleeve peers for use in model portfolios.', 'Write about 120 words of plain text (no markdown, no headings): which is the best core exposure and why, any fee or volatility outliers, and one caution. Be specific with the numbers given. Do not give personal advice.', '', 'Security: ' + secFacts(sec), 'Peers:', ...peers.map(secFacts)].join('\n');
+    try { return ok(res, { peers, commentary: (await claude.run(prompt)).trim(), via: 'claude' }); } catch (e) { return ok(res, { peers, commentary: '', via: 'table' }); }
+  }
+  if (b.task === 'note') {
+    if (!claude.enabled()) return ok(res, { note: templateNote(sec), via: 'template' });
+    const prompt = ['You are an investment research analyst at GBX Professional Services (Australia). Write an internal research note on the security below for the model-portfolio committee.', 'About 180 words, plain text with short labelled paragraphs: What it is / Numbers / Role in a portfolio / Risks / Verdict (Core, Satellite or Avoid). Use the figures given, no invented data, no personal advice, no markdown.', '', secFacts(sec), sec.desc ? 'Description: ' + sec.desc : '', peers.length ? 'Sleeve peers for context: ' + peers.map((p) => p.t + ' ' + pct(p.ret && p.ret.y5) + ' 5y, fee ' + (p.mer != null ? p.mer + '%' : 'n/a')).join('; ') : ''].filter(Boolean).join('\n');
+    try { return ok(res, { note: (await claude.run(prompt)).trim(), via: 'claude' }); } catch (e) { return ok(res, { note: templateNote(sec), via: 'template' }); }
+  }
+  throw err(400, 'Unknown task');
+});
+
 /* ---------- admin / ops ---------- */
-r.get('/admin/status', (req, res) => { admin(req); ok(res, { features: state.features(), security: state.securityPolicy(), keyVersions: D.vault.versions(), mail: D.log.mailRecent.all(20), hooks: D.log.hookRecent.all(30), push: push.stats7d(), devices: push.devices(), jobs: ['chat', 'digest', 'backup', 'market', 'nurture', 'prune'].map((n) => ({ name: n, ...(D.jobs.get.get(n) || {}) })), db: D.DB_PATH, rev: D.rev() }); });
+r.get('/admin/status', (req, res) => { admin(req); ok(res, { features: state.features(), security: state.securityPolicy(), keyVersions: D.vault.versions(), mail: D.log.mailRecent.all(20), hooks: D.log.hookRecent.all(30), push: push.stats7d(), devices: push.devices(), jobs: ['chat', 'digest', 'backup', 'market', 'nurture', 'score', 'bookings', 'prune'].map((n) => ({ name: n, ...(D.jobs.get.get(n) || {}) })), db: D.DB_PATH, rev: D.rev() }); });
 r.post('/admin/backup', async (req, res) => { const me = admin(req); const f = await jobs.backup(); audit(req, me.id, 'admin.backup', f, ''); ok(res, { file: f }); });
 r.get('/admin/audit', (req, res) => { admin(req); const since = req.query.get('since') || ''; ok(res, { rows: D.auditRecent(Math.min(2000, Number(req.query.get('limit')) || 200), since) }); });
 r.get('/admin/audit.csv', (req, res) => { const me = admin(req); audit(req, me.id, 'audit.export', '', ''); const rows = D.auditRecent(20000, req.query.get('since') || ''); const csv = ['at,who,ip,action,target,detail', ...rows.map((r) => [r.at, r.who, r.ip, r.action, r.target, r.detail].map((v) => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(','))].join('\n'); res.writeHead(200, { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': 'attachment; filename="pipeline-audit.csv"', 'cache-control': 'no-store' }); res.end(csv); });
