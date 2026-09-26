@@ -73,7 +73,7 @@ Everything below is optional and turns on when its variables are set in
 
 | Feature | Variables | Notes |
 |---|---|---|
-| Email (invites, resets, task and lead alerts, 24 h chat digest, daily task digest) | `SMTP_HOST/PORT/USER/PASS`, `MAIL_FROM` | Microsoft 365: `smtp.office365.com:587` with a mailbox that has SMTP AUTH enabled. Or `MAIL_MODE=graph` with the Graph app below and `Mail.Send`. Test it from Integrations → Server → *Send me a test email*. |
+| Email (invites, resets, task and lead alerts, digests, invoices, newsletters) | `RESEND_API_KEY` **or** `POSTMARK_TOKEN` (recommended), else `SMTP_HOST/PORT/USER/PASS`, or `MAIL_MODE=graph`; plus `MAIL_FROM`, `MAIL_CAMPAIGN_FROM`, `MAIL_WEBHOOK_SECRET` | See *Email deliverability* below. Test from Integrations → Server → *Send me a test email*. |
 | SharePoint files | `MS_TENANT_ID`, `MS_CLIENT_ID`, `MS_CLIENT_SECRET`, `SP_SITE`, `SP_LIBRARY`, optional `SP_FOLDER`, optional `SP_INVOICE_FOLDER` | Azure app registration with application permission `Sites.Selected` (grant it on the site) or `Sites.ReadWrite.All`. `SP_LIBRARY` is a document library display name (default library is `Documents`); optional `SP_FOLDER` nests per-client folders under a base folder inside it (e.g. `SP_LIBRARY=Documents`, `SP_FOLDER=Client Files`). Files upload to `<library>/<folder>/<Client>/`; nightly DB backups also copy to `<library>/<folder>/_CRM Backups/`. Invoice PDFs save to `<library>/<SP_INVOICE_FOLDER>/` (default `Invoices`) as drafts, then the invoice can be emailed from the CRM (PDF attached) or downloaded from SharePoint and sent manually. Emailing invoices needs email configured (below) with `Mail.Send` if using Graph. |
 | Microsoft Bookings | `BOOKINGS_BUSINESS` + the `MS_*` app | Grant the Graph app the application permission `Bookings.Read.All` (in the tenant that owns the booking mailbox), then set `BOOKINGS_BUSINESS` to the booking business id (usually the booking mailbox address). Booked calls sync every 15 min into activity + a task on the matching lead, or become a new lead. Trigger on demand with `POST /api/v1/integrations/bookings/sync` (admin). |
 | Google Ads lead forms | `GOOGLE_ADS_KEY` | In Google Ads → lead form asset → *Lead delivery option* → Webhook: URL `https://crm.gbxps.com/api/v1/hooks/google-ads`, key = the same string. Use *Send test data* to check. |
@@ -142,9 +142,57 @@ land in the CRM's **Mailing list** immediately (instead of only emailing you):
 Manage the list under **Mailing list** in the CRM: add subscribers, unsubscribe,
 and **Compose email** to send a bulk email to everyone subscribed (optionally
 filtered by tag). Every bulk email personalises `{{name}}` and appends a working
-unsubscribe link (`/api/v1/unsubscribe/<token>`, public) as required by the Spam
-Act 2003. Sending uses the same email transport as the rest of the app (SMTP or
-`MAIL_MODE=graph`), one message per recipient, rate-limited to ~4/second.
+unsubscribe link (`/api/v1/unsubscribe/<token>`, public) plus one-click
+`List-Unsubscribe` headers, as required by the Spam Act 2003 and by Gmail, Yahoo
+and Outlook. Sending goes through the campaign identity (`MAIL_CAMPAIGN_FROM`),
+one message per recipient, rate-limited to ~4/second.
+
+Website signups are **double opt-in** by default: the address lands as
+*pending*, gets a confirmation email, and only becomes *subscribed* once the
+link (`/api/v1/subscribe/confirm/<token>`) is clicked. Set
+`MAILING_DOUBLE_OPTIN=0` to subscribe immediately instead. People you add by
+hand in the CRM (existing clients who have consented) are subscribed straight
+away.
+
+## Email deliverability (newsletters and nurture without landing in junk)
+
+**Do not send bulk mail from a Microsoft 365 mailbox.** Exchange Online caps it
+(10,000 recipients/day, 30/minute) and, worse, a flagged mailbox drags every 1:1
+client email on `gbxps.com` into junk too. Keep `MAIL_MODE=graph` / SMTP for
+small setups only; for anything bulk use an email API on a **separate
+subdomain**:
+
+1. **Provider.** Resend (the website already uses it) or Postmark. Set
+   `RESEND_API_KEY=re_...` (or `POSTMARK_TOKEN=...`); `MAIL_MODE` is inferred.
+2. **Two identities, two reputations.**
+   - `MAIL_FROM="GBX Pipeline <notifications@gbxps.com>"` for transactional
+     mail (invites, invoices, alerts).
+   - `MAIL_CAMPAIGN_FROM="GBX Professional Services <hello@news.gbxps.com>"`
+     for newsletters and nurture. A subdomain keeps campaign complaints away
+     from the main domain. With Postmark, campaigns use the `broadcast` message
+     stream (`POSTMARK_BROADCAST_STREAM` to rename).
+3. **DNS (Cloudflare).** In the provider, add both `gbxps.com` and
+   `news.gbxps.com` as sending domains and create the records it gives you:
+   DKIM (CNAME/TXT), SPF (`v=spf1 include:<provider> ~all` on the subdomain;
+   add the provider include to the root SPF next to Microsoft's), and the
+   return-path/MAIL FROM CNAME. Then a DMARC record on the root:
+   `_dmarc.gbxps.com TXT "v=DMARC1; p=quarantine; sp=quarantine; rua=mailto:dmarc@gbxps.com"`
+   (start at `p=none` for two weeks if you want to watch reports first).
+   Cloudflare's free *DMARC Management* reads the reports for you.
+4. **Bounce / complaint webhook.** Set `MAIL_WEBHOOK_SECRET` to a long random
+   string and, in the provider, add a webhook for bounce + spam-complaint
+   events pointing at
+   `https://crm.gbxps.com/api/v1/hooks/mail-events/<MAIL_WEBHOOK_SECRET>`.
+   Hard bounces and complaints then suppress the address automatically
+   (status *bounced* / *complained* under Mailing list).
+5. **Monitor.** Google Postmaster Tools and Microsoft SNDS for both domains;
+   keep bounces under 2% and complaints under 0.1%. Send a steady cadence
+   rather than bursts, mostly text, from a named person, and never import a
+   bought or scraped list.
+
+Ordinary 1:1 replies and follow-ups you write in the Email tab still go from
+your own connected Microsoft 365 mailbox, which is exactly where they should
+come from.
 
 ## Data, backups, recovery
 
