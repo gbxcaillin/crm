@@ -481,7 +481,7 @@ r.post('/files/reconcile', async (req, res) => {
 // endpoints are the actions that must run on the server: sending, and the public unsubscribe.
 r.post('/subscribers/bulk', async (req, res) => {
   const me = admin(req); const b = await readJson(req);
-  const out = await mailing.sendBulk({ subject: b.subject, html: b.html, tag: b.tag }, me.id);
+  const out = await mailing.sendBulk({ subject: b.subject, html: b.html, tag: b.tag, emails: b.emails, prepared: !!b.prepared }, me.id);
   if (out.error) throw err(400, out.error);
   audit(req, me.id, 'mailing.bulk', `${out.sent}/${out.total} sent`, String(b.subject || '').slice(0, 80));
   ok(res, out);

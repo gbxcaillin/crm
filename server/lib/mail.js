@@ -31,8 +31,9 @@ ${cta ? `<tr><td style="padding:8px 28px 26px"><a href="${cta.url}" style="displ
 }
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-async function send({ to, subject, title, html, text, cta, footer, attachments, kind = 'notify' }) {
-  const body = layout(title || subject, html || `<p>${esc(text)}</p>`, cta, footer);
+async function send({ to, subject, title, html, text, cta, footer, attachments, raw, kind = 'notify' }) {
+  // raw = send the given HTML as-is (for pre-prepared newsletters); otherwise wrap in the app layout.
+  const body = raw ? (html || '') : layout(title || subject, html || `<p>${esc(text)}</p>`, cta, footer);
   if (!enabled()) { log.mail.run(nowIso(), to, subject, kind, 'skipped', 'mail not configured'); console.log(`[mail:off] to=${to} "${subject}"`); return false; }
   try {
     if (cfg.mode === 'graph') await graph.sendMail(process.env.MAIL_FROM, to, subject, body, attachments);
