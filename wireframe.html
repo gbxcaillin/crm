@@ -134,6 +134,7 @@ a{color:var(--teal-ink);text-decoration:none}a:hover{text-decoration:underline}
 .page-head h1 em{font-style:italic;color:var(--teal-ink)}
 .page-head .sub{color:var(--ink-2);margin-top:2px;font-size:12.5px}
 .toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.toolbar .select{width:auto;min-width:150px}
 .seg{display:inline-flex;border:1px solid var(--line-2);border-radius:var(--r);overflow:hidden}
 .seg button{height:30px;padding:0 12px;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);border-right:1px solid var(--line-2)}
 .seg button:last-child{border-right:none}
@@ -473,6 +474,7 @@ td.check-col,th.check-col{width:32px;padding-right:0;cursor:default}
 .mconv>summary::-webkit-details-marker{display:none}
 .mconv[open]>summary{background:var(--surface-2)}
 .mconv[open]>summary .faint.ellip{visibility:hidden}
+.sel-lbl{display:none}
 .mail-search{position:sticky;top:0;z-index:2;padding:8px;background:var(--surface);border-bottom:1px solid var(--line)}
 .mail-search .input{width:100%;height:32px}
 .matts{display:flex;flex-direction:column;gap:6px;padding:2px 14px 14px}
@@ -613,6 +615,8 @@ td.check-col,th.check-col{width:32px;padding-right:0;cursor:default}
   .toolbar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;margin:0 -14px;padding-left:14px;padding-right:14px}
   .toolbar::-webkit-scrollbar{display:none}
   .toolbar>*{flex-shrink:0}
+  .toolbar .select,.toolbar .input{width:auto;min-width:0;max-width:46vw}
+  .toolbar .btn-primary{order:-1}
   .btn{height:40px;padding:0 14px}.btn-sm{height:34px}.btn-icon{width:40px}
   .input,.select,.textarea{font-size:16px;height:42px}.textarea{height:auto}
   .seg button{height:36px}
@@ -630,6 +634,7 @@ td.check-col,th.check-col{width:32px;padding-right:0;cursor:default}
   table.cards td[data-l]::before{content:attr(data-l);display:block;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:1px}
   table.cards td.full{grid-column:1/-1}
   table.cards td.hide-m,table.cards .check-col{display:none}
+  table.cards.sel-m td.check-col{display:flex;grid-column:1/-1;align-items:center;gap:8px;font-size:12px;color:var(--ink-2)}table.cards.sel-m td.check-col:empty{display:none}.sel-lbl{display:inline}
   #bulk{display:none!important}
   /* board */
   .stage-strip{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -14px;padding:0 14px 4px}.stage-strip::-webkit-scrollbar{display:none}
@@ -1807,7 +1812,7 @@ function vMailing(){
       <div class="toolbar">${sel.length?`<span class="chip chip-teal" style="height:32px;padding:0 12px;display:inline-flex;align-items:center">${sel.length} selected</span><button class="btn btn-quiet" data-subsel-clear>Clear</button>`:''}${tags.length?`<select class="select" id="sub-tag"><option value="">All tags</option>${tags.map(t=>`<option ${filt===t?'selected':''}>${esc(t)}</option>`).join('')}</select>`:''}<button class="btn btn-quiet" data-addsub>Add subscriber</button><button class="btn btn-primary" data-compose-bulk>${sel.length?`Email selected (${sel.length})`:'Compose email'}</button></div></div>
     <div class="stats"><div class="stat"><span class="label">Subscribed</span><span class="v">${active.length}</span></div><div class="stat"><span class="label">Unsubscribed</span><span class="v">${unsub.length}</span></div><div class="stat"><span class="label">${pend.length?'Awaiting confirm':'Tags'}</span><span class="v">${pend.length?pend.length:tags.length}</span></div><div class="stat"><span class="label">Total</span><span class="v">${subs.length}</span></div></div>
     <div class="card"><div class="card-head"><h3>Subscribers</h3>${mailOff?'<span class="faint" style="font-size:11px">Email not configured on the server — sending is disabled</span>':'<span class="faint" style="font-size:11px">Tick people to send to just them, or use Compose for everyone / a tag</span>'}</div>
-    <div class="table-wrap" style="border:none"><table class="cards"><thead><tr><th class="check-col"><input type="checkbox" id="subsel-all" ${allSel?'checked':''}></th><th>Email</th><th>Name</th><th>Source</th><th>Tags</th><th>Status</th><th>Added</th><th></th></tr></thead><tbody>${rows.length?rows.map(s=>`<tr><td class="check-col">${s.status==='subscribed'?`<input type="checkbox" class="subsel" data-id="${s.id}" ${sel.includes(s.id)?'checked':''}>`:''}</td><td class="full"><span class="name">${esc(s.email)}</span></td><td data-l="Name">${esc(s.name||'—')}</td><td data-l="Source"><span class="chip chip-line">${esc(s.source||'—')}</span></td><td data-l="Tags">${(s.tags||[]).map(t=>`<span class="chip chip-line">${esc(t)}</span>`).join(' ')||'—'}</td><td data-l="Status"><span class="chip ${s.status==='subscribed'?'chip-teal':s.status==='pending'?'chip-amber':['bounced','complained'].includes(s.status)?'chip-red':'chip-line'}" title="${esc(s.suppressReason||'')}">${esc(s.status)}</span></td><td class="mono" style="font-size:11px" data-l="Added">${fmtDate((s.at||'').slice(0,10))}</td><td class="full" style="text-align:right">${s.status==='subscribed'?`<button class="btn btn-sm btn-quiet" data-unsub="${s.id}">Unsubscribe</button>`:`<button class="btn btn-sm btn-quiet" data-resub="${s.id}">Re-subscribe</button>`} <button class="btn btn-sm btn-quiet" data-subdel="${s.id}">Remove</button></td></tr>`).join(''):'<tr><td colspan="8"><div class="empty">No subscribers yet — they appear here when people sign up on the website.</div></td></tr>'}</tbody></table></div></div>
+    <div class="table-wrap" style="border:none"><table class="cards sel-m"><thead><tr><th class="check-col"><input type="checkbox" id="subsel-all" ${allSel?'checked':''}></th><th>Email</th><th>Name</th><th>Source</th><th>Tags</th><th>Status</th><th>Added</th><th></th></tr></thead><tbody>${rows.length?rows.map(s=>`<tr><td class="check-col">${s.status==='subscribed'?`<input type="checkbox" class="subsel" data-id="${s.id}" ${sel.includes(s.id)?'checked':''}><span class="sel-lbl">${sel.includes(s.id)?'Selected':'Select to email'}</span>`:''}</td><td class="full"><span class="name">${esc(s.email)}</span></td><td data-l="Name">${esc(s.name||'—')}</td><td data-l="Source"><span class="chip chip-line">${esc(s.source||'—')}</span></td><td data-l="Tags">${(s.tags||[]).map(t=>`<span class="chip chip-line">${esc(t)}</span>`).join(' ')||'—'}</td><td data-l="Status"><span class="chip ${s.status==='subscribed'?'chip-teal':s.status==='pending'?'chip-amber':['bounced','complained'].includes(s.status)?'chip-red':'chip-line'}" title="${esc(s.suppressReason||'')}">${esc(s.status)}</span></td><td class="mono" style="font-size:11px" data-l="Added">${fmtDate((s.at||'').slice(0,10))}</td><td class="full" style="text-align:right">${s.status==='subscribed'?`<button class="btn btn-sm btn-quiet" data-unsub="${s.id}">Unsubscribe</button>`:`<button class="btn btn-sm btn-quiet" data-resub="${s.id}">Re-subscribe</button>`} <button class="btn btn-sm btn-quiet" data-subdel="${s.id}">Remove</button></td></tr>`).join(''):'<tr><td colspan="8"><div class="empty">No subscribers yet — they appear here when people sign up on the website.</div></td></tr>'}</tbody></table></div></div>
   </div>`;
 }
 function vFiles(){
