@@ -17,7 +17,7 @@ function verify(secret, input, t = Date.now()) {
   for (const w of [-1, 0, 1]) { const exp = code(secret, t + w * 30000); if (exp.length === c.length && crypto.timingSafeEqual(Buffer.from(exp), Buffer.from(c))) return true; }
   return false;
 }
-function otpauthUrl(secret, account, issuer = 'GBX Pipeline') { return `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(account)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}&algorithm=SHA1&digits=6&period=30`; }
+function otpauthUrl(secret, account, issuer = 'GBX Professional Services') { return `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(account)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}&algorithm=SHA1&digits=6&period=30`; }
 const sha = (s) => crypto.createHash('sha256').update(s).digest('hex');
 function newBackupCodes(n = 8) { const codes = []; for (let i = 0; i < n; i++) { const raw = crypto.randomBytes(5).toString('hex'); codes.push(raw.slice(0, 5) + '-' + raw.slice(5)); } return { codes, hashes: codes.map((c) => sha(c.replace('-', ''))) }; }
 function useBackupCode(hashes, input) { const h = sha(String(input || '').replace(/[\s-]/g, '').toLowerCase()); const i = (hashes || []).indexOf(h); if (i < 0) return null; const next = hashes.slice(); next.splice(i, 1); return next; }

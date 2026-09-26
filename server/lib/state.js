@@ -118,6 +118,8 @@ function applySync(actor, body) {
   D.users.seen(actor.id);
   // Fire notification hooks after commit, without blocking the response.
   (async () => { for (const [col, prev, next] of hooks) await notify.onRecordChange(actor.id, col, prev, next); })().catch((e) => console.error('[hooks]', e.message));
+  // A lead created by hand in the CRM never passes through the webhook path, so auto-enrol it here.
+  for (const [col, prev, next] of hooks) if (col === 'deals' && !prev && next && next.stage === 'new') { try { require('./nurture').autoEnrol(next); } catch (e) { console.error('[nurture] auto-enrol skipped:', e.message); } }
   return pull(base, actor);
 }
 function pull(since, actor) {
