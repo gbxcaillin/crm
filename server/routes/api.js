@@ -18,6 +18,7 @@ const claude = require('../lib/claude');
 const { notify } = require('../lib/notify');
 const totp = require('../lib/totp');
 const oidc = require('../lib/oidc');
+const nurture = require('../lib/nurture');
 const QR = require('qrcode');
 const { err, send, readJson, readBody, makeRouter } = require('../lib/http');
 
@@ -534,6 +535,47 @@ r.post('/hooks/mail-events/:secret', async (req, res) => {
   ok(res, { received: events.length, suppressed });
 });
 
+/* ---------- nurture sequences ---------- */
+// Sequences themselves are edited through sync. These are the server-side actions.
+r.post('/sequences/:id/enrol', async (req, res) => {
+  const u = session(req); const b = await readJson(req);
+  const seq = D.getRecord('sequences', req.params.id); if (!seq) throw err(404, 'No such sequence');
+  const d = D.getRecord('deals', b.deal); if (!d) throw err(404, 'No such lead');
+  const out = nurture.enrol(seq, d, u.id); if (out.error) throw err(400, out.error);
+  ok(res, out);
+});
+r.post('/enrolments/:id/stop', (req, res) => {
+  const u = session(req); const e = D.getRecord('enrolments', req.params.id); if (!e) throw err(404, 'No such enrolment');
+  ok(res, { enrolment: nurture.stop(e, 'stopped by ' + (u.name || 'staff'), u.id) });
+});
+// Draft a sequence: Claude when the helper is on, otherwise the built-in template.
+r.post('/sequences/draft', async (req, res) => {
+  const u = session(req); const b = await readJson(req);
+  const service = String(b.service || '').slice(0, 120), source = String(b.source || '').slice(0, 40), goal = String(b.goal || '').slice(0, 400);
+  const count = Math.min(6, Math.max(2, Number(b.count) || 4));
+  if (!claude.enabled()) return ok(res, { steps: nurture.templateSteps(service, source).slice(0, count), via: 'template' });
+  const prompt = [
+    `You write nurture email sequences for GBX Professional Services (professional services and workplace financial education/wellbeing for businesses of any kind, Australia). Author: ${u.name || 'a consultant'}.`,
+    `Write a ${count}-step follow-up sequence for a lead who enquired${service ? ' about "' + service + '"' : ''}${source ? ' via ' + source : ''}.${goal ? ' Goal: ' + goal : ' Goal: book a 45-minute Health Check call.'}`,
+    'Rules: plain text bodies (no HTML, no markdown), each under 120 words, warm, specific, no hype, one clear ask per email, sign off with {{sender}}. Use {{name}} for the first name and {{practice}} for the business name. Space the steps over about two weeks (day offsets from enrolment, first is 0). The last step should make it easy to say no.',
+    'Return ONLY compact JSON, no prose, no code fences: {"steps":[{"day":<int>,"subject":"...","body":"..."}]}',
+  ].join('\n');
+  try {
+    const text = await claude.run(prompt); const m = text.match(/\{[\s\S]*\}/); if (!m) throw new Error('no json');
+    const j = JSON.parse(m[0]); const steps = (j.steps || []).slice(0, count).map((x, i) => ({ day: Math.max(0, Math.round(Number(x.day) || i * 4)), subject: String(x.subject || '').slice(0, 150), body: String(x.body || '').slice(0, 2000) })).filter((x) => x.subject && x.body);
+    if (!steps.length) throw new Error('empty');
+    ok(res, { steps, via: 'claude' });
+  } catch (e) { ok(res, { steps: nurture.templateSteps(service, source).slice(0, count), via: 'template' }); }
+});
+// Run due steps now (admin, for testing or after adding a sequence).
+r.post('/nurture/run', async (req, res) => { admin(req); ok(res, { sent: await nurture.run(30, { force: true }) }); });
+// Public opt-out link from every nurture email.
+r.get('/nurture/stop/:token', (req, res) => {
+  const e = nurture.optOut(req.params.token);
+  if (e) D.audit('system', auth.clientIp(req), 'nurture.optout', String(e.deal), '');
+  publicPage(res, e ? 'You will not hear from us again' : 'Link not valid', e ? 'We have stopped the follow-up emails. If you ever want to pick the conversation up, just email us.' : 'This link is not valid or has already been used.');
+});
+
 /* ---------- invoices: PDF to SharePoint + send ---------- */
 // Mirrors calcInvoice() in wireframe.html so the server computes the same totals.
 function calcInvoice(inv, s = {}) {
@@ -731,7 +773,7 @@ r.get('/market/search', async (req, res) => { session(req); ok(res, { results: a
 r.post('/market/refresh', async (req, res) => { session(req); ok(res, { updated: await market.refreshSecurities() }); });
 
 /* ---------- admin / ops ---------- */
-r.get('/admin/status', (req, res) => { admin(req); ok(res, { features: state.features(), security: state.securityPolicy(), keyVersions: D.vault.versions(), mail: D.log.mailRecent.all(20), hooks: D.log.hookRecent.all(30), push: push.stats7d(), devices: push.devices(), jobs: ['chat', 'digest', 'backup', 'market', 'prune'].map((n) => ({ name: n, ...(D.jobs.get.get(n) || {}) })), db: D.DB_PATH, rev: D.rev() }); });
+r.get('/admin/status', (req, res) => { admin(req); ok(res, { features: state.features(), security: state.securityPolicy(), keyVersions: D.vault.versions(), mail: D.log.mailRecent.all(20), hooks: D.log.hookRecent.all(30), push: push.stats7d(), devices: push.devices(), jobs: ['chat', 'digest', 'backup', 'market', 'nurture', 'prune'].map((n) => ({ name: n, ...(D.jobs.get.get(n) || {}) })), db: D.DB_PATH, rev: D.rev() }); });
 r.post('/admin/backup', async (req, res) => { const me = admin(req); const f = await jobs.backup(); audit(req, me.id, 'admin.backup', f, ''); ok(res, { file: f }); });
 r.get('/admin/audit', (req, res) => { admin(req); const since = req.query.get('since') || ''; ok(res, { rows: D.auditRecent(Math.min(2000, Number(req.query.get('limit')) || 200), since) }); });
 r.get('/admin/audit.csv', (req, res) => { const me = admin(req); audit(req, me.id, 'audit.export', '', ''); const rows = D.auditRecent(20000, req.query.get('since') || ''); const csv = ['at,who,ip,action,target,detail', ...rows.map((r) => [r.at, r.who, r.ip, r.action, r.target, r.detail].map((v) => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(','))].join('\n'); res.writeHead(200, { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': 'attachment; filename="pipeline-audit.csv"', 'cache-control': 'no-store' }); res.end(csv); });

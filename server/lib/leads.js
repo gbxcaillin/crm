@@ -68,6 +68,7 @@ async function createLead(input, { source = 'website', campaign = '', via = 'api
     putRecord('tasks', { id: nextId('tasks'), title: 'First call within 24 h of lead', desc: 'Auto-created by the lead rule. Call, qualify, book a Health Check if there is fit.', deal: d.id, due: require('./db').localIso(due).slice(0, 10), who: owner ? [owner] : [], by: '', notify: [], notifyBy: false, channels: ['app', 'email'], repeat: null, files: [], done: false, created: at, auto: sourceLabel(source) + ' lead rule' }, 'system');
   })();
   log.hook.run(nowIso(), via, 'created', `${d.practice} · ${sourceLabel(source)}${campaign ? ' · ' + campaign : ''}`, String(d.id));
+  try { require('./nurture').autoEnrol(d); } catch (e) { console.error('[nurture] auto-enrol skipped:', e.message); }
   const body = `${sourceLabel(source)} · ${contact || email}${d.value ? ' · A$' + d.value.toLocaleString('en-AU') : ''} · score ${sc}`;
   const everyone = users.all().filter((u) => u.status === 'Active' && u.id !== owner).map((u) => u.id);
   if (owner) await notify('lead', [owner], { title: `New lead · ${d.practice}`, body, url: '#/deal/' + d.id, kind: 'lead', id: d.id, actions: [{ action: 'open', title: 'Open lead' }] });

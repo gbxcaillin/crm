@@ -194,6 +194,33 @@ Ordinary 1:1 replies and follow-ups you write in the Email tab still go from
 your own connected Microsoft 365 mailbox, which is exactly where they should
 come from.
 
+## Nurture sequences (automatic follow-ups for enquiries)
+
+**Nurture** in the CRM holds sequences of timed emails (day offsets from
+enrolment) with `{{name}}`, `{{practice}}`, `{{service}}` and `{{sender}}`
+placeholders. Tick **auto-enrol** on a sequence and every new lead from the
+chosen source (website, Google Ads, ...) is enrolled the moment the webhook
+creates it; or press **Nurture** on any open lead to enrol by hand.
+
+- Sends run every 10 minutes, **Melbourne weekday business hours only**
+  (per-sequence window, default 8:00 to 18:00).
+- A sequence **stops itself** when the lead replies or someone here emails
+  them (any email activity on the deal), when the deal leaves *New Lead* or is
+  marked lost, or when they use the **Stop these emails** link that every
+  nurture email carries (`/api/v1/nurture/stop/<token>`, sets `noNurture` on
+  the lead for good).
+- "Send from" is either the campaign address (`MAIL_CAMPAIGN_FROM`, via
+  Resend/Postmark, with the unsubscribe footer) or the lead owner's own
+  connected Microsoft 365 mailbox for a personal first touch.
+- **Draft with Claude** writes a 4-step sequence from the service and source
+  when the Claude helper is running; otherwise a built-in starter template
+  loads. Every send is logged on the lead's timeline. Admins can force a run
+  from Nurture → *Send due now*.
+
+Spam Act note: an enquiry gives inferred consent for follow-up about that
+enquiry, which is what a sequence is. It does not put the lead on the
+newsletter; that stays opt-in.
+
 ## Data, backups, recovery
 
 - `/root/crm-data/crm.db` — the workspace (SQLite, WAL mode).
