@@ -26,8 +26,10 @@ function inHours(seq) {
 }
 const dueAt = (startedAt, day) => { const t = new Date(startedAt); t.setDate(t.getDate() + (Number(day) || 0)); return t.toISOString(); };
 
-// The booking link every nurture email must carry (Settings, or BOOKING_URL as a fallback).
-const bookingUrl = () => String((D.kvGet('settings') || {}).bookingUrl || process.env.BOOKING_URL || '').trim();
+// The booking link every nurture email must carry: Settings, else BOOKING_URL, else the website's
+// booking page (gbxps.com/book embeds the Microsoft Bookings scheduler, on our own domain).
+const DEFAULT_BOOKING = 'https://gbxps.com/book/';
+const bookingUrl = () => String((D.kvGet('settings') || {}).bookingUrl || process.env.BOOKING_URL || DEFAULT_BOOKING).trim();
 // Does the sequence's audience filter (source / service) describe this lead?
 function matchesLead(seq, d) {
   const t = seq.trigger || {};
@@ -106,7 +108,7 @@ function personalise(t, d, sender, booking) {
 async function sendStep(e, seq, d) {
   const steps = seq.steps || []; const step = steps[e.step];
   if (!step) return stop(e, 'completed');
-  const owner = D.users.get(d.owner) || {}; const sender = owner.name || BRAND;
+  const owner = (d.owner && D.users.get(d.owner)) || {}; const sender = owner.name || BRAND;
   const booking = bookingUrl();
   const subject = personalise(step.subject, d, sender, booking);
   let body = personalise(step.body, d, sender, booking);
