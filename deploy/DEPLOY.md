@@ -212,10 +212,11 @@ creates it; or press **Nurture** on any open lead to enrol by hand.
 - "Send from" is either the campaign address (`MAIL_CAMPAIGN_FROM`, via
   Resend/Postmark, with the unsubscribe footer) or the lead owner's own
   connected Microsoft 365 mailbox for a personal first touch.
-- **Booking link**: set it once at the top of the Nurture page (or
-  `BOOKING_URL` on the server). Every nurture email carries it: place it with
-  `{{booking}}`, or it is appended as "Book a time that suits you: ..." when an
-  email lacks it.
+- **Booking link**: defaults to the website booking page
+  (`https://gbxps.com/book/`, which embeds the Microsoft Bookings scheduler).
+  Override at the top of the Nurture page or with `BOOKING_URL`. Every nurture
+  email carries it: place it with `{{booking}}`, or it is appended as "Book a
+  time that suits you: ..." when an email lacks it.
 - Leads added by hand in the CRM are auto-enrolled too (not only webhook
   leads). Creating a sequence with auto-enrol offers to **backfill** the
   matching leads already in New Lead from the last 30 days; the same is
