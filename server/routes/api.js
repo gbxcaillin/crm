@@ -10,6 +10,7 @@ const market = require('../lib/market');
 const jobs = require('../lib/jobs');
 const leads = require('../lib/leads');
 const mailing = require('../lib/mailing');
+const mailbox = require('../lib/mailbox');
 const pdf = require('../lib/pdf');
 const bookings = require('../lib/bookings');
 const cloudflare = require('../lib/cloudflare');
@@ -578,6 +579,43 @@ r.post('/email/send', async (req, res) => {
   const sent = await mail.send({ to, subject, title: '', html, footer: mail.esc((me.name ? me.name + ' · ' : '') + 'GBX Professional Services'), kind: 'outbound' });
   if (!sent) throw err(502, 'The email could not be sent (check server mail settings)');
   audit(req, u.id, 'email.send', to, subject);
+  ok(res, { sent: true });
+});
+
+/* ---------- connected mailboxes (per-user delegated OAuth) ---------- */
+r.get('/mail/connect', (req, res) => {
+  const u = session(req);
+  if (!mailbox.enabled()) throw err(404, 'Mailbox connection is not configured on the server');
+  const a = mailbox.authUrl(); auth.stashOidc(a.state, { verifier: a.verifier, uid: u.id });
+  res.writeHead(302, { location: a.url, 'cache-control': 'no-store' }); res.end();
+});
+r.get('/mail/connect/callback', async (req, res) => {
+  const back = (m) => { res.writeHead(302, { location: BASE + '/#/settings/email?m=' + encodeURIComponent(m), 'cache-control': 'no-store' }); res.end(); };
+  try {
+    const q = req.query; if (q.get('error')) return back(q.get('error_description') || q.get('error'));
+    const st = auth.takeOidc(q.get('state')); if (!st || !st.uid) return back('Connection expired, try again');
+    const out = await mailbox.connect(st.uid, q.get('code'), st.verifier);
+    audit(req, st.uid, 'mail.connect', out.email, '');
+    back('Connected ' + out.email);
+  } catch (e) { back(e.message); }
+});
+r.get('/mail/accounts', (req, res) => { const u = session(req); ok(res, { configured: mailbox.enabled(), accounts: mailbox.listFor(u.id) }); });
+r.delete('/mail/accounts', (req, res) => { const u = session(req); const email = String(req.query.get('email') || '').toLowerCase(); mailbox.remove(u.id, email); audit(req, u.id, 'mail.disconnect', email, ''); ok(res, { accounts: mailbox.listFor(u.id) }); });
+r.get('/mail/messages', async (req, res) => {
+  const u = session(req); const only = String(req.query.get('account') || '').toLowerCase();
+  const accts = mailbox.listFor(u.id).filter((a) => !only || a.email === only);
+  let out = [], errors = [];
+  for (const a of accts) { try { out = out.concat(await mailbox.recent(u.id, a.email, 20)); } catch (e) { errors.push(a.email + ': ' + e.message); } }
+  out.sort((x, y) => (y.at || '').localeCompare(x.at || ''));
+  ok(res, { messages: out, errors });
+});
+r.post('/mail/send', async (req, res) => {
+  const u = session(req); const b = await readJson(req);
+  const from = String(b.from || '').toLowerCase();
+  if (!mailbox.listFor(u.id).some((a) => a.email === from)) throw err(400, 'That mailbox is not connected to your account');
+  const to = String(b.to || '').trim(); if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) throw err(400, 'A valid recipient email is required');
+  await mailbox.send(u.id, from, { to, subject: String(b.subject || '(no subject)').slice(0, 200), body: String(b.body || ''), replyTo: b.replyTo || '' });
+  audit(req, u.id, 'mail.send', from + ' -> ' + to, String(b.subject || '').slice(0, 80));
   ok(res, { sent: true });
 });
 
