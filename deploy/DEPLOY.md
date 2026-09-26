@@ -165,7 +165,7 @@ subdomain**:
 1. **Provider.** Resend (the website already uses it) or Postmark. Set
    `RESEND_API_KEY=re_...` (or `POSTMARK_TOKEN=...`); `MAIL_MODE` is inferred.
 2. **Two identities, two reputations.**
-   - `MAIL_FROM="GBX Pipeline <notifications@gbxps.com>"` for transactional
+   - `MAIL_FROM="GBX Professional Services <notifications@gbxps.com>"` for transactional
      mail (invites, invoices, alerts).
    - `MAIL_CAMPAIGN_FROM="GBX Professional Services <hello@news.gbxps.com>"`
      for newsletters and nurture. A subdomain keeps campaign complaints away
@@ -212,6 +212,14 @@ creates it; or press **Nurture** on any open lead to enrol by hand.
 - "Send from" is either the campaign address (`MAIL_CAMPAIGN_FROM`, via
   Resend/Postmark, with the unsubscribe footer) or the lead owner's own
   connected Microsoft 365 mailbox for a personal first touch.
+- **Booking link**: set it once at the top of the Nurture page (or
+  `BOOKING_URL` on the server). Every nurture email carries it: place it with
+  `{{booking}}`, or it is appended as "Book a time that suits you: ..." when an
+  email lacks it.
+- Leads added by hand in the CRM are auto-enrolled too (not only webhook
+  leads). Creating a sequence with auto-enrol offers to **backfill** the
+  matching leads already in New Lead from the last 30 days; the same is
+  available later from the sequence card (*Enrol matching leads*).
 - **Draft with Claude** writes a 4-step sequence from the service and source
   when the Claude helper is running; otherwise a built-in starter template
   loads. Every send is logged on the lead's timeline. Admins can force a run

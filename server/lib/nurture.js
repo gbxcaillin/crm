@@ -26,13 +26,26 @@ function inHours(seq) {
 }
 const dueAt = (startedAt, day) => { const t = new Date(startedAt); t.setDate(t.getDate() + (Number(day) || 0)); return t.toISOString(); };
 
-// Does an auto-enrol sequence apply to this (new) lead?
-function matches(seq, d) {
+// The booking link every nurture email must carry (Settings, or BOOKING_URL as a fallback).
+const bookingUrl = () => String((D.kvGet('settings') || {}).bookingUrl || process.env.BOOKING_URL || '').trim();
+// Does the sequence's audience filter (source / service) describe this lead?
+function matchesLead(seq, d) {
   const t = seq.trigger || {};
-  if (!seq.active || !t.auto) return false;
   if (t.source && t.source !== d.source) return false;
   if (t.service && !String(d.service || '').toLowerCase().includes(String(t.service).toLowerCase())) return false;
   return true;
+}
+// Does an auto-enrol sequence apply to this (new) lead?
+function matches(seq, d) { return !!(seq.active && (seq.trigger || {}).auto && matchesLead(seq, d)); }
+// Leads already sitting in New Lead that the sequence would have caught: recent, emailable, not
+// opted out, not already in a sequence. Used to backfill when a sequence is created.
+function backfillCandidates(seq, days = 30) {
+  const since = new Date(); since.setDate(since.getDate() - days); const cutoff = D.localIso(since).slice(0, 10);
+  const busy = new Set(enrols().filter((e) => e.status === 'active').map((e) => e.deal));
+  return D.listCol('deals').filter((d) => d.stage === 'new' && d.email && !d.noNurture && !busy.has(d.id) && (d.created || '') >= cutoff && matchesLead(seq, d));
+}
+function backfill(seq, days = 30, by = 'system') {
+  let n = 0; for (const d of backfillCandidates(seq, days)) if (enrol(seq, d, by).enrolment) n++; return n;
 }
 
 function enrol(seq, d, by = 'system') {
@@ -82,8 +95,9 @@ function stopReason(e, seq, d) {
   }
   return '';
 }
-function personalise(t, d, sender) {
+function personalise(t, d, sender, booking) {
   return String(t || '')
+    .replace(/\{\{\s*booking\s*\}\}/g, booking || '')
     .replace(/\{\{\s*name\s*\}\}/g, (d.contact || '').split(' ')[0] || 'there')
     .replace(/\{\{\s*practice\s*\}\}/g, d.practice || 'your business')
     .replace(/\{\{\s*service\s*\}\}/g, d.service || 'your enquiry')
@@ -93,7 +107,12 @@ async function sendStep(e, seq, d) {
   const steps = seq.steps || []; const step = steps[e.step];
   if (!step) return stop(e, 'completed');
   const owner = D.users.get(d.owner) || {}; const sender = owner.name || BRAND;
-  const subject = personalise(step.subject, d, sender), body = personalise(step.body, d, sender);
+  const booking = bookingUrl();
+  const subject = personalise(step.subject, d, sender, booking);
+  let body = personalise(step.body, d, sender, booking);
+  // Every nurture email carries the booking link, whether or not the author remembered it.
+  if (booking && !body.includes(booking)) body += `\n\nBook a time that suits you: ${booking}`;
+  else if (!booking) console.warn('[nurture] no booking link set (Nurture page or BOOKING_URL); sending without one');
   const unsub = `${mail.BASE}/api/v1/nurture/stop/${e.token}`;
   let sent = false, via = '';
   if (seq.from === 'mailbox' && d.owner) {
@@ -131,11 +150,11 @@ async function run(limit = 30, { force = false } = {}) {
 function templateSteps(service, source) {
   const s = service ? service : 'your enquiry';
   return [
-    { day: 0, subject: `Thanks for getting in touch, {{name}}`, body: `Hi {{name}},\n\nThanks for reaching out to ${BRAND} about ${s}. I have your details and will come back to you personally within two business days.\n\nIf it is easier, just reply to this email with a couple of times that suit you for a 20-minute call and I will lock one in.\n\nKind regards,\n{{sender}}\n${BRAND}` },
-    { day: 3, subject: `One thing most businesses miss with ${s}`, body: `Hi {{name}},\n\nA quick one while it is fresh. When we look at ${s} with a business like {{practice}}, the biggest gains usually come from the basics done consistently rather than anything clever: a clear number to watch each week, one owner for it, and a short monthly review.\n\nOur free tools at https://gbxps.com/tools give you a quick read on where you stand. Takes about five minutes.\n\nHappy to talk it through whenever suits.\n\n{{sender}}\n${BRAND}` },
-    { day: 7, subject: `How a business like {{practice}} approached this`, body: `Hi {{name}},\n\nOne example that might be useful. A business of a similar size came to us with the same question about ${s}. We started with a short health check, picked the two changes with the best return, and reviewed them monthly. Within a quarter they had a clear picture and a plan they could actually run.\n\nIf you would like the same kind of starting point, a Health Check is a 45-minute conversation with no obligation. Reply and I will send times.\n\n{{sender}}\n${BRAND}` },
-    { day: 14, subject: `Should I close the loop, {{name}}?`, body: `Hi {{name}},\n\nI do not want to keep filling your inbox. If ${s} is still on the list, reply with a good time and I will call. If the timing is wrong, no problem at all, just say so and I will leave it there.\n\nEither way, thanks for considering ${BRAND}.\n\n{{sender}}` },
+    { day: 0, subject: `Thanks for getting in touch, {{name}}`, body: `Hi {{name}},\n\nThanks for reaching out to ${BRAND} about ${s}. I have your details and will come back to you personally within two business days.\n\nIf it is easier, pick a time that suits you for a 20-minute call here: {{booking}}\n\nKind regards,\n{{sender}}\n${BRAND}` },
+    { day: 3, subject: `One thing most businesses miss with ${s}`, body: `Hi {{name}},\n\nA quick one while it is fresh. When we look at ${s} with a business like {{practice}}, the biggest gains usually come from the basics done consistently rather than anything clever: a clear number to watch each week, one owner for it, and a short monthly review.\n\nOur free tools at https://gbxps.com/tools give you a quick read on where you stand. Takes about five minutes.\n\nHappy to talk it through whenever suits: {{booking}}\n\n{{sender}}\n${BRAND}` },
+    { day: 7, subject: `How a business like {{practice}} approached this`, body: `Hi {{name}},\n\nOne example that might be useful. A business of a similar size came to us with the same question about ${s}. We started with a short health check, picked the two changes with the best return, and reviewed them monthly. Within a quarter they had a clear picture and a plan they could actually run.\n\nIf you would like the same kind of starting point, a Health Check is a 45-minute conversation with no obligation. Book one here: {{booking}}\n\n{{sender}}\n${BRAND}` },
+    { day: 14, subject: `Should I close the loop, {{name}}?`, body: `Hi {{name}},\n\nI do not want to keep filling your inbox. If ${s} is still on the list, grab a time here and I will call: {{booking}}\n\nIf the timing is wrong, no problem at all, just say so and I will leave it there.\n\nEither way, thanks for considering ${BRAND}.\n\n{{sender}}` },
   ].map((x) => ({ ...x, source }));
 }
 
-module.exports = { enrol, autoEnrol, stop, optOut, run, matches, templateSteps, inHours };
+module.exports = { enrol, autoEnrol, stop, optOut, run, matches, matchesLead, backfillCandidates, backfill, templateSteps, inHours, bookingUrl };

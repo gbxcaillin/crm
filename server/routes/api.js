@@ -121,7 +121,7 @@ r.post('/auth/forgot', async (req, res) => {
   if (u && u.status === 'Active') {
     const t = auth.issueToken(u.id, 'reset', 1);
     audit(req, u.id, 'password.forgot', u.email, '');
-    await mail.send({ to: u.email, subject: 'Reset your GBX Pipeline password', title: 'Reset your password', html: `<p>Hi ${mail.esc(u.name.split(' ')[0])}, someone asked to reset the password for this account. The link works once and expires in 24 hours. If it wasn't you, ignore this email.</p>`, cta: { label: 'Choose a new password', url: `${BASE}/#/reset/${t}` }, kind: 'reset' });
+    await mail.send({ to: u.email, subject: 'Reset your GBX Professional Services CRM password', title: 'Reset your password', html: `<p>Hi ${mail.esc(u.name.split(' ')[0])}, someone asked to reset the password for this account. The link works once and expires in 24 hours. If it wasn't you, ignore this email.</p>`, cta: { label: 'Choose a new password', url: `${BASE}/#/reset/${t}` }, kind: 'reset' });
   }
   ok(res, { ok: true, sent: !!(u && mail.enabled()) });
 });
@@ -221,7 +221,7 @@ r.post('/sync', async (req, res) => { const u = session(req); const b = await re
 async function sendInvite(u, by) {
   const t = auth.issueToken(u.id, 'invite', 7);
   const url = `${BASE}/#/invite/${t}`;
-  const sent = await mail.send({ to: u.email, subject: `${by.name} invited you to GBX Pipeline`, title: 'You have been invited', html: `<p>Hi ${mail.esc(u.name.split(' ')[0])}, ${mail.esc(by.name)} added you to the GBX Professional Services pipeline workspace as <b>${mail.esc(u.role)}</b>. Choose a password to get started. The link expires in 7 days.</p>`, cta: { label: 'Set your password', url }, kind: 'invite' });
+  const sent = await mail.send({ to: u.email, subject: `${by.name} invited you to the GBX Professional Services CRM`, title: 'You have been invited', html: `<p>Hi ${mail.esc(u.name.split(' ')[0])}, ${mail.esc(by.name)} added you to the GBX Professional Services pipeline workspace as <b>${mail.esc(u.role)}</b>. Choose a password to get started. The link expires in 7 days.</p>`, cta: { label: 'Set your password', url }, kind: 'invite' });
   return { url, sent };
 }
 r.post('/users', async (req, res) => {
@@ -238,7 +238,7 @@ r.post('/users', async (req, res) => {
   ok(res, { user: D.users.public(D.users.get(u.id)), inviteUrl: inv.url, emailed: inv.sent });
 });
 r.post('/users/:id/invite', async (req, res) => { const me = admin(req); const u = D.users.get(req.params.id); if (!u) throw err(404, 'No such user'); if (u.status === 'Active' && u.pw_hash) throw err(400, 'User is already active'); const inv = await sendInvite(u, me); ok(res, { inviteUrl: inv.url, emailed: inv.sent }); });
-r.post('/users/:id/reset', async (req, res) => { admin(req); const u = D.users.get(req.params.id); if (!u) throw err(404, 'No such user'); const t = auth.issueToken(u.id, 'reset', 1); const url = `${BASE}/#/reset/${t}`; const sent = await mail.send({ to: u.email, subject: 'Reset your GBX Pipeline password', title: 'Reset your password', html: '<p>An admin issued a password reset for your account. The link works once and expires in 24 hours.</p>', cta: { label: 'Choose a new password', url }, kind: 'reset' }); ok(res, { resetUrl: url, emailed: sent }); });
+r.post('/users/:id/reset', async (req, res) => { admin(req); const u = D.users.get(req.params.id); if (!u) throw err(404, 'No such user'); const t = auth.issueToken(u.id, 'reset', 1); const url = `${BASE}/#/reset/${t}`; const sent = await mail.send({ to: u.email, subject: 'Reset your GBX Professional Services CRM password', title: 'Reset your password', html: '<p>An admin issued a password reset for your account. The link works once and expires in 24 hours.</p>', cta: { label: 'Choose a new password', url }, kind: 'reset' }); ok(res, { resetUrl: url, emailed: sent }); });
 
 /* ---------- API keys ---------- */
 r.post('/keys', async (req, res) => { const me = admin(req); const b = await readJson(req); if (!b.name) throw err(400, 'Name required'); const scopes = (Array.isArray(b.scopes) ? b.scopes : []).filter((s) => ['deals:read', 'deals:write', 'contacts:write', 'files:read', 'ai:write', 'subscribers:write'].includes(s)); const k = auth.createApiKey(String(b.name).slice(0, 60), scopes.length ? scopes : ['deals:read'], me.id); audit(req, me.id, 'key.create', b.name, scopes.join(' ')); ok(res, { id: k.id, key: k.key, keys: auth.listApiKeys() }); });
@@ -257,7 +257,7 @@ r.get('/analytics/summary', async (req, res) => { session(req); ok(res, await cl
 r.get('/push/key', (req, res) => ok(res, { publicKey: push.publicKey }));
 r.post('/push/subscribe', async (req, res) => { const u = session(req); const b = await readJson(req); push.subscribe(u.id, b.device, b.subscription); ok(res, { devices: push.devices() }); });
 r.post('/push/unsubscribe', async (req, res) => { session(req); const b = await readJson(req); if (b.endpoint) push.unsubscribe(b.endpoint); ok(res, { devices: push.devices() }); });
-r.post('/push/test', async (req, res) => { const u = session(req); const n = await push.sendToUser(u.id, { title: 'GBX Pipeline test', body: 'Push is working on this device.', url: '#/settings/notifications', kind: 'system', id: 'test' }); ok(res, { sent: n }); });
+r.post('/push/test', async (req, res) => { const u = session(req); const n = await push.sendToUser(u.id, { title: 'GBX Professional Services', body: 'Push is working on this device.', url: '#/settings/notifications', kind: 'system', id: 'test' }); ok(res, { sent: n }); });
 
 /* ---------- leads API (Claude agent, Zapier, ads platforms) ---------- */
 const dealView = (d) => ({ ...d, campaign: (D.kvGet('campaigns') || {})[d.id] || '' });
@@ -544,6 +544,16 @@ r.post('/sequences/:id/enrol', async (req, res) => {
   const out = nurture.enrol(seq, d, u.id); if (out.error) throw err(400, out.error);
   ok(res, out);
 });
+// Enrol the recent New Leads a sequence would have caught (preview with apply=false).
+r.post('/sequences/:id/backfill', async (req, res) => {
+  const u = session(req); const b = await readJson(req);
+  const seq = D.getRecord('sequences', req.params.id); if (!seq) throw err(404, 'No such sequence');
+  const days = Math.min(365, Math.max(1, Number(b.days) || 30));
+  if (!b.apply) return ok(res, { matching: nurture.backfillCandidates(seq, days).length, days });
+  const enrolled = nurture.backfill(seq, days, u.id);
+  audit(req, u.id, 'nurture.backfill', seq.name, enrolled + ' enrolled');
+  ok(res, { enrolled, days });
+});
 r.post('/enrolments/:id/stop', (req, res) => {
   const u = session(req); const e = D.getRecord('enrolments', req.params.id); if (!e) throw err(404, 'No such enrolment');
   ok(res, { enrolment: nurture.stop(e, 'stopped by ' + (u.name || 'staff'), u.id) });
@@ -557,7 +567,7 @@ r.post('/sequences/draft', async (req, res) => {
   const prompt = [
     `You write nurture email sequences for GBX Professional Services (professional services and workplace financial education/wellbeing for businesses of any kind, Australia). Author: ${u.name || 'a consultant'}.`,
     `Write a ${count}-step follow-up sequence for a lead who enquired${service ? ' about "' + service + '"' : ''}${source ? ' via ' + source : ''}.${goal ? ' Goal: ' + goal : ' Goal: book a 45-minute Health Check call.'}`,
-    'Rules: plain text bodies (no HTML, no markdown), each under 120 words, warm, specific, no hype, one clear ask per email, sign off with {{sender}}. Use {{name}} for the first name and {{practice}} for the business name. Space the steps over about two weeks (day offsets from enrolment, first is 0). The last step should make it easy to say no.',
+    'Rules: plain text bodies (no HTML, no markdown), each under 120 words, warm, specific, no hype, one clear ask per email, sign off with {{sender}}. Every email must include {{booking}} (a scheduling link) as the call to action, e.g. "Pick a time here: {{booking}}". Use {{name}} for the first name and {{practice}} for the business name. Space the steps over about two weeks (day offsets from enrolment, first is 0). The last step should make it easy to say no.',
     'Return ONLY compact JSON, no prose, no code fences: {"steps":[{"day":<int>,"subject":"...","body":"..."}]}',
   ].join('\n');
   try {
@@ -777,7 +787,7 @@ r.get('/admin/status', (req, res) => { admin(req); ok(res, { features: state.fea
 r.post('/admin/backup', async (req, res) => { const me = admin(req); const f = await jobs.backup(); audit(req, me.id, 'admin.backup', f, ''); ok(res, { file: f }); });
 r.get('/admin/audit', (req, res) => { admin(req); const since = req.query.get('since') || ''; ok(res, { rows: D.auditRecent(Math.min(2000, Number(req.query.get('limit')) || 200), since) }); });
 r.get('/admin/audit.csv', (req, res) => { const me = admin(req); audit(req, me.id, 'audit.export', '', ''); const rows = D.auditRecent(20000, req.query.get('since') || ''); const csv = ['at,who,ip,action,target,detail', ...rows.map((r) => [r.at, r.who, r.ip, r.action, r.target, r.detail].map((v) => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(','))].join('\n'); res.writeHead(200, { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': 'attachment; filename="pipeline-audit.csv"', 'cache-control': 'no-store' }); res.end(csv); });
-r.post('/admin/test-mail', async (req, res) => { const u = admin(req); const sent = await mail.send({ to: u.email, subject: 'GBX Pipeline test email', title: 'Email is working', text: 'This is a test from the Pipeline server.', cta: { label: 'Open Pipeline', url: BASE }, kind: 'test' }); ok(res, { sent, mode: mail.mode() }); });
+r.post('/admin/test-mail', async (req, res) => { const u = admin(req); const sent = await mail.send({ to: u.email, subject: 'GBX Professional Services test email', title: 'Email is working', text: 'This is a test from the Pipeline server.', cta: { label: 'Open Pipeline', url: BASE }, kind: 'test' }); ok(res, { sent, mode: mail.mode() }); });
 r.post('/admin/run-job', async (req, res) => { admin(req); const b = await readJson(req); const fn = { chat: jobs.chatDigest, digest: jobs.dailyDigest, backup: jobs.backup, market: market.refreshSecurities }[b.job]; if (!fn) throw err(400, 'Unknown job'); ok(res, { result: await fn() }); });
 
 module.exports = r;
