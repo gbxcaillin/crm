@@ -609,6 +609,21 @@ r.get('/mail/messages', async (req, res) => {
   out.sort((x, y) => (y.at || '').localeCompare(x.at || ''));
   ok(res, { messages: out, errors });
 });
+r.get('/mail/message', async (req, res) => {
+  const u = session(req); const acct = String(req.query.get('account') || '').toLowerCase();
+  if (!mailbox.listFor(u.id).some((a) => a.email === acct)) throw err(400, 'That mailbox is not connected to your account');
+  ok(res, { message: await mailbox.message(u.id, acct, req.query.get('id')) });
+});
+r.post('/mail/draft', async (req, res) => {
+  const u = session(req); const b = await readJson(req); const acct = String(b.account || '').toLowerCase();
+  if (!mailbox.listFor(u.id).some((a) => a.email === acct)) throw err(400, 'That mailbox is not connected to your account');
+  const m = await mailbox.message(u.id, acct, b.id); const me = D.users.get(u.id) || {};
+  const first = String(m.fromName || 'there').split(' ')[0];
+  if (!claude.enabled()) return ok(res, { draft: `Hi ${first},\n\nThanks for your email.\n\n\n\nKind regards,\n${me.name || ''}\nGBX Professional Services` });
+  const prompt = `You are ${me.name || 'a consultant'} at GBX Professional Services (professional services and workplace financial education for businesses). Draft a concise, warm, professional reply to the email below. Output ONLY the reply body - no subject line, no preamble, no code fences.\n\nFrom: ${m.fromName} <${m.from}>\nSubject: ${m.subject}\n\n${String(m.text || '').slice(0, 4000)}`;
+  try { ok(res, { draft: String(await claude.run(prompt) || '').trim() }); }
+  catch (e) { ok(res, { draft: `Hi ${first},\n\nThanks for your email.\n\n\n\nKind regards,\n${me.name || ''}` }); }
+});
 r.post('/mail/send', async (req, res) => {
   const u = session(req); const b = await readJson(req);
   const from = String(b.from || '').toLowerCase();

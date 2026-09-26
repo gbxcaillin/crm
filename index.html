@@ -1319,7 +1319,7 @@ function route(){
   for(const k in CHARTS)delete CHARTS[k];
   c.innerHTML=view();
   bindCharts();
-  if(rr==='research')ensureHist([...S.securities.map(s=>s.t),...(S.watchlist||[])]);if(rr==='security')ensureHist([decodeURIComponent(a||'')]);if(rr==='model'){const m=modelOf(a);if(m)ensureHist(m.holdings.map(h=>h.t))}if(rr==='files')fetchFiles(S.ui.fileDeal);if(rr==='dashboard')ensureAnalytics();if(rr==='settings'&&a==='security'&&isServer())loadSecurityPanels();if(rr==='settings'&&a==='email')loadMailAccounts();
+  if(rr==='research')ensureHist([...S.securities.map(s=>s.t),...(S.watchlist||[])]);if(rr==='security')ensureHist([decodeURIComponent(a||'')]);if(rr==='model'){const m=modelOf(a);if(m)ensureHist(m.holdings.map(h=>h.t))}if(rr==='files')fetchFiles(S.ui.fileDeal);if(rr==='email')fetchMail();if(rr==='dashboard')ensureAnalytics();if(rr==='settings'&&a==='security'&&isServer())loadSecurityPanels();if(rr==='settings'&&a==='email')loadMailAccounts();
   const crumbs={dashboard:'Dashboard',pipeline:'Pipeline',clients:'Clients',client:`<a href="#/clients" style="color:var(--ink-3)">Clients</a><span class="sep">/</span>${esc(client(a)?.name||'Client')}`,reports:'Reports',research:'Research',security:`<a href="#/research" style="color:var(--ink-3)">Research</a><span class="sep">/</span>${esc(decodeURIComponent(a||''))}`,model:`<a href="#/research" style="color:var(--ink-3)">Research</a><span class="sep">/</span>${esc(modelOf(a)?.name||'Model')}`,tasks:'Tasks',calendar:'Calendar',email:'Email',chat:'Chat',mailing:'Mailing list',files:'Files',invoices:'Invoices',invoice:`<a href="#/invoices" style="color:var(--ink-3)">Invoices</a><span class="sep">/</span>${esc(invoice(a)?.number||'Invoice')}`,integrations:'Integrations',settings:`Settings<span class="sep">/</span>${{profile:'Profile',email:'Email accounts',fields:'Fields',stages:'Stages',team:'Team',notifications:'Notifications',invoicing:'Invoicing',research:'Research data',storage:'Storage',security:'Security'}[a]||'Profile'}`,deal:`<a href="#/pipeline" style="color:var(--ink-3)">Pipeline</a><span class="sep">/</span>${esc(deal(a)?.practice||'Deal')}`};
   $('#crumb').innerHTML=crumbs[rr];
   const me=user(S.me);$('#me-av').textContent=initials(me.name);$('#me-name').textContent=me.name;$('#me-role').textContent=me.role;
@@ -1641,13 +1641,46 @@ function vTasks(){
 }
 
 /* ================= EMAIL ================= */
+const MAIL={accounts:[],messages:[],errors:[],at:0,loaded:false,body:{}};
+function fetchMail(force){
+  if(!isServer()||!NET.features.mailbox)return;
+  if(!force&&Date.now()-MAIL.at<45000&&MAIL.loaded)return;
+  MAIL.at=Date.now();
+  api('mail/accounts').then(acc=>{MAIL.accounts=acc.accounts||[];if(!MAIL.accounts.length){MAIL.messages=[];MAIL.loaded=true;if(location.hash.replace(/\?.*/,'')==='#/email')softRoute();return;}return api('mail/messages').then(r=>{MAIL.messages=r.messages||[];MAIL.errors=r.errors||[];MAIL.loaded=true;if(location.hash.replace(/\?.*/,'')==='#/email')softRoute()})}).catch(()=>{MAIL.loaded=true});
+}
+function fetchMailBody(acct,id){
+  if(MAIL.body[id]){softRoute();return;}
+  api('mail/message?account='+encodeURIComponent(acct)+'&id='+encodeURIComponent(id)).then(r=>{MAIL.body[id]=r.message;softRoute()}).catch(e=>toast(e.message));
+}
+function dealByEmail(addr){addr=String(addr||'').toLowerCase();return S.deals.find(d=>d.email&&d.email.toLowerCase()===addr)}
+function vEmailReal(){
+  const key=S.ui.mailMsg||'';const [oAcct,oId]=key.split('|');
+  const cur=oId?(MAIL.body[oId]||MAIL.messages.find(m=>m.id===oId)):null;
+  const openState=S.ui.mailOpen&&cur;
+  const acctChips=MAIL.accounts.map(a=>`<span class="chip chip-line">${esc(a.email)}</span>`).join(' ');
+  const list=MAIL.messages.length?MAIL.messages.map(m=>{const d=dealByEmail(m.from);return`<div class="thr ${m.read?'':'unread'} ${oId===m.id?'active':''}" data-mailmsg="${esc(m.account)}|${esc(m.id)}"><div class="l1"><span class="from ellip">${esc(m.fromName||m.from)}</span><span class="when">${fmtDT(m.at)}</span></div><div class="subj ellip">${esc(m.subject)}</div><div class="prev ellip">${esc((m.preview||'').replace(/\s+/g,' '))}</div><div class="deal"><span class="faint">${esc(m.account)}</span>${d?` · ${esc(d.practice)}`:''}</div></div>`}).join(''):`<div class="empty">${MAIL.loaded?'Inbox is empty':'Loading…'}</div>`;
+  let read='<div class="empty">Select a message</div>';
+  if(openState){const d=dealByEmail(cur.from);const full=MAIL.body[oId];
+    read=`<div class="mr-head"><button class="btn btn-sm btn-quiet mail-back" id="mail-back" style="align-self:flex-start">‹ Back</button><h2>${esc(cur.subject)}</h2><div class="row wrap" style="gap:8px"><span class="muted" style="font-size:12px">${esc(cur.fromName||cur.from)} &lt;${esc(cur.from)}&gt;</span>${d?`<a class="chip chip-teal" href="#/deal/${d.id}">${esc(d.practice)}</a>`:''}<span class="grow"></span>${cur.url?`<a class="btn btn-sm btn-quiet" href="${esc(cur.url)}" target="_blank" rel="noopener">Open in Outlook</a>`:''}</div><div class="faint" style="font-size:11px">into ${esc(cur.account)} · ${fmtDT(cur.at)}</div></div>
+    <div class="msg"><div class="mb">${full?esc(full.text).replace(/\n/g,'<br>'):'<span class="faint">Loading message…</span>'}</div></div>
+    <form class="reply" id="mail-reply" data-acct="${esc(cur.account)}" data-id="${esc(cur.id)}" data-to="${esc(cur.from)}" data-subject="${esc(cur.subject)}"><textarea class="textarea" name="body" placeholder="Reply to ${esc(cur.fromName||cur.from)}…" style="min-height:80px"></textarea><div class="row"><button class="btn btn-primary btn-sm" type="submit">Send reply</button><button class="btn btn-sm btn-quiet" type="button" id="mail-ai" data-acct="${esc(cur.account)}" data-id="${esc(cur.id)}">Draft with Claude</button><span class="faint grow" style="font-size:11px;text-align:right">Sends from ${esc(cur.account)}${d?' · logged to '+esc(d.practice):''}</span></div></form>`;
+  }
+  return`<div class="page" style="gap:12px"><div class="page-head"><div><h1>Email</h1><div class="sub">Your connected ${MAIL.accounts.length>1?'mailboxes':'mailbox'}: ${acctChips} · <a href="#/settings/email">manage</a></div></div><button class="btn btn-primary" data-mailcompose>Compose</button></div>
+  <div class="mail ${openState?'open':''}">
+    <div class="mail-list">${list}</div>
+    <div class="mail-read">${read}</div>
+  </div>${MAIL.errors&&MAIL.errors.length?`<div class="err" style="font-size:11px">${esc(MAIL.errors.join('; '))}</div>`:''}</div>`;
+}
 function vEmail(){
+  if(isServer()&&NET.features.mailbox&&MAIL.accounts.length)return vEmailReal();
+  const connectBanner=isServer()&&NET.features.mailbox?`<div class="card" style="margin-bottom:12px"><div class="card-body row wrap" style="gap:10px;align-items:center"><span class="grow" style="font-size:12.5px">Connect your Microsoft 365 inbox to see and reply to real email here.</span><a class="btn btn-sm btn-primary" href="#/settings/email">Connect a mailbox</a></div></div>`:'';
   const u=S.ui;const ths=S.threads.filter(t=>t.folder===u.folder).sort((a,b)=>a.at<b.at?1:-1);
   const cur=S.threads.find(t=>t.id===u.thread&&t.folder===u.folder)||ths[0];
   if(cur&&cur.unread){cur.unread=false}
   const cnt=f=>S.threads.filter(t=>t.folder===f&&t.unread).length||'';
   const folders=[['inbox','Inbox'],['sent','Sent'],['drafts','Drafts'],['archive','Archive']];
-  return`<div class="page" style="gap:12px"><div class="page-head"><div><h1>Email</h1><div class="sub">Connected: caillin@gbxps.com via Microsoft 365 · every deal email is threaded onto its card automatically</div></div><button class="btn btn-primary" data-open="compose">Compose</button></div>
+  return`<div class="page" style="gap:12px"><div class="page-head"><div><h1>Email</h1><div class="sub">${isServer()?'Deal emails logged here · connect a mailbox to see live inbox mail':'Connected: caillin@gbxps.com via Microsoft 365 · every deal email is threaded onto its card'}</div></div><button class="btn btn-primary" data-open="compose">Compose</button></div>
+  ${connectBanner}
   <div class="mail ${u.mailOpen&&cur?'open':''}">
     <div class="folder-strip">${folders.map(([k,l])=>`<button class="${u.folder===k?'active':''}" data-folder="${k}">${l}<span class="c">${cnt(k)}</span></button>`).join('')}</div>
     <div class="mail-folders">${folders.map(([k,l])=>`<button class="${u.folder===k?'active':''}" data-folder="${k}">${l}<span class="c">${cnt(k)}</span></button>`).join('')}
@@ -2222,6 +2255,12 @@ function openCompose(dealId,draft=''){
     if(isServer()&&NET.features.mail){const bt=e.target.querySelector('[type=submit]');bt.disabled=true;bt.textContent='Sending…';try{await api('email/send',{body:{to,subject,body,deal:did}});logLocal('Email sent to '+to)}catch(err){toast(err.message);bt.disabled=false;bt.textContent='Send'}return}
     logLocal(isServer()?'Logged — email is not configured on the server':'Logged (preview)')}
 }
+function openMailCompose(prefill={}){
+  const accts=MAIL.accounts||[];
+  if(!accts.length){toast('Connect a mailbox first (Settings → Email accounts)');return}
+  modal('New email',`<div class="form-grid"><div class="field"><span class="label">From</span><select class="select" name="from">${accts.map(a=>`<option value="${esc(a.email)}">${esc(a.email)}</option>`).join('')}</select></div><div class="field"><span class="label">To</span><input class="input" name="to" type="email" value="${esc(prefill.to||'')}" required></div><div class="field span2"><span class="label">Subject</span><input class="input" name="subject" value="${esc(prefill.subject||'')}" required></div><div class="field span2"><span class="label">Message</span><textarea class="textarea" name="body" style="min-height:170px">${esc(prefill.body||'')}</textarea></div></div><p class="faint" style="font-size:11px">Sends from your connected mailbox via Microsoft 365.</p>`,`<button class="btn btn-quiet" type="button" data-close-modal>Cancel</button><button class="btn btn-primary" type="submit">Send</button>`,{wide:true});
+  $('#mform').onsubmit=async e=>{e.preventDefault();const fd=new FormData(e.target);const to=String(fd.get('to')||'').trim();if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)){toast('Enter a valid recipient');return}const bt=e.target.querySelector('[type=submit]');bt.disabled=true;bt.textContent='Sending…';try{await api('mail/send',{body:{from:fd.get('from'),to,subject:fd.get('subject'),body:fd.get('body')}});const d=dealByEmail(to);if(d)logAct(d.id,'email','Email sent',fd.get('subject'));closeModal();toast('Email sent to '+to);fetchMail(true)}catch(err){toast(err.message);bt.disabled=false;bt.textContent='Send'}};
+}
 function aiDraft(d){if(!d)return'';const first=d.contact.split(' ')[0];const s=stage(d.stage).id;
   const mid={new:`Thanks for reaching out about ${d.service.toLowerCase()} for ${d.practice}. From what you shared, the quickest way to see where the upside is would be a 45‑minute Health Check — we look at your current numbers and come back with two or three concrete priorities.`,hc:`Looking forward to the Health Check. Ahead of it, could you send your last quarter's lead volume, conversion rate and average client value? That lets us price the scope on the call rather than afterwards.`,scope:`Following the Health Check, here is the scope we discussed for ${d.practice}. I have kept it to the two items with the clearest payback so the engagement stays focused.`,prop:`Just checking in on the proposal. Happy to walk the partners through it, or to adjust the commitment structure if that is the sticking point.`,neg:`Thanks for the redlines. I have accepted the review‑frequency change and proposed alternative wording on data ownership that keeps your reporting rights intact. Can we close this out on a 15‑minute call tomorrow?`}[s]||`Thanks for your time.`;
   return`Hi ${first},\n\n${mid}\n\nKind regards,\n${user(S.me).name}\nGBX Professional Services`}
@@ -2410,6 +2449,9 @@ function bindView(r){
       return}
     if(x=el('[data-folder]')){S.ui.folder=x.dataset.folder;S.ui.thread=0;S.ui.mailOpen=false;route();return}
     if(x=el('[data-thread]')){S.ui.thread=+x.dataset.thread;S.ui.mailOpen=true;route();return}
+    if(x=el('[data-mailmsg]')){const [acct,id]=x.dataset.mailmsg.split('|');S.ui.mailMsg=x.dataset.mailmsg;S.ui.mailOpen=true;fetchMailBody(acct,id);route();return}
+    if(x=el('#mail-ai')){const bb=x;bb.disabled=true;bb.textContent='Drafting…';api('mail/draft',{body:{account:bb.dataset.acct,id:bb.dataset.id}}).then(r=>{const ta=$('#mail-reply [name=body]');if(ta)ta.value=r.draft||''}).catch(err=>toast(err.message)).finally(()=>{bb.disabled=false;bb.textContent='Draft with Claude'});return}
+    if(x=el('[data-mailcompose]')){openMailCompose();return}
     if(x=el('[data-archive]')){const th=S.threads.find(q=>q.id===+x.dataset.archive);th.folder='archive';toast('Archived');route();return}
     if(x=el('[data-filedeal]')){S.ui.fileDeal=+x.dataset.filedeal;route();return}
     if(x=el('[data-delfile]')){S.files=S.files.filter(f=>f.id!==+x.dataset.delfile);toast('Link removed — file stays in SharePoint');route();return}
@@ -2472,6 +2514,7 @@ function bindView(r){
     if(e.target.id==='f-q'){S.ui.q=e.target.value;clearTimeout(c._t);c._t=setTimeout(()=>{route();const i=$('#f-q');if(i){i.focus();i.setSelectionRange(99,99)}},250)}};
   c.onsubmit=e=>{if(e.target.id==='chat-form'){e.preventDefault();sendChat(e.target);return}
     if(e.target.id==='pw-form'){e.preventDefault();const f=e.target;api('auth/password',{body:{current:f.current.value,password:f.password.value}}).then(()=>{toast('Password updated');f.reset();loadSecurityPanels()}).catch(err=>toast(err.message));return}
+    if(e.target.id==='mail-reply'){e.preventDefault();const f=e.target;const body=f.body.value.trim();if(!body)return;const to=f.dataset.to;const subject=/^re:/i.test(f.dataset.subject||'')?f.dataset.subject:'Re: '+f.dataset.subject;const bt=f.querySelector('[type=submit]');bt.disabled=true;bt.textContent='Sending…';api('mail/send',{body:{from:f.dataset.acct,to,subject,body,replyTo:f.dataset.id}}).then(()=>{const d=dealByEmail(to);if(d)logAct(d.id,'email','Email reply sent','Re: '+f.dataset.subject);toast('Reply sent to '+to);f.body.value='';fetchMail(true)}).catch(err=>{toast(err.message);bt.disabled=false;bt.textContent='Send reply'});return}
     if(e.target.id==='reply-form'){e.preventDefault();const th=S.threads.find(q=>q.id===+e.target.dataset.thread);const body=e.target.body.value.trim();if(!body||!th)return;
       const to=th.addr||'';const subject=/^re:/i.test(th.subject||'')?th.subject:'Re: '+th.subject;
       const logLocal=(label)=>{th.msgs.push({from:user(S.me).name,out:true,at:now(),body});th.at=now();markSynced('threads',th);if(th.deal)logAct(th.deal,'email','Email sent','Re: '+th.subject);toast(label);route()};
