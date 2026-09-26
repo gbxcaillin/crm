@@ -607,7 +607,22 @@ r.get('/mail/messages', async (req, res) => {
   let out = [], errors = [];
   for (const a of accts) { try { out = out.concat(await mailbox.recent(u.id, a.email, 20)); } catch (e) { errors.push(a.email + ': ' + e.message); } }
   out.sort((x, y) => (y.at || '').localeCompare(x.at || ''));
+  // Auto-log inbound mail onto the matching deal's timeline (idempotent by message id).
+  try {
+    const deals = D.listCol('deals'); const acts = D.listCol('activity');
+    for (const m of out) {
+      const d = deals.find((x) => x.email && x.email.toLowerCase() === String(m.from).toLowerCase());
+      if (!d || acts.some((a) => a.msgId === m.id)) continue;
+      const rec = { id: Date.now() + Math.floor(Math.random() * 1e6), deal: d.id, type: 'email', who: '', text: 'Email received', detail: String(m.subject || '').slice(0, 200), at: m.at || D.nowIso(), msgId: m.id };
+      D.putRecord('activity', rec, 'system'); acts.push(rec);
+    }
+  } catch (e) { console.error('[mail] auto-log skipped:', e.message); }
   ok(res, { messages: out, errors });
+});
+r.get('/mail/conversation', async (req, res) => {
+  const u = session(req); const acct = String(req.query.get('account') || '').toLowerCase();
+  if (!mailbox.listFor(u.id).some((a) => a.email === acct)) throw err(400, 'That mailbox is not connected to your account');
+  ok(res, { messages: await mailbox.conversation(u.id, acct, req.query.get('conv')) });
 });
 r.get('/mail/message', async (req, res) => {
   const u = session(req); const acct = String(req.query.get('account') || '').toLowerCase();
