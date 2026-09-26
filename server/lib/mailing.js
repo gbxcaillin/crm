@@ -1,7 +1,7 @@
 'use strict';
 // Mailing list + bulk email. Subscribers are a synced collection; website signups arrive via
-// POST /hooks/subscribe and land here immediately (as "pending" until they confirm, when double
-// opt-in is on). Bulk sends go through mail.js, one message per recipient with a per-recipient
+// POST /hooks/subscribe and land here immediately (or as "pending" until they confirm, when
+// MAILING_DOUBLE_OPTIN=1). Bulk sends go through mail.js, one message per recipient with a per-recipient
 // unsubscribe link and one-click List-Unsubscribe headers (Spam Act 2003 requires a working
 // unsubscribe; Gmail/Yahoo/Outlook require the headers), rate-limited to stay under send limits.
 //
@@ -16,9 +16,9 @@ const validEmail = (e) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e);
 const newToken = () => crypto.randomBytes(16).toString('hex');
 const find = (email) => D.listCol('subscribers').find((s) => s.email === normEmail(email));
 const byToken = (t) => (t ? D.listCol('subscribers').find((s) => s.token === t) : null);
-// Double opt-in for website signups: on unless MAILING_DOUBLE_OPTIN=0, and only when we can
-// actually send the confirmation email.
-const doubleOptIn = () => process.env.MAILING_DOUBLE_OPTIN !== '0' && mail.enabled();
+// Website signups are single-click by default. Set MAILING_DOUBLE_OPTIN=1 to require an emailed
+// confirmation first (only takes effect when we can actually send the confirmation email).
+const doubleOptIn = () => process.env.MAILING_DOUBLE_OPTIN === '1' && mail.enabled();
 const brand = 'GBX Professional Services';
 
 async function sendConfirm(s) {
@@ -28,9 +28,9 @@ async function sendConfirm(s) {
 }
 
 // Add a subscriber, or re-subscribe/enrich an existing one. Idempotent on email.
-// { confirm: true } (website signups) applies double opt-in: new or previously unsubscribed
-// addresses become "pending" and get a confirmation email. Staff adding someone in the CRM
-// (existing clients who have consented) subscribe immediately.
+// { confirm: true } (website signups) applies double opt-in when it is switched on: new or
+// previously unsubscribed addresses become "pending" and get a confirmation email. Otherwise,
+// and for staff adding someone in the CRM, the address is subscribed immediately.
 async function add(input, by = 'system', { confirm = false } = {}) {
   const email = normEmail(input.email);
   if (!validEmail(email)) return { error: 'A valid email is required' };
