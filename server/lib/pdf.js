@@ -129,4 +129,57 @@ function assemble(content) {
   return Buffer.from(out, 'latin1');
 }
 
-module.exports = { invoicePdf };
+// Render a model portfolio "pack" to a PDF Buffer. m: the model record; data: {
+// holdings:[{t,name,cls,w,yld,mer,y1}], alloc:[{cls,pct}], tw, wYield, wFee, wY1 }; s: business info.
+function modelPdf(m, data, s = {}) {
+  const b = builder();
+  const rightX = PAGE_W - M;
+  let y = M + 6;
+  b.text(M, y, 'GBX', { font: 'F2', size: 20 });
+  b.text(M + 46, y - 2, 'PROFESSIONAL SERVICES', { font: 'F1', size: 8, color: '0.42 0.42 0.4' });
+  b.text(rightX - 150, y, 'MODEL PORTFOLIO', { font: 'F2', size: 13 });
+  y += 24;
+  b.text(M, y, ascii(m.name || 'Model portfolio'), { font: 'F2', size: 17 }); y += 18;
+  [['Risk profile', m.risk], ['Benchmark', m.benchmark], ['Objective', m.objective]].filter(([, v]) => v).forEach(([k, v]) => { b.text(M, y, k + ':', { font: 'F2', size: 9, color: '0.42 0.42 0.4' }); b.text(M + 78, y, ascii(v), { font: 'F1', size: 9.5 }); y += 13; });
+
+  // Allocation summary
+  y += 8; b.text(M, y, 'ASSET ALLOCATION', { font: 'F2', size: 8, color: '0.42 0.42 0.4' }); y += 14;
+  (data.alloc || []).forEach((a) => { b.text(M, y, ascii(a.cls), { font: 'F1', size: 9.5 }); b.rightMono(M + 200, y, a.pct.toFixed(1) + '%', 9.5); y += 13; });
+
+  // Holdings table
+  y += 10;
+  const cW = rightX - 44, cF = rightX - 104, cY = rightX - 164, cT = rightX - 224;
+  b.rect(M, y - 10, rightX - M, 20, '0.95 0.94 0.91');
+  b.text(M + 6, y + 4, 'HOLDING', { font: 'F2', size: 8, color: '0.35 0.35 0.33' });
+  b.text(cT - 24, y + 4, 'TARGET', { font: 'F2', size: 8, color: '0.35 0.35 0.33' });
+  b.text(cY - 22, y + 4, 'YIELD', { font: 'F2', size: 8, color: '0.35 0.35 0.33' });
+  b.text(cF - 16, y + 4, 'FEE', { font: 'F2', size: 8, color: '0.35 0.35 0.33' });
+  b.text(cW - 16, y + 4, '1 YR', { font: 'F2', size: 8, color: '0.35 0.35 0.33' });
+  y += 24;
+  (data.holdings || []).forEach((h) => {
+    const nm = ascii(`${h.name || h.t} (${h.t})`);
+    b.text(M + 6, y, nm.length > 52 ? nm.slice(0, 51) + '...' : nm, { font: 'F1', size: 9 });
+    b.rightMono(cT, y, (h.w || 0) + '%', 9);
+    b.rightMono(cY, y, (h.yld != null ? h.yld.toFixed(1) : '-') + '%', 9);
+    b.rightMono(cF, y, (h.mer != null ? h.mer.toFixed(2) + '%' : '-'), 9);
+    b.rightMono(cW, y, (h.y1 != null ? (h.y1 >= 0 ? '+' : '') + h.y1.toFixed(1) : '-') + '%', 9);
+    y += 15; b.line(M, y - 6, rightX, y - 6, 0.4, 0.85);
+  });
+  y += 6;
+  b.text(M + 6, y, 'Weighted', { font: 'F2', size: 9 });
+  b.rightMono(cT, y, (data.tw || 0).toFixed(0) + '%', 9);
+  b.rightMono(cY, y, (data.wYield || 0).toFixed(1) + '%', 9);
+  b.rightMono(cF, y, (data.wFee || 0).toFixed(2) + '%', 9);
+  b.rightMono(cW, y, ((data.wY1 || 0) >= 0 ? '+' : '') + (data.wY1 || 0).toFixed(1) + '%', 9);
+  y += 30;
+
+  const disc = ascii(m.notes || '') || 'This model portfolio is general information only and not personal financial advice. Past performance is not a reliable indicator of future performance. Consider the relevant PDS/TMD and your circumstances, or seek advice, before investing.';
+  b.text(M, y, 'IMPORTANT', { font: 'F2', size: 8, color: '0.42 0.42 0.4' }); y += 12;
+  // naive wrap ~ 95 chars per line at 8.5pt
+  disc.match(/.{1,95}(\s|$)/g)?.forEach((ln) => { b.text(M, y, ln.trim(), { font: 'F1', size: 8.5, color: '0.4 0.4 0.38' }); y += 11; });
+  if (s.entity) { y += 6; b.text(M, y, ascii(s.entity) + (s.abn ? '  ABN ' + s.abn : ''), { font: 'F1', size: 8.5, color: '0.5 0.5 0.48' }); }
+
+  return assemble(b.build());
+}
+
+module.exports = { invoicePdf, modelPdf };
