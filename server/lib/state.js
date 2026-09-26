@@ -22,7 +22,7 @@ const SERVER_SETTINGS = (s) => {
   s.storage = s.storage || 'sharepoint';
   return s;
 };
-function features() { return { mail: mail.enabled(), mailMode: mail.mode(), sharepoint: graph.enabled(), mailbox: require('./mailbox').enabled(), market: true, push: true, webAnalytics: cloudflare.enabled(), aiAssist: claude.enabled(), bookingUrl: require('./nurture').bookingUrl(), demo: process.env.DEMO_DATA === '1' }; }
+function features() { return { mail: mail.enabled(), mailMode: mail.mode(), sharepoint: graph.enabled(), mailbox: require('./mailbox').enabled(), market: true, push: true, webAnalytics: cloudflare.enabled(), aiAssist: claude.enabled(), bookings: require('./bookings').enabled(), bookingUrl: require('./nurture').bookingUrl(), demo: process.env.DEMO_DATA === '1' }; }
 
 /* ---------- visibility: Admins and Managers see everything; Members see the deals and clients they own ---------- */
 function scopeFor(user) {

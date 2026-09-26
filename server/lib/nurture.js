@@ -89,6 +89,8 @@ function stopReason(e, seq, d) {
   const on = seq.stopOn || {};
   if (d.stage === 'lost') return 'marked lost';
   if (on.stage !== false && d.stage !== 'new') { const st = (D.kvGet('stages') || []).find((s) => s.id === d.stage); return 'moved to ' + (st ? st.name : d.stage); }
+  // A call booked through Microsoft Bookings (synced onto the deal) is the goal: stop here.
+  if (D.listCol('activity').some((a) => a.deal === d.id && /^Call booked/.test(a.text || '') && a.at > e.at)) return 'booked a call';
   if (on.reply !== false) {
     // Any human email activity on the deal after enrolment (a reply received, or someone here
     // wrote to them) means a person has the conversation; the sequence steps aside.
