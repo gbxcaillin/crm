@@ -221,6 +221,8 @@ creates it; or press **Nurture** on any open lead to enrol by hand.
   leads). Creating a sequence with auto-enrol offers to **backfill** the
   matching leads already in New Lead from the last 30 days; the same is
   available later from the sequence card (*Enrol matching leads*).
+- A call booked through Microsoft Bookings (with `BOOKINGS_BUSINESS` sync on)
+  also ends the sequence: the goal was reached.
 - **Draft with Claude** writes a 4-step sequence from the service and source
   when the Claude helper is running; otherwise a built-in starter template
   loads. Every send is logged on the lead's timeline. Admins can force a run
