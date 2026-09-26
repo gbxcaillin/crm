@@ -85,8 +85,9 @@ async function upload(folder, name, buf) {
   return last;
 }
 async function download(spId) { const d = await driveId(); const r = await fetch(`https://graph.microsoft.com/v1.0/drives/${d}/items/${spId}/content`, { headers: { authorization: 'Bearer ' + (await token()) }, redirect: 'follow' }); if (!r.ok) throw new Error('Download failed ' + r.status); return Buffer.from(await r.arrayBuffer()); }
-async function sendMail(from, to, subject, html, attachments) {
+async function sendMail(from, to, subject, html, attachments, replyTo) {
   const message = { subject, body: { contentType: 'HTML', content: html }, toRecipients: [{ emailAddress: { address: to } }] };
+  if (replyTo) message.replyTo = [{ emailAddress: { address: replyTo } }];
   if (attachments && attachments.length) message.attachments = attachments.map((a) => ({ '@odata.type': '#microsoft.graph.fileAttachment', name: a.filename, contentType: a.contentType || 'application/octet-stream', contentBytes: Buffer.from(a.content).toString('base64') }));
   return g('POST', `/users/${encodeURIComponent(from)}/sendMail`, { message, saveToSentItems: !!(attachments && attachments.length) });
 }

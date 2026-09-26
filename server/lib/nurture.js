@@ -124,7 +124,7 @@ async function sendStep(e, seq, d) {
     if (acct) { try { await mailbox.send(d.owner, acct, { to: d.email, subject, body: `${body}\n\n--\nNot useful? Stop these emails: ${unsub}` }); sent = true; via = acct; } catch (err) { console.error('[nurture] mailbox send failed, falling back:', err.message); } }
   }
   if (!sent) {
-    sent = await mail.send({ to: d.email, subject, title: '', html: `<div style="white-space:pre-wrap">${mail.esc(body)}</div>`, footer: `${BRAND} &middot; You are receiving this because you enquired at gbxps.com. <a href="${unsub}" style="color:#8E8B83">Stop these emails</a>.`, kind: 'campaign', unsubscribe: unsub });
+    sent = await mail.send({ to: d.email, subject, title: '', html: `<div style="white-space:pre-wrap">${mail.esc(body)}</div>`, footer: `${BRAND} &middot; You are receiving this because you enquired at gbxps.com. <a href="${unsub}" style="color:#8E8B83">Stop these emails</a>.`, kind: 'campaign', unsubscribe: unsub, replyTo: owner.email || undefined });
     via = mail.campaignFrom();
   }
   D.putRecord('activity', { id: rid(), deal: d.id, type: 'email', who: '', text: sent ? `Nurture email sent (step ${e.step + 1} of ${steps.length})` : `Nurture email failed (step ${e.step + 1})`, detail: `${subject}${via ? ' · from ' + via : ''}`, at: D.nowIso() }, 'system');

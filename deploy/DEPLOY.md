@@ -73,8 +73,9 @@ Everything below is optional and turns on when its variables are set in
 
 | Feature | Variables | Notes |
 |---|---|---|
-| Email (invites, resets, task and lead alerts, digests, invoices, newsletters) | `RESEND_API_KEY` **or** `POSTMARK_TOKEN` (recommended), else `SMTP_HOST/PORT/USER/PASS`, or `MAIL_MODE=graph`; plus `MAIL_FROM`, `MAIL_CAMPAIGN_FROM`, `MAIL_WEBHOOK_SECRET` | See *Email deliverability* below. Test from Integrations → Server → *Send me a test email*. |
+| Email (invites, resets, task and lead alerts, digests, invoices, newsletters) | `RESEND_API_KEY` **or** `POSTMARK_TOKEN` (recommended), else `SMTP_HOST/PORT/USER/PASS`, or `MAIL_MODE=graph`; plus `MAIL_FROM`, `MAIL_CAMPAIGN_FROM`, `MAIL_REPLY_TO`, `MAIL_WEBHOOK_SECRET` | See *Email deliverability* below. Test from Integrations → Server → *Send me a test email*. |
 | SharePoint files | `MS_TENANT_ID`, `MS_CLIENT_ID`, `MS_CLIENT_SECRET`, `SP_SITE`, `SP_LIBRARY`, optional `SP_FOLDER`, optional `SP_INVOICE_FOLDER` | Azure app registration with application permission `Sites.Selected` (grant it on the site) or `Sites.ReadWrite.All`. `SP_LIBRARY` is a document library display name (default library is `Documents`); optional `SP_FOLDER` nests per-client folders under a base folder inside it (e.g. `SP_LIBRARY=Documents`, `SP_FOLDER=Client Files`). Files upload to `<library>/<folder>/<Client>/`; nightly DB backups also copy to `<library>/<folder>/_CRM Backups/`. Invoice PDFs save to `<library>/<SP_INVOICE_FOLDER>/` (default `Invoices`) as drafts, then the invoice can be emailed from the CRM (PDF attached) or downloaded from SharePoint and sent manually. Emailing invoices needs email configured (below) with `Mail.Send` if using Graph. |
+| Claude lead scoring (automatic) | the Claude helper (`CLAUDE_HELPER_SOCKET`) | With the helper on, every new lead is scored within about five minutes and the score, priority and rationale land on the lead. Switch off under Settings → Claude triggers → Score. Research pages get *Draft research note* and *Compare peers* the same way. |
 | Microsoft Bookings | `BOOKINGS_BUSINESS` + the `MS_*` app | Grant the Graph app the application permission `Bookings.Read.All` (in the tenant that owns the booking mailbox), then set `BOOKINGS_BUSINESS` to the booking business id (usually the booking mailbox address). Booked calls sync every 15 min into activity + a task on the matching lead, or become a new lead. Trigger on demand with `POST /api/v1/integrations/bookings/sync` (admin). |
 | Google Ads lead forms | `GOOGLE_ADS_KEY` | In Google Ads → lead form asset → *Lead delivery option* → Webhook: URL `https://crm.gbxps.com/api/v1/hooks/google-ads`, key = the same string. Use *Send test data* to check. |
 | Meta Lead Ads | `META_VERIFY_TOKEN`, `META_APP_SECRET`, `META_PAGE_TOKEN` | Meta app → Webhooks → Page → `leadgen`, callback `https://crm.gbxps.com/api/v1/hooks/meta`. The page token needs `leads_retrieval` and `pages_manage_ads`. Zapier or a similar relay can instead POST straight to `/api/v1/hooks/lead` with an API key. |
@@ -171,6 +172,11 @@ subdomain**:
      for newsletters and nurture. A subdomain keeps campaign complaints away
      from the main domain. With Postmark, campaigns use the `broadcast` message
      stream (`POSTMARK_BROADCAST_STREAM` to rename).
+   - `MAIL_REPLY_TO=hello@gbxps.com` (a real, monitored mailbox). The campaign
+     address has no mailbox, so campaign mail carries a Reply-To: newsletters
+     reply to whoever sent them (else `MAIL_REPLY_TO`), and nurture emails reply
+     to the lead's owner, so the reply lands in a connected inbox, is logged on
+     the lead, and stops the sequence.
 3. **DNS (Cloudflare).** In the provider, add both `gbxps.com` and
    `news.gbxps.com` as sending domains and create the records it gives you:
    DKIM (CNAME/TXT), SPF (`v=spf1 include:<provider> ~all` on the subdomain;

@@ -15,6 +15,7 @@ const cfg = {
   campaignFrom: env.MAIL_CAMPAIGN_FROM || env.MAIL_FROM || 'GBX Professional Services <hello@gbxps.com>',
   host: env.SMTP_HOST, port: Number(env.SMTP_PORT || 587), user: env.SMTP_USER, pass: env.SMTP_PASS, secure: env.SMTP_SECURE === '1',
   resendKey: env.RESEND_API_KEY, postmarkToken: env.POSTMARK_TOKEN,
+  replyTo: env.MAIL_REPLY_TO || '',   // default Reply-To for campaign mail (the campaign address has no mailbox)
   postmarkStream: env.POSTMARK_STREAM || 'outbound', postmarkBroadcast: env.POSTMARK_BROADCAST_STREAM || 'broadcast',
 };
 let transport = null;
@@ -43,12 +44,12 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 // A plain-text alternative from HTML, so every message has a text part (a spam-filter signal).
 const toText = (h) => String(h || '').replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<\/(p|div|tr|li|h[1-6])>/gi, '\n').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/\n{3,}/g, '\n\n').trim();
 
-async function viaResend(from, to, subject, html, text, headers, attachments) {
-  const r = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { authorization: 'Bearer ' + cfg.resendKey, 'content-type': 'application/json' }, body: JSON.stringify({ from, to: [to], subject, html, text, headers: headers || undefined, attachments: attachments && attachments.length ? attachments.map((a) => ({ filename: a.filename, content: Buffer.from(a.content).toString('base64') })) : undefined }) });
+async function viaResend(from, to, subject, html, text, headers, attachments, replyTo) {
+  const r = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { authorization: 'Bearer ' + cfg.resendKey, 'content-type': 'application/json' }, body: JSON.stringify({ from, to: [to], subject, html, text, reply_to: replyTo || undefined, headers: headers || undefined, attachments: attachments && attachments.length ? attachments.map((a) => ({ filename: a.filename, content: Buffer.from(a.content).toString('base64') })) : undefined }) });
   if (!r.ok) throw new Error('resend ' + r.status + ': ' + (await r.text()).slice(0, 200));
 }
-async function viaPostmark(from, to, subject, html, text, headers, attachments, stream) {
-  const r = await fetch('https://api.postmarkapp.com/email', { method: 'POST', headers: { 'x-postmark-server-token': cfg.postmarkToken, accept: 'application/json', 'content-type': 'application/json' }, body: JSON.stringify({ From: from, To: to, Subject: subject, HtmlBody: html, TextBody: text, MessageStream: stream, Headers: headers ? Object.entries(headers).map(([Name, Value]) => ({ Name, Value })) : undefined, Attachments: attachments && attachments.length ? attachments.map((a) => ({ Name: a.filename, Content: Buffer.from(a.content).toString('base64'), ContentType: a.contentType || 'application/octet-stream' })) : undefined }) });
+async function viaPostmark(from, to, subject, html, text, headers, attachments, stream, replyTo) {
+  const r = await fetch('https://api.postmarkapp.com/email', { method: 'POST', headers: { 'x-postmark-server-token': cfg.postmarkToken, accept: 'application/json', 'content-type': 'application/json' }, body: JSON.stringify({ From: from, To: to, Subject: subject, HtmlBody: html, TextBody: text, MessageStream: stream, ReplyTo: replyTo || undefined, Headers: headers ? Object.entries(headers).map(([Name, Value]) => ({ Name, Value })) : undefined, Attachments: attachments && attachments.length ? attachments.map((a) => ({ Name: a.filename, Content: Buffer.from(a.content).toString('base64'), ContentType: a.contentType || 'application/octet-stream' })) : undefined }) });
   const j = await r.json().catch(() => ({}));
   if (!r.ok || (j.ErrorCode && j.ErrorCode !== 0)) throw new Error('postmark ' + r.status + ': ' + (j.Message || '').slice(0, 200));
 }
@@ -57,17 +58,19 @@ async function viaPostmark(from, to, subject, html, text, headers, attachments, 
 // raw: send the given HTML as-is (pre-prepared newsletters); otherwise wrap in the app layout.
 // unsubscribe: a per-recipient URL; adds RFC 8058 one-click List-Unsubscribe headers (Gmail/Yahoo/Outlook
 // require them for bulk mail) on providers that can carry custom headers.
-async function send({ to, subject, title, html, text, cta, footer, attachments, raw, kind = 'notify', unsubscribe }) {
+// replyTo: where replies go. Campaign mail defaults to MAIL_REPLY_TO, because hello@news.* has no mailbox.
+async function send({ to, subject, title, html, text, cta, footer, attachments, raw, kind = 'notify', unsubscribe, replyTo }) {
   const body = raw ? (html || '') : layout(title || subject, html || `<p>${esc(text)}</p>`, cta, footer);
   const plain = text || toText(body) || subject;
   const from = kind === 'campaign' ? cfg.campaignFrom : cfg.from;
   const headers = unsubscribe ? { 'List-Unsubscribe': `<${unsubscribe}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } : null;
+  const reply = replyTo || (kind === 'campaign' ? cfg.replyTo : '') || '';
   if (!enabled()) { log.mail.run(nowIso(), to, subject, kind, 'skipped', 'mail not configured'); console.log(`[mail:off] to=${to} "${subject}"`); return false; }
   try {
-    if (cfg.mode === 'resend') await viaResend(from, to, subject, body, plain, headers, attachments);
-    else if (cfg.mode === 'postmark') await viaPostmark(from, to, subject, body, plain, headers, attachments, kind === 'campaign' ? cfg.postmarkBroadcast : cfg.postmarkStream);
-    else if (cfg.mode === 'graph') await graph.sendMail(addrOf(from), to, subject, body, attachments); // Graph cannot set List-Unsubscribe (custom headers must be x-*)
-    else await (await smtp()).sendMail({ from, to, subject, html: body, text: plain, headers: headers || undefined, attachments: attachments && attachments.map((a) => ({ filename: a.filename, content: a.content, contentType: a.contentType })) });
+    if (cfg.mode === 'resend') await viaResend(from, to, subject, body, plain, headers, attachments, reply);
+    else if (cfg.mode === 'postmark') await viaPostmark(from, to, subject, body, plain, headers, attachments, kind === 'campaign' ? cfg.postmarkBroadcast : cfg.postmarkStream, reply);
+    else if (cfg.mode === 'graph') await graph.sendMail(addrOf(from), to, subject, body, attachments, reply); // Graph cannot set List-Unsubscribe (custom headers must be x-*)
+    else await (await smtp()).sendMail({ from, to, subject, html: body, text: plain, replyTo: reply || undefined, headers: headers || undefined, attachments: attachments && attachments.map((a) => ({ filename: a.filename, content: a.content, contentType: a.contentType })) });
     log.mail.run(nowIso(), to, subject, kind, 'sent', '');
     return true;
   } catch (e) {
@@ -76,4 +79,4 @@ async function send({ to, subject, title, html, text, cta, footer, attachments, 
     return false;
   }
 }
-module.exports = { send, enabled, esc, BASE, mode: () => cfg.mode, campaignFrom: () => cfg.campaignFrom };
+module.exports = { send, enabled, esc, BASE, mode: () => cfg.mode, campaignFrom: () => cfg.campaignFrom, replyTo: () => cfg.replyTo };
