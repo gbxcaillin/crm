@@ -537,6 +537,33 @@ r.post('/invoices/:id/send', async (req, res) => {
   ok(res, { sent: true, url: inv.spUrl || '' });
 });
 
+/* ---------- model portfolio pack (PDF to SharePoint) ---------- */
+const GROWTH_CLS = ['Australian equities', 'International equities', 'Property & infrastructure'];
+r.post('/models/:id/pack', async (req, res) => {
+  const u = session(req); if (!graph.enabled()) throw err(503, 'SharePoint is not configured on the server');
+  const m = D.getRecord('models', req.params.id); if (!m) throw err(404, 'No such model');
+  const b = await readJson(req).catch(() => ({}));
+  const secs = Object.fromEntries(D.listCol('securities').map((s) => [s.t, s]));
+  const holdings = (m.holdings || []).map((h) => { const s = secs[h.t] || {}; return { t: h.t, name: s.name || h.t, cls: s.cls || 'Other', w: h.w || 0, yld: s.yld, mer: s.mer, y1: s.ret ? s.ret.y1 : null }; });
+  const tw = holdings.reduce((a, h) => a + h.w, 0) || 1;
+  const wavg = (f) => holdings.reduce((a, h) => a + (f(h) || 0) * h.w, 0) / tw;
+  const clsMap = {}; holdings.forEach((h) => { clsMap[h.cls] = (clsMap[h.cls] || 0) + h.w; });
+  const alloc = Object.entries(clsMap).map(([cls, w]) => ({ cls, pct: w / tw * 100 })).sort((a, b2) => b2.pct - a.pct);
+  const data = { holdings, alloc, tw, wYield: wavg((h) => h.yld), wFee: wavg((h) => h.mer), wY1: wavg((h) => h.y1) };
+  const s = (D.kvGet('settings') || {}).invoice || {};
+  const buf = pdf.modelPdf(m, data, s);
+  // Save into the linked deal's client folder if given, else a shared "Model packs" folder.
+  let folder = [graph.SP_FOLDER, 'Model packs'].filter(Boolean).join('/'); let dealId = 0;
+  const d = b.deal ? D.getRecord('deals', b.deal) : (b.client ? D.getRecord('deals', ((D.getRecord('clients', b.client) || {}).deals || [])[0]) : null);
+  if (d) { dealId = d.id; try { await reconcileDealFolder(d, u.id); } catch (e) {} folder = [graph.SP_FOLDER, folderLeaf(d)].filter(Boolean).join('/'); }
+  const name = `${graph.safe(m.name)} - model pack.pdf`;
+  const item = await graph.upload(folder, name, buf);
+  const rec = { id: D.nextId('files'), deal: dealId, name: item.name || name, size: fmtSize(buf.length), by: u.id, at: D.today(), kind: 'PDF', url: item.webUrl, spId: item.id };
+  D.putRecord('files', rec, u.id);
+  if (dealId) D.putRecord('activity', { id: Date.now(), deal: dealId, type: 'file', who: u.id, text: 'Model pack saved to SharePoint', detail: m.name, at: D.nowIso() }, u.id);
+  ok(res, { url: item.webUrl, name: rec.name, file: rec });
+});
+
 /* ---------- outbound email (compose / reply) ---------- */
 // Actually sends an email through the configured transport. The client keeps the thread and
 // activity log (synced), so this endpoint only sends and audits.
