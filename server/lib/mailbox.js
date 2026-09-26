@@ -80,7 +80,8 @@ async function message(uid, email, id) {
   const tok = await accessToken(uid, email);
   const m = await gget(tok, `/me/messages/${encodeURIComponent(id)}?$select=id,conversationId,subject,from,toRecipients,receivedDateTime,body,webLink`);
   const html = m.body && m.body.contentType === 'html';
-  return { id: m.id, conv: m.conversationId, subject: m.subject || '(no subject)', from: (m.from && m.from.emailAddress && m.from.emailAddress.address) || '', fromName: (m.from && m.from.emailAddress && m.from.emailAddress.name) || '', at: m.receivedDateTime, text: html ? htmlToText(m.body.content) : (m.body ? m.body.content : ''), url: m.webLink, account: email };
+  const raw = m.body ? m.body.content : '';
+  return { id: m.id, conv: m.conversationId, subject: m.subject || '(no subject)', from: (m.from && m.from.emailAddress && m.from.emailAddress.address) || '', fromName: (m.from && m.from.emailAddress && m.from.emailAddress.name) || '', at: m.receivedDateTime, text: html ? htmlToText(raw) : raw, html: html ? raw : '', url: m.webLink, account: email };
 }
 // Send from a connected mailbox (new message, or a reply when replyTo message id is given).
 async function send(uid, email, { to, subject, body, replyTo }) {

@@ -467,6 +467,8 @@ td.check-col,th.check-col{width:32px;padding-right:0;cursor:default}
 .msg .mh b{font-weight:600}
 .msg .mh .when{margin-left:auto;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3)}
 .msg .mb{color:var(--ink-2);white-space:pre-line;max-width:64ch}
+.mail-frame{width:100%;height:58vh;border:0;background:#fff;display:block}
+@media(max-width:760px){.mail-frame{height:52vh}}
 .msg.out{background:var(--surface-2)}
 .reply{padding:14px 22px;display:flex;flex-direction:column;gap:8px;margin-top:auto;border-top:1px solid var(--line)}
 
@@ -1043,6 +1045,12 @@ const dealFolderName=d=>d?(d.practice||d.contact||d.email||('Deal '+d.id)):'{Cli
 // The SharePoint folder's own URL, derived from any file already in it (its link minus the
 // filename). Empty until the folder has at least one file. Used for an "Open folder" button.
 const spFolderUrl=fs=>{const f=(fs||[]).find(x=>x&&x.url);if(!f)return'';try{const u=new URL(f.url);u.pathname=u.pathname.replace(/\/[^/]*$/,'');u.search='';u.hash='';return u.toString()}catch(_){return''}};
+// Render an untrusted HTML email safely: a sandboxed iframe (no scripts, no app access) with a
+// strict CSP. Links open in a new tab; remote images load but nothing can run code.
+function mailFrame(html){
+  const doc=`<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https: http: data: cid:; style-src 'unsafe-inline' https: http: data:; font-src https: data:; media-src https: data:"><base target="_blank"><style>html,body{margin:0}body{font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;color:#1a1a1a;background:#fff;padding:6px 8px;word-wrap:break-word;overflow-wrap:break-word}img{max-width:100%;height:auto}table{max-width:100%!important}</style>`+String(html||'');
+  return`<iframe class="mail-frame" sandbox="allow-popups allow-popups-to-escape-sandbox" srcdoc="${doc.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"></iframe>`;
+}
 const aud=n=>'A$'+Number(n||0).toLocaleString('en-AU');
 const audK=n=>n>=1e6?'A$'+(n/1e6).toFixed(2)+'m':n>=1000?'A$'+Math.round(n/1000)+'k':aud(n);
 const user=id=>S.users.find(u=>u.id===id);
@@ -1643,7 +1651,7 @@ function vEmailReal(){
   let read='<div class="empty">Select a message</div>';
   if(openState){const d=dealByEmail(cur.from);const full=MAIL.body[oId];
     read=`<div class="mr-head"><button class="btn btn-sm btn-quiet mail-back" id="mail-back" style="align-self:flex-start">‹ Back</button><h2>${esc(cur.subject)}</h2><div class="row wrap" style="gap:8px"><span class="muted" style="font-size:12px">${esc(cur.fromName||cur.from)} &lt;${esc(cur.from)}&gt;</span>${d?`<a class="chip chip-teal" href="#/deal/${d.id}">${esc(d.practice)}</a>`:''}<span class="grow"></span>${cur.url?`<a class="btn btn-sm btn-quiet" href="${esc(cur.url)}" target="_blank" rel="noopener">Open in Outlook</a>`:''}</div><div class="faint" style="font-size:11px">into ${esc(cur.account)} · ${fmtDT(cur.at)}</div></div>
-    <div class="msg"><div class="mb">${full?esc(full.text).replace(/\n/g,'<br>'):'<span class="faint">Loading message…</span>'}</div></div>
+    <div class="msg" style="padding:0">${full?(full.html?mailFrame(full.html):`<div class="mb" style="padding:12px 14px">${esc(full.text).replace(/\n/g,'<br>')}</div>`):'<div class="mb" style="padding:12px 14px"><span class="faint">Loading message…</span></div>'}</div>
     <form class="reply" id="mail-reply" data-acct="${esc(cur.account)}" data-id="${esc(cur.id)}" data-to="${esc(cur.from)}" data-subject="${esc(cur.subject)}"><textarea class="textarea" name="body" placeholder="Reply to ${esc(cur.fromName||cur.from)}…" style="min-height:80px"></textarea><div class="row"><button class="btn btn-primary btn-sm" type="submit">Send reply</button><button class="btn btn-sm btn-quiet" type="button" id="mail-ai" data-acct="${esc(cur.account)}" data-id="${esc(cur.id)}">Draft with Claude</button><span class="faint grow" style="font-size:11px;text-align:right">Sends from ${esc(cur.account)}${d?' · logged to '+esc(d.practice):''}</span></div></form>`;
   }
   return`<div class="page" style="gap:12px"><div class="page-head"><div><h1>Email</h1><div class="sub">Your connected ${MAIL.accounts.length>1?'mailboxes':'mailbox'}: ${acctChips} · <a href="#/settings/email">manage</a></div></div><button class="btn btn-primary" data-mailcompose>Compose</button></div>
